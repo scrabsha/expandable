@@ -13,12 +13,12 @@ type Result<T> = std::result::Result<T, ()>;
 type Cursor<'ast> = &'ast [TokenTree];
 
 pub(crate) fn check_arm(
-    ty: FragmentKind,
+    init_state: State,
     bindings: Matcher,
     substitution: &[expansion::TokenTree],
 ) -> Result<()> {
     let bindings = bindings.bindings;
-    ExpCtx::check_rule(bindings, substitution, ty.to_dynamic_state())
+    ExpCtx::check_rule(bindings, substitution, init_state.into_dynamic_state())
 }
 
 #[derive(Default)]
@@ -214,7 +214,7 @@ impl ExpCtx {
             }
 
             RepetitionQuantifier::ZeroOrMore => {
-                self.parse_one_or_more_repetitions(states, stream, sep)
+                self.parse_zero_or_more_repetitions(states, stream, sep)
             }
 
             RepetitionQuantifier::OneOrMore => {
@@ -300,15 +300,15 @@ mod tests {
             fn $test_name() {
                 let matcher = token_tree! { $( $matcher )* };
                 let matcher = crate::matcher::TokenTree::from_generic(matcher).expect("Failed to generate `matcher::TokenTree`");
-                let bindings = crate::matcher::Matcher::from_generic(&matcher).expect("Failed to generate `matcher::Bindings`").bindings;
+                let bindings = crate::matcher::Matcher::from_generic(&matcher).expect("Failed to generate `matcher::Bindings`");
 
                 let subst = token_tree! { $( $substitution )* };
                 let subst = crate::substitution::TokenTree::from_generic(subst).expect("Failed to generate `substitution::TokenTree`");
 
-                let state = stringify!($kind).parse::<crate::FragmentKind>().expect("Failed to generate `FragmentKind`");
-                let state = state.to_dynamic_state();
+                let state = stringify!($kind).parse::<crate::InvocationContext>().expect("Failed to generate `FragmentKind`");
+                let state = state.to_state();
 
-                ExpCtx::check_rule(bindings, &subst, state).expect("Checking failed");
+                check_arm(state, bindings, &subst).expect("Checking failed");
             }
         }
     }
