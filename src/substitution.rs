@@ -4,6 +4,7 @@ use crate::{RepetitionQuantifier, Terminal, TokenTree as GenericTokenTree};
 pub(crate) enum TokenTree {
     Terminal(Terminal),
     Parenthesed(Vec<TokenTree>),
+    CurlyBraced(Vec<TokenTree>),
     Fragment(String),
     Repetition {
         inner: Vec<TokenTree>,
@@ -27,12 +28,17 @@ impl TokenTree {
                         Self::parse_repetition(&mut iter, inner)?
                     }
 
-                    GenericTokenTree::Terminal(_) => return Err(()),
+                    GenericTokenTree::CurlyBraced(_) | GenericTokenTree::Terminal(_) => {
+                        return Err(())
+                    }
                 },
 
                 GenericTokenTree::Terminal(t) => TokenTree::Terminal(t),
-                GenericTokenTree::Parenthesed(i) => {
-                    TokenTree::Parenthesed(TokenTree::from_generic(i)?)
+                GenericTokenTree::Parenthesed(inner) => {
+                    TokenTree::Parenthesed(TokenTree::from_generic(inner)?)
+                }
+                GenericTokenTree::CurlyBraced(inner) => {
+                    TokenTree::CurlyBraced(TokenTree::from_generic(inner)?)
                 }
             };
 
@@ -66,14 +72,14 @@ impl TokenTree {
                     GenericTokenTree::Terminal(Terminal::Times) => RepetitionQuantifier::ZeroOrMore,
                     GenericTokenTree::Terminal(Terminal::Plus) => RepetitionQuantifier::OneOrMore,
 
-                    GenericTokenTree::Terminal(_) | GenericTokenTree::Parenthesed(_) => {
-                        return Err(())
-                    }
+                    GenericTokenTree::Terminal(_)
+                    | GenericTokenTree::Parenthesed(_)
+                    | GenericTokenTree::CurlyBraced(_) => return Err(()),
                 };
 
                 (Some(t), del)
             }
-            crate::TokenTree::Parenthesed(_) => return Err(()),
+            GenericTokenTree::Parenthesed(_) | GenericTokenTree::CurlyBraced(_) => return Err(()),
         };
 
         let separator = separator.map(Box::new);

@@ -1,47 +1,46 @@
-use crate::grammar::State;
+use tinyset::{set64, Set64};
 
-#[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
-pub(crate) struct StateSet(
-    // TODO: write a proper impl
-    u8,
-);
+use crate::grammar::DynamicState;
 
-impl StateSet {
-    pub(crate) fn empty() -> StateSet {
-        StateSet(0)
+// Let's pretend this is fast enough and use clone when required.
+#[derive(Clone, Debug, Eq, Hash, PartialEq)]
+pub(crate) struct DynamicStateSet(Set64<DynamicState>);
+
+impl DynamicStateSet {
+    pub(crate) fn empty() -> DynamicStateSet {
+        DynamicStateSet(Set64::new())
     }
 
-    fn set(mut self, val: State) -> StateSet {
-        let offset = val as u8;
-        self.0 |= 1 << offset;
+    fn set(mut self, state: DynamicState) -> DynamicStateSet {
+        self.0.insert(state);
         self
     }
 
-    pub(crate) fn singleton(val: State) -> StateSet {
-        StateSet::empty().set(val)
+    pub(crate) fn singleton(state: DynamicState) -> DynamicStateSet {
+        DynamicStateSet::empty().set(state)
     }
 
-    pub(crate) fn is_included_in(self, rhs: StateSet) -> bool {
-        rhs.0 | self.0 == rhs.0
+    pub(crate) fn is_included_in(&self, rhs: &DynamicStateSet) -> bool {
+        (&self.0 - &rhs.0).is_empty()
     }
 
-    pub(crate) fn union(self, rhs: StateSet) -> StateSet {
-        StateSet(self.0 | rhs.0)
+    pub(crate) fn union(self, rhs: DynamicStateSet) -> DynamicStateSet {
+        DynamicStateSet(&self.0 | &rhs.0)
     }
 }
 
-impl IntoIterator for StateSet {
-    type Item = State;
+impl IntoIterator for DynamicStateSet {
+    type Item = DynamicState;
     type IntoIter = IntoIter;
 
-    fn into_iter(self) -> Self::IntoIter {
-        IntoIter { set: self, cur: 0 }
+    fn into_iter(self) -> IntoIter {
+        IntoIter(self.0.into_iter())
     }
 }
 
-impl FromIterator<State> for StateSet {
-    fn from_iter<T: IntoIterator<Item = State>>(iter: T) -> Self {
-        let mut set = StateSet::empty();
+impl FromIterator<DynamicState> for DynamicStateSet {
+    fn from_iter<T: IntoIterator<Item = DynamicState>>(iter: T) -> Self {
+        let mut set = DynamicStateSet::empty();
 
         for i in iter {
             set = set.set(i);
@@ -51,22 +50,12 @@ impl FromIterator<State> for StateSet {
     }
 }
 
-pub(crate) struct IntoIter {
-    set: StateSet,
-    cur: u8,
-}
+pub(crate) struct IntoIter(set64::IntoIter<DynamicState>);
 
 impl Iterator for IntoIter {
-    type Item = State;
+    type Item = DynamicState;
 
-    fn next(&mut self) -> Option<State> {
-        for i in self.cur..8 {
-            if (self.set.0 & 1 << i) != 0 {
-                self.cur = i + 1;
-                return Some(State::try_from(i).unwrap());
-            }
-        }
-
-        None
+    fn next(&mut self) -> Option<DynamicState> {
+        self.0.next()
     }
 }

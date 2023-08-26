@@ -1,43 +1,9 @@
 use std::str::FromStr;
 
-macro_rules! token_tree {
-    (@inner, ( $( $tt:tt )* ) ) => {
-        $crate::TokenTree::Parenthesed(token_tree! { $( $tt )* })
-    };
+use grammar::{DynamicState, State};
 
-    (@inner, $id:ident) => {
-        $crate::TokenTree::Terminal($crate::Terminal::Ident(stringify!($id).to_string()))
-    };
-
-    (@inner, @) => {
-        $crate::TokenTree::Terminal($crate::Terminal::Dollar)
-    };
-
-    (@inner, :) => {
-        $crate::TokenTree::Terminal($crate::Terminal::Colon)
-    };
-
-    (@inner, ?) => {
-        $crate::TokenTree::Terminal($crate::Terminal::QuestionMark)
-    };
-
-    (@inner, +) => {
-        $crate::TokenTree::Terminal($crate::Terminal::Plus)
-    };
-
-    (@inner, *) => {
-        $crate::TokenTree::Terminal($crate::Terminal::Times)
-    };
-
-    ( $( $tt:tt )* ) => {
-        vec![
-            $(
-                token_tree!(@inner, $tt)
-            ),*
-        ]
-    };
-}
-
+#[macro_use]
+mod macros;
 mod expansion;
 mod grammar;
 mod matcher;
@@ -54,6 +20,7 @@ mod substitution;
 enum TokenTree {
     Terminal(Terminal),
     Parenthesed(Vec<TokenTree>),
+    CurlyBraced(Vec<TokenTree>),
 }
 
 /// A terminal.
@@ -69,8 +36,19 @@ enum Terminal {
 
 #[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
 enum FragmentKind {
+    Item,
     Ident,
     Expr,
+}
+
+impl FragmentKind {
+    pub(crate) fn to_dynamic_state(self) -> DynamicState {
+        match self {
+            FragmentKind::Item => State::ItemStart.into_dynamic_state(),
+            FragmentKind::Ident => State::ExprStart.into_dynamic_state(),
+            FragmentKind::Expr => State::ExprStart.into_dynamic_state(),
+        }
+    }
 }
 
 impl FromStr for FragmentKind {
@@ -78,6 +56,7 @@ impl FromStr for FragmentKind {
 
     fn from_str(s: &str) -> Result<FragmentKind, ()> {
         Ok(match s {
+            "item" => FragmentKind::Item,
             "ident" => FragmentKind::Ident,
             "expr" => FragmentKind::Expr,
 
@@ -95,9 +74,7 @@ enum RepetitionQuantifier {
 
 #[macro_export]
 #[cfg(test)]
-mod macros {
-    use super::*;
-
+mod macros_ {
     macro_rules! token_tree_test {
         ($name:ident {
             { $( $left:tt )* },

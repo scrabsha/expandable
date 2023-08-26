@@ -8,6 +8,7 @@ type Result<T> = std::result::Result<T, ()>;
 pub(crate) enum TokenTree {
     Terminal(Terminal),
     Parenthesed(Vec<TokenTree>),
+    CurlyBraced(Vec<TokenTree>),
     Binding {
         name: String,
         kind: FragmentKind,
@@ -37,13 +38,19 @@ impl TokenTree {
                         Self::parse_repetition(&mut iter, inner)
                     }
 
-                    GenericTokenTree::Terminal(_) => return Err(()),
+                    GenericTokenTree::Terminal(_) | GenericTokenTree::CurlyBraced(_) => {
+                        return Err(())
+                    }
                 }?,
 
                 GenericTokenTree::Terminal(t) => TokenTree::Terminal(t),
 
                 GenericTokenTree::Parenthesed(inner) => {
                     TokenTree::Parenthesed(Self::from_generic(inner)?)
+                }
+
+                GenericTokenTree::CurlyBraced(inner) => {
+                    TokenTree::CurlyBraced(Self::from_generic(inner)?)
                 }
             };
 
@@ -76,8 +83,8 @@ impl TokenTree {
     }
 
     fn parse_repetition(
-        iter: &mut impl Iterator<Item = GenericTokenTree>,
-        inner: Vec<GenericTokenTree>,
+        _iter: &mut impl Iterator<Item = GenericTokenTree>,
+        _inner: Vec<GenericTokenTree>,
     ) -> Result<TokenTree> {
         todo!()
     }
@@ -125,9 +132,9 @@ impl Matcher {
                     assert!(prev.is_none());
                 }
 
-                TokenTree::Repetition { inner, .. } | TokenTree::Parenthesed(inner) => {
-                    inner.iter().for_each(|tt| visit(bindings, tt))
-                }
+                TokenTree::Repetition { inner, .. }
+                | TokenTree::Parenthesed(inner)
+                | TokenTree::CurlyBraced(inner) => inner.iter().for_each(|tt| visit(bindings, tt)),
             }
         }
 
