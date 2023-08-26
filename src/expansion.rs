@@ -23,7 +23,6 @@ pub(crate) fn check_arm(
 
 #[derive(Default)]
 struct ExpCtx {
-    state_sets: Vec<DynamicStateSet>,
     // todo: we also want to see which depth a macro repeats at.
     bindings: HashMap<String, FragmentKind>,
 }
@@ -298,11 +297,11 @@ mod tests {
         ( $test_name:ident { #[$kind:ident]( $( $matcher:tt )* ) => { $( $substitution:tt )* } $(;)? }) => {
             #[test]
             fn $test_name() {
-                let matcher = token_tree! { $( $matcher )* };
+                let matcher = quote! { $( $matcher )* };
                 let matcher = crate::matcher::TokenTree::from_generic(matcher).expect("Failed to generate `matcher::TokenTree`");
                 let bindings = crate::matcher::Matcher::from_generic(&matcher).expect("Failed to generate `matcher::Bindings`");
 
-                let subst = token_tree! { $( $substitution )* };
+                let subst = quote! { $( $substitution )* };
                 let subst = crate::substitution::TokenTree::from_generic(subst).expect("Failed to generate `substitution::TokenTree`");
 
                 let state = stringify!($kind).parse::<crate::InvocationContext>().expect("Failed to generate `FragmentKind`");

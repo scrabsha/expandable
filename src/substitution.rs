@@ -103,7 +103,7 @@ mod tests {
         }) => {
             #[test]
             fn $name() {
-                let left = TokenTree::from_generic(token_tree! { $( $left )* });
+                let left = TokenTree::from_generic(quote! { $( $left )* });
                 let right = $right;
 
                 right.assert_debug_eq(&left);

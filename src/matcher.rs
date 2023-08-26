@@ -182,7 +182,7 @@ mod local_tree_to_matcher {
         }) => {
             #[test]
             fn $test_name() {
-                let tokens = token_tree! {
+                let tokens = quote! {
                     $( $left )*
                 };
 

@@ -3,6 +3,23 @@ use tinyset::Fits64;
 #[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
 pub(crate) struct DynamicState {
     pub(crate) state: State,
+    // This is probably the most disappointing part of the codebase.
+    //
+    // The Rust grammar is definitely not regular. It should be parsed with
+    // pushdown automaton. We circumvent this issue by manipulating trees
+    // instead of raw sequence of tokens. This approach works well, as long as
+    // we can guess in advance if a token is a delimiter or not.
+    //
+    // Depending on the situation, `<` and `>` may or may not be considered as
+    // delimiters. For instance, `<` and `>` are delimiters in
+    // `Iterator<Item = u8>`, but are definitely not delimiters in
+    // `4 < x && 6 > y`. As a result, we do have to use a pushdown automaton in
+    // order to parse the Rust syntax.
+    //
+    // Luckily for us, there is only one symbol that is pushed and popped in the
+    // state machine's stack, which represent the amount of "delimiter `<`" that
+    // have not been closed by a "delimiter `>`". This means that this entire
+    // stack can be represented with an integer.
     pub(crate) opened_lts: u8,
 }
 
