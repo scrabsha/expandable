@@ -1,7 +1,10 @@
-use std::collections::HashMap;
+use std::{
+    collections::HashMap,
+    fmt::{self, Debug},
+};
 
 use crate::{
-    FragmentKind, RepetitionQuantifier, RepetitionQuantifierKind, Terminal,
+    FragmentKind, RepetitionQuantifier, RepetitionQuantifierKind, Spanneable, Terminal,
     TokenTree as GenericTokenTree, TokenTreeKind as GenericTokenTreeKind,
 };
 
@@ -14,34 +17,22 @@ pub(crate) struct TokenTree<Span> {
 }
 
 #[cfg(test)]
-#[allow(non_snake_case)]
+#[allow(non_snake_case, unused)]
 impl TokenTree<()> {
     fn Terminal(t: Terminal) -> TokenTree<()> {
-        TokenTree {
-            kind: TokenTreeKind::Terminal(t),
-            span: (),
-        }
+        TokenTreeKind::Terminal(t).with_span(())
     }
 
     fn Parenthesed(i: Vec<TokenTree<()>>) -> TokenTree<()> {
-        TokenTree {
-            kind: TokenTreeKind::Parenthesed(i),
-            span: (),
-        }
+        TokenTreeKind::Parenthesed(i).with_span(())
     }
 
     fn CurlyBraced(i: Vec<TokenTree<()>>) -> TokenTree<()> {
-        TokenTree {
-            kind: TokenTreeKind::CurlyBraced(i),
-            span: (),
-        }
+        TokenTreeKind::CurlyBraced(i).with_span(())
     }
 
     fn Binding(name: String, kind: FragmentKind) -> TokenTree<()> {
-        TokenTree {
-            kind: TokenTreeKind::Binding { name, kind },
-            span: (),
-        }
+        TokenTreeKind::Binding { name, kind }.with_span(())
     }
 
     fn Repetition(
@@ -50,14 +41,12 @@ impl TokenTree<()> {
         quantifier: RepetitionQuantifier<()>,
     ) -> TokenTree<()> {
         let separator = separator.map(Box::new);
-        TokenTree {
-            kind: TokenTreeKind::Repetition {
-                inner,
-                separator,
-                quantifier,
-            },
-            span: (),
+        TokenTreeKind::Repetition {
+            inner,
+            separator,
+            quantifier,
         }
+        .with_span(())
     }
 }
 
@@ -75,6 +64,14 @@ pub(crate) enum TokenTreeKind<Span> {
         separator: Option<Box<TokenTree<Span>>>,
         quantifier: RepetitionQuantifier<Span>,
     },
+}
+
+impl<Span> Spanneable<Span> for TokenTreeKind<Span> {
+    type Output = TokenTree<Span>;
+
+    fn with_span(self, span: Span) -> TokenTree<Span> {
+        TokenTree { kind: self, span }
+    }
 }
 
 impl<Span> TokenTree<Span> {
@@ -104,20 +101,19 @@ impl<Span> TokenTree<Span> {
                     }?
                 }
 
-                GenericTokenTreeKind::Terminal(t) => TokenTree {
-                    kind: TokenTreeKind::Terminal(t),
-                    span: token.span,
-                },
+                GenericTokenTreeKind::Terminal(t) => {
+                    TokenTreeKind::Terminal(t).with_span(token.span)
+                }
 
-                GenericTokenTreeKind::Parenthesed(inner) => TokenTree {
-                    kind: TokenTreeKind::Parenthesed(TokenTree::from_generic(inner)?),
-                    span: token.span,
-                },
+                GenericTokenTreeKind::Parenthesed(inner) => {
+                    TokenTreeKind::Parenthesed(TokenTree::from_generic(inner)?)
+                        .with_span(token.span)
+                }
 
-                GenericTokenTreeKind::CurlyBraced(inner) => TokenTree {
-                    kind: TokenTreeKind::CurlyBraced(TokenTree::from_generic(inner)?),
-                    span: token.span,
-                },
+                GenericTokenTreeKind::CurlyBraced(inner) => {
+                    TokenTreeKind::CurlyBraced(TokenTree::from_generic(inner)?)
+                        .with_span(token.span)
+                }
             };
 
             out.push(token);
@@ -129,6 +125,7 @@ impl<Span> TokenTree<Span> {
     fn parse_fragment(
         iter: &mut impl Iterator<Item = GenericTokenTree<Span>>,
         name: String,
+        // TODO
         span: Span,
     ) -> Result<TokenTree<Span>> {
         // $ident
@@ -150,10 +147,7 @@ impl<Span> TokenTree<Span> {
 
         // $ident:kind
 
-        Ok(TokenTree {
-            kind: TokenTreeKind::Binding { name, kind },
-            span,
-        })
+        Ok(TokenTreeKind::Binding { name, kind }.with_span(span))
     }
 
     fn parse_repetition(
@@ -167,33 +161,21 @@ impl<Span> TokenTree<Span> {
         let (separator, quantifier) = match token.kind {
             GenericTokenTreeKind::Terminal(Terminal::QuestionMark) => (
                 None,
-                RepetitionQuantifier {
-                    kind: RepetitionQuantifierKind::ZeroOrOne,
-                    span: token.span,
-                },
+                RepetitionQuantifierKind::ZeroOrOne.with_span(token.span),
             ),
             GenericTokenTreeKind::Terminal(Terminal::Times) => (
                 None,
-                RepetitionQuantifier {
-                    kind: RepetitionQuantifierKind::ZeroOrMore,
-                    span: token.span,
-                },
+                RepetitionQuantifierKind::ZeroOrMore.with_span(token.span),
             ),
             GenericTokenTreeKind::Terminal(Terminal::Plus) => (
                 None,
-                RepetitionQuantifier {
-                    kind: RepetitionQuantifierKind::OneOrMore,
-                    span: token.span,
-                },
+                RepetitionQuantifierKind::OneOrMore.with_span(token.span),
             ),
             GenericTokenTreeKind::Terminal(sep) => {
-                let sep = TokenTree {
-                    kind: TokenTreeKind::Terminal(sep),
-                    span: token.span,
-                };
+                let sep = TokenTreeKind::Terminal(sep).with_span(token.span);
 
                 let token = iter.next().ok_or(())?;
-                let kind = match token.kind {
+                let quantifier = match token.kind {
                     GenericTokenTreeKind::Terminal(Terminal::QuestionMark) => {
                         RepetitionQuantifierKind::ZeroOrOne
                     }
@@ -205,11 +187,8 @@ impl<Span> TokenTree<Span> {
                     }
 
                     _ => return Err(()),
-                };
-                let quantifier = RepetitionQuantifier {
-                    kind,
-                    span: token.span,
-                };
+                }
+                .with_span(token.span);
 
                 (Some(Box::new(sep)), quantifier)
             }
@@ -234,15 +213,15 @@ pub(crate) struct Matcher {
     pub(crate) bindings: HashMap<String, FragmentKind>,
 }
 
-impl std::fmt::Debug for Matcher {
-    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+impl Debug for Matcher {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         // HashMaps are not ordered. As we need a deterministic debug output,
         // we have to make a shiny debug impl.
 
         struct Helper<'a>(Vec<(&'a String, &'a FragmentKind)>);
 
-        impl std::fmt::Debug for Helper<'_> {
-            fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        impl Debug for Helper<'_> {
+            fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
                 f.debug_map().entries(self.0.iter().copied()).finish()
             }
         }

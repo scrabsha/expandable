@@ -78,8 +78,14 @@ pub struct TokenTree<Span> {
     pub span: Span,
 }
 
+pub trait Spanneable<Span> {
+    type Output;
+
+    fn with_span(self, span: Span) -> Self::Output;
+}
+
 #[cfg(test)]
-#[allow(non_snake_case)]
+#[allow(non_snake_case, unused)]
 impl TokenTree<()> {
     fn Terminal(t: Terminal) -> TokenTree<()> {
         TokenTree {
@@ -110,6 +116,14 @@ pub enum TokenTreeKind<Span> {
     CurlyBraced(Vec<TokenTree<Span>>),
 }
 
+impl<Span> Spanneable<Span> for TokenTreeKind<Span> {
+    type Output = TokenTree<Span>;
+
+    fn with_span(self, span: Span) -> TokenTree<Span> {
+        TokenTree { kind: self, span }
+    }
+}
+
 /// A terminal symbol.
 ///
 /// # Multicharacter operators
@@ -137,6 +151,23 @@ pub enum Terminal {
     Semi,
     /// A times (`*`).
     Times,
+}
+
+impl<Span> Spanneable<Span> for Terminal {
+    type Output = TokenTree<Span>;
+
+    fn with_span(self, span: Span) -> TokenTree<Span> {
+        TokenTree {
+            kind: self.into(),
+            span,
+        }
+    }
+}
+
+impl<Span> From<Terminal> for TokenTreeKind<Span> {
+    fn from(value: Terminal) -> TokenTreeKind<Span> {
+        TokenTreeKind::Terminal(value)
+    }
 }
 
 /// The contexts in which a macro can be called.
@@ -203,7 +234,7 @@ struct RepetitionQuantifier<Span> {
 }
 
 #[cfg(test)]
-#[allow(non_snake_case)]
+#[allow(non_snake_case, unused)]
 impl RepetitionQuantifier<()> {
     fn ZeroOrOne() -> RepetitionQuantifier<()> {
         RepetitionQuantifier {
@@ -232,6 +263,14 @@ enum RepetitionQuantifierKind {
     ZeroOrOne,
     ZeroOrMore,
     OneOrMore,
+}
+
+impl<Span> Spanneable<Span> for RepetitionQuantifierKind {
+    type Output = RepetitionQuantifier<Span>;
+
+    fn with_span(self, span: Span) -> RepetitionQuantifier<Span> {
+        RepetitionQuantifier { kind: self, span }
+    }
 }
 
 #[cfg(test)]
