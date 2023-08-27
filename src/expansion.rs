@@ -1,36 +1,42 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, marker::PhantomData};
 
 use crate::{
     expansion,
     grammar::{DynamicState, State},
     matcher::Matcher,
     states::DynamicStateSet,
-    substitution::TokenTree,
-    FragmentKind, RepetitionQuantifier, Terminal,
+    substitution::{TokenTree, TokenTreeKind},
+    FragmentKind, RepetitionQuantifier, RepetitionQuantifierKind, Terminal,
 };
 
 type Result<T> = std::result::Result<T, ()>;
-type Cursor<'ast> = &'ast [TokenTree];
+type Cursor<'ast, Span> = &'ast [TokenTree<Span>];
 
-pub(crate) fn check_arm(
+pub(crate) fn check_arm<Span>(
     init_state: State,
     bindings: Matcher,
-    substitution: &[expansion::TokenTree],
-) -> Result<()> {
+    substitution: &[expansion::TokenTree<Span>],
+) -> Result<()>
+where
+    Span: Copy,
+{
     let bindings = bindings.bindings;
     ExpCtx::check_rule(bindings, substitution, init_state.into_dynamic_state())
 }
 
-#[derive(Default)]
-struct ExpCtx {
+struct ExpCtx<Span> {
     // todo: we also want to see which depth a macro repeats at.
     bindings: HashMap<String, FragmentKind>,
+    span: PhantomData<Span>,
 }
 
-impl ExpCtx {
+impl<Span> ExpCtx<Span>
+where
+    Span: Copy,
+{
     fn check_rule(
         bindings: HashMap<String, FragmentKind>,
-        subst: &[TokenTree],
+        subst: &[TokenTree<Span>],
         initial_state: DynamicState,
     ) -> Result<()> {
         let ctxt = ExpCtx::new(bindings);
@@ -38,20 +44,21 @@ impl ExpCtx {
             .map(drop)
     }
 
-    fn new(bindings: HashMap<String, FragmentKind>) -> ExpCtx {
+    fn new(bindings: HashMap<String, FragmentKind>) -> ExpCtx<Span> {
         ExpCtx {
             bindings,
-            ..Default::default()
+            span: PhantomData,
         }
     }
 
     fn parse_single_tree(
         &self,
         states: DynamicStateSet,
-        tree: &TokenTree,
-    ) -> Result<DynamicStateSet> {
-        match tree {
-            TokenTree::Repetition {
+        tree: &TokenTree<Span>,
+    ) -> Result<DynamicStateSet>
+    {
+        match &tree.kind {
+            TokenTreeKind::Repetition {
                 inner,
                 separator,
                 quantifier,
@@ -62,9 +69,9 @@ impl ExpCtx {
                 *quantifier,
             ),
 
-            other => Ok(states
+            _ => Ok(states
                 .into_iter()
-                .map(|state| self.parse_single_tree_inner(state, other))
+                .map(|state| self.parse_single_tree_inner(state, tree))
                 .collect::<Result<Vec<_>>>()?
                 .into_iter()
                 .flatten()
@@ -75,29 +82,30 @@ impl ExpCtx {
     fn parse_single_tree_inner(
         &self,
         state: DynamicState,
-        tree: &TokenTree,
-    ) -> Result<DynamicStateSet> {
+        tree: &TokenTree<Span>,
+    ) -> Result<DynamicStateSet>
+    {
         // TODO: we will have to deal with a huge number of transitions. We *have* to
         // find a way to generate this function, perhaps with a macro
         // :upside_down:.
-        Ok(match (state.state, tree) {
-            (_, TokenTree::Repetition { .. }) => {
+        Ok(match (state.state, &tree.kind) {
+            (_, TokenTreeKind::Repetition { .. }) => {
                 unreachable!("Repetitions should be handled by `parse_single_tree`")
             }
 
             // fn
-            (State::ItemStart, TokenTree::Terminal(Terminal::Ident(fn_))) if fn_ == "fn" => {
+            (State::ItemStart, TokenTreeKind::Terminal(Terminal::Ident(fn_))) if fn_ == "fn" => {
                 DynamicStateSet::singleton(state.with_state(State::AfterFnKw))
             }
 
             (State::ItemStart, _) => return Err(()),
 
             // fn foo
-            (State::AfterFnKw, TokenTree::Terminal(Terminal::Ident(_))) => {
+            (State::AfterFnKw, TokenTreeKind::Terminal(Terminal::Ident(_))) => {
                 DynamicStateSet::singleton(state.with_state(State::AfterFnName))
             }
 
-            (State::AfterFnKw, TokenTree::Fragment(name)) => {
+            (State::AfterFnKw, TokenTreeKind::Fragment(name)) => {
                 let kind = self.bindings.get(name).ok_or(())?;
 
                 if *kind != FragmentKind::Ident {
@@ -110,7 +118,7 @@ impl ExpCtx {
             (State::AfterFnKw, _) => return Err(()),
 
             // fn foo()
-            (State::AfterFnName, TokenTree::Parenthesed(params)) => {
+            (State::AfterFnName, TokenTreeKind::Parenthesed(params)) => {
                 if self
                     .parse_stream(
                         DynamicStateSet::singleton(state.with_state(State::FnParamStart)),
@@ -131,7 +139,7 @@ impl ExpCtx {
             (State::AfterFnName, _) => return Err(()),
 
             // fn foo() {}
-            (State::AfterFnParam, TokenTree::CurlyBraced(inner)) => {
+            (State::AfterFnParam, TokenTreeKind::CurlyBraced(inner)) => {
                 if self
                     .parse_stream(
                         DynamicStateSet::singleton(state.with_state(State::ExprStart)),
@@ -148,11 +156,11 @@ impl ExpCtx {
 
             (State::AfterFnParam, _) => return Err(()),
 
-            (State::ExprStart, TokenTree::Terminal(Terminal::Ident(_))) => {
+            (State::ExprStart, TokenTreeKind::Terminal(Terminal::Ident(_))) => {
                 DynamicStateSet::singleton(state.with_state(State::AfterBinop))
             }
 
-            (State::ExprStart, TokenTree::Parenthesed(inner)) => {
+            (State::ExprStart, TokenTreeKind::Parenthesed(inner)) => {
                 if self
                     .parse_stream(
                         DynamicStateSet::singleton(state.with_state(State::ExprStart)),
@@ -167,7 +175,7 @@ impl ExpCtx {
                 DynamicStateSet::singleton(state.with_state(State::AfterBinop))
             }
 
-            (State::ExprStart, TokenTree::Fragment(name)) => {
+            (State::ExprStart, TokenTreeKind::Fragment(name)) => {
                 let kind = self.bindings.get(name).ok_or(())?;
 
                 match kind {
@@ -183,7 +191,7 @@ impl ExpCtx {
 
             (State::ExprStart, _) => return Err(()),
 
-            (State::AfterBinop, TokenTree::Terminal(Terminal::Plus | Terminal::Times)) => {
+            (State::AfterBinop, TokenTreeKind::Terminal(Terminal::Plus | Terminal::Times)) => {
                 DynamicStateSet::singleton(state.with_state(State::ExprStart))
             }
 
@@ -191,7 +199,12 @@ impl ExpCtx {
         })
     }
 
-    fn parse_stream(&self, mut states: DynamicStateSet, stream: Cursor) -> Result<DynamicStateSet> {
+    fn parse_stream(
+        &self,
+        mut states: DynamicStateSet,
+        stream: Cursor<Span>,
+    ) -> Result<DynamicStateSet>
+    {
         for tree in stream {
             states = self.parse_single_tree(states, tree)?;
         }
@@ -202,21 +215,22 @@ impl ExpCtx {
     fn parse_repetition(
         &self,
         states: DynamicStateSet,
-        stream: Cursor,
-        sep: Option<&TokenTree>,
-        quantifier: RepetitionQuantifier,
-    ) -> Result<DynamicStateSet> {
-        match quantifier {
-            RepetitionQuantifier::ZeroOrOne => {
+        stream: Cursor<Span>,
+        sep: Option<&TokenTree<Span>>,
+        quantifier: RepetitionQuantifier<Span>,
+    ) -> Result<DynamicStateSet>
+    {
+        match quantifier.kind {
+            RepetitionQuantifierKind::ZeroOrOne => {
                 assert!(sep.is_none());
                 self.parse_zero_or_one_repetitions(states, stream)
             }
 
-            RepetitionQuantifier::ZeroOrMore => {
+            RepetitionQuantifierKind::ZeroOrMore => {
                 self.parse_zero_or_more_repetitions(states, stream, sep)
             }
 
-            RepetitionQuantifier::OneOrMore => {
+            RepetitionQuantifierKind::OneOrMore => {
                 self.parse_one_or_more_repetitions(states, stream, sep)
             }
         }
@@ -225,8 +239,9 @@ impl ExpCtx {
     fn parse_zero_or_one_repetitions(
         &self,
         states: DynamicStateSet,
-        stream: Cursor,
-    ) -> Result<DynamicStateSet> {
+        stream: Cursor<Span>,
+    ) -> Result<DynamicStateSet>
+    {
         let candidates = states.clone();
         let candidates = candidates.union(self.parse_single_repetition(states, None, stream)?);
 
@@ -236,19 +251,21 @@ impl ExpCtx {
     fn parse_zero_or_more_repetitions(
         &self,
         states: DynamicStateSet,
-        stream: Cursor,
-        sep: Option<&TokenTree>,
-    ) -> Result<DynamicStateSet> {
+        stream: Cursor<Span>,
+        sep: Option<&TokenTree<Span>>,
+    ) -> Result<DynamicStateSet>
+    {
         self.parse_zero_or_more_repetitions_inner(states, stream, sep, true)
     }
 
     fn parse_zero_or_more_repetitions_inner(
         &self,
         states: DynamicStateSet,
-        stream: Cursor,
-        sep: Option<&TokenTree>,
+        stream: Cursor<Span>,
+        sep: Option<&TokenTree<Span>>,
         mut first: bool,
-    ) -> Result<DynamicStateSet> {
+    ) -> Result<DynamicStateSet>
+    {
         let mut outcomes = DynamicStateSet::empty();
         let mut to_test = states;
 
@@ -266,9 +283,10 @@ impl ExpCtx {
     fn parse_one_or_more_repetitions(
         &self,
         states: DynamicStateSet,
-        stream: Cursor,
-        sep: Option<&TokenTree>,
-    ) -> Result<DynamicStateSet> {
+        stream: Cursor<Span>,
+        sep: Option<&TokenTree<Span>>,
+    ) -> Result<DynamicStateSet>
+    {
         let states = self.parse_single_repetition(states, None, stream)?;
 
         self.parse_zero_or_more_repetitions_inner(states, stream, sep, false)
@@ -277,9 +295,10 @@ impl ExpCtx {
     fn parse_single_repetition(
         &self,
         states: DynamicStateSet,
-        sep: Option<&TokenTree>,
-        stream: Cursor,
-    ) -> Result<DynamicStateSet> {
+        sep: Option<&TokenTree<Span>>,
+        stream: Cursor<Span>,
+    ) -> Result<DynamicStateSet>
+    {
         let states = match sep {
             Some(sep) => self.parse_single_tree(states, sep)?,
             None => states,
@@ -297,7 +316,7 @@ mod tests {
         ( $test_name:ident { #[$kind:ident]( $( $matcher:tt )* ) => { $( $substitution:tt )* } $(;)? }) => {
             #[test]
             fn $test_name() {
-                let matcher = quote! { $( $matcher )* };
+                let matcher: Vec<crate::TokenTree<()>> = quote! { $( $matcher )* };
                 let matcher = crate::matcher::TokenTree::from_generic(matcher).expect("Failed to generate `matcher::TokenTree`");
                 let bindings = crate::matcher::Matcher::from_generic(&matcher).expect("Failed to generate `matcher::Bindings`");
 

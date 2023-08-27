@@ -35,6 +35,14 @@ macro_rules! quote {
         $crate::TokenTree::Terminal($crate::Terminal::Times)
     };
 
+    (@inner, =>) => {
+        $crate::TokenTree::Terminal($crate::Terminal::FatArrow)
+    };
+
+    (@inner, ;) => {
+        $crate::TokenTree::Terminal($crate::Terminal::Semi)
+    };
+
     ( $( $tt:tt )* ) => {
         vec![
             $(
@@ -44,7 +52,7 @@ macro_rules! quote {
     };
 }
 
-mod macros_ {
+mod tests {
     macro_rules! test_quote {
         ($name:ident {
             { $( $left:tt )* },

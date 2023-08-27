@@ -7,4 +7,4 @@ edition = "2021"
 
 [dependencies]
 expect-test = "1.4"
-tinyset = "0.4.15"
+tinyset = "0.4"

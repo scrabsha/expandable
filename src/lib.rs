@@ -1,4 +1,4 @@
-use std::str::FromStr;
+use std::{marker::Copy, str::FromStr};
 
 use grammar::State;
 
@@ -18,33 +18,36 @@ mod substitution;
 /// This functions takes all the tokens that have been passed to the macro
 /// invocation and performs all the checks that have been implemented in this
 /// crate.
-pub fn check_macro(ctxt: InvocationContext, input: Vec<TokenTree>) -> Result<(), ()> {
+pub fn check_macro<Span>(ctxt: InvocationContext, input: Vec<TokenTree<Span>>) -> Result<(), ()>
+where
+    Span: Copy,
+{
     let mut iter = input.into_iter();
 
     while let Some(head) = iter.next() {
-        let matcher = match head {
-            TokenTree::Parenthesed(inner) => {
+        let matcher = match head.kind {
+            TokenTreeKind::Parenthesed(inner) => {
                 let inner = matcher::TokenTree::from_generic(inner)?;
                 Matcher::from_generic(&inner)?
             }
             _ => return Err(()),
         };
 
-        match iter.next().ok_or(())? {
-            TokenTree::Terminal(Terminal::FatArrow) => {}
+        match iter.next().ok_or(())?.kind {
+            TokenTreeKind::Terminal(Terminal::FatArrow) => {}
             _ => return Err(()),
         }
 
-        let substitution = match iter.next().ok_or(())? {
-            TokenTree::CurlyBraced(inner) => substitution::TokenTree::from_generic(inner)?,
+        let substitution = match iter.next().ok_or(())?.kind {
+            TokenTreeKind::CurlyBraced(inner) => substitution::TokenTree::from_generic(inner)?,
             _ => return Err(()),
         };
 
         expansion::check_arm(ctxt.to_state(), matcher, &substitution)?;
 
         if let Some(semi) = iter.next() {
-            match semi {
-                TokenTree::Terminal(Terminal::Semi) => {}
+            match semi.kind {
+                TokenTreeKind::Terminal(Terminal::Semi) => {}
                 _ => return Err(()),
             }
         }
@@ -70,23 +73,69 @@ pub fn check_macro(ctxt: InvocationContext, input: Vec<TokenTree>) -> Result<(),
 /// [declarative-macro-tokens-and-procedural-macro-tokens]:
 ///     https://doc.rust-lang.org/reference/procedural-macros.html#declarative-macro-tokens-and-procedural-macro-tokens
 #[derive(Clone, Debug, PartialEq)]
-pub enum TokenTree {
-    Terminal(Terminal),
-    Parenthesed(Vec<TokenTree>),
-    CurlyBraced(Vec<TokenTree>),
+pub struct TokenTree<Span> {
+    pub kind: TokenTreeKind<Span>,
+    pub span: Span,
 }
 
-/// A terminal.
+#[cfg(test)]
+#[allow(non_snake_case)]
+impl TokenTree<()> {
+    fn Terminal(t: Terminal) -> TokenTree<()> {
+        TokenTree {
+            kind: TokenTreeKind::Terminal(t),
+            span: (),
+        }
+    }
+
+    fn Parenthesed(i: Vec<TokenTree<()>>) -> TokenTree<()> {
+        TokenTree {
+            kind: TokenTreeKind::Parenthesed(i),
+            span: (),
+        }
+    }
+
+    fn CurlyBraced(i: Vec<TokenTree<()>>) -> TokenTree<()> {
+        TokenTree {
+            kind: TokenTreeKind::CurlyBraced(i),
+            span: (),
+        }
+    }
+}
+
+#[derive(Clone, Debug, PartialEq)]
+pub enum TokenTreeKind<Span> {
+    Terminal(Terminal),
+    Parenthesed(Vec<TokenTree<Span>>),
+    CurlyBraced(Vec<TokenTree<Span>>),
+}
+
+/// A terminal symbol.
+///
+/// # Multicharacter operators
+///
+/// Multicharacter operators (`+=`, `->`, ...) must _not_ be split in multiple
+/// [`Terminal`]. Any use of the [`check_macro`] function that does not respect
+/// this invariant will is subject to unexpected results.
 #[derive(Clone, Debug, Eq, Hash, PartialEq)]
 pub enum Terminal {
+    /// An arrow (`->`).
     Arrow,
+    /// A colon (':').
     Colon,
+    /// A dollar (`@`).
     Dollar,
+    /// A fat arrow (`=>`).
     FatArrow,
+    /// An identifier (`foo`, `bar`).
     Ident(String),
+    /// A plus (`+`).
     Plus,
+    /// A question mark (`?`).
     QuestionMark,
+    /// A semicolon (`;`).
     Semi,
+    /// A times (`*`).
     Times,
 }
 
@@ -148,8 +197,89 @@ impl FromStr for InvocationContext {
 }
 
 #[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
-enum RepetitionQuantifier {
+struct RepetitionQuantifier<Span> {
+    kind: RepetitionQuantifierKind,
+    span: Span,
+}
+
+#[cfg(test)]
+#[allow(non_snake_case)]
+impl RepetitionQuantifier<()> {
+    fn ZeroOrOne() -> RepetitionQuantifier<()> {
+        RepetitionQuantifier {
+            kind: RepetitionQuantifierKind::ZeroOrOne,
+            span: (),
+        }
+    }
+
+    fn ZeroOrMore() -> RepetitionQuantifier<()> {
+        RepetitionQuantifier {
+            kind: RepetitionQuantifierKind::ZeroOrMore,
+            span: (),
+        }
+    }
+
+    fn OneOrMore() -> RepetitionQuantifier<()> {
+        RepetitionQuantifier {
+            kind: RepetitionQuantifierKind::OneOrMore,
+            span: (),
+        }
+    }
+}
+
+#[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
+enum RepetitionQuantifierKind {
     ZeroOrOne,
     ZeroOrMore,
     OneOrMore,
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    macro_rules! check_macro_test {
+        ( $test_name:ident {
+            #[$kind:ident]
+            {
+                $( $tt:tt )*
+            }
+        }) => {
+            #[test]
+            fn $test_name() {
+                let tokens = quote! { $( $tt )* };
+                let ctxt = stringify!($kind).parse::<InvocationContext>().expect("Failed to parse `InvocationContext`");
+
+                check_macro(ctxt, tokens).unwrap();
+            }
+        };
+    }
+
+    check_macro_test! {
+        single_arm {
+            #[expr]
+            {
+                () => { a }
+            }
+        }
+    }
+
+    check_macro_test! {
+        accepts_final_semi {
+            #[expr]
+            {
+                () => { a };
+            }
+        }
+    }
+
+    check_macro_test! {
+        multiple_arms {
+            #[expr]
+            {
+                () => { a };
+                (()) => { b };
+            }
+        }
+    }
 }
