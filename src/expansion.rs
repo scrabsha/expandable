@@ -1,6 +1,7 @@
 use std::{collections::HashMap, marker::PhantomData};
 
 use crate::{
+    error::Error,
     expansion,
     grammar::{DynamicState, State},
     matcher::Matcher,
@@ -9,14 +10,13 @@ use crate::{
     FragmentKind, RepetitionQuantifier, RepetitionQuantifierKind, Terminal,
 };
 
-type Result<T> = std::result::Result<T, ()>;
 type Cursor<'ast, Span> = &'ast [TokenTree<Span>];
 
 pub(crate) fn check_arm<Span>(
     init_state: State,
     bindings: Matcher,
     substitution: &[expansion::TokenTree<Span>],
-) -> Result<()>
+) -> Result<(), Error<Span>>
 where
     Span: Copy,
 {
@@ -38,7 +38,7 @@ where
         bindings: HashMap<String, FragmentKind>,
         subst: &[TokenTree<Span>],
         initial_state: DynamicState,
-    ) -> Result<()> {
+    ) -> Result<(), Error<Span>> {
         let ctxt = ExpCtx::new(bindings);
         ctxt.parse_stream(DynamicStateSet::singleton(initial_state), subst)
             .map(drop)
@@ -55,8 +55,7 @@ where
         &self,
         states: DynamicStateSet,
         tree: &TokenTree<Span>,
-    ) -> Result<DynamicStateSet>
-    {
+    ) -> Result<DynamicStateSet, Error<Span>> {
         match &tree.kind {
             TokenTreeKind::Repetition {
                 inner,
@@ -72,7 +71,7 @@ where
             _ => Ok(states
                 .into_iter()
                 .map(|state| self.parse_single_tree_inner(state, tree))
-                .collect::<Result<Vec<_>>>()?
+                .collect::<Result<Vec<_>, _>>()?
                 .into_iter()
                 .flatten()
                 .collect()),
@@ -83,8 +82,7 @@ where
         &self,
         state: DynamicState,
         tree: &TokenTree<Span>,
-    ) -> Result<DynamicStateSet>
-    {
+    ) -> Result<DynamicStateSet, Error<Span>> {
         // TODO: we will have to deal with a huge number of transitions. We *have* to
         // find a way to generate this function, perhaps with a macro
         // :upside_down:.
@@ -98,7 +96,7 @@ where
                 DynamicStateSet::singleton(state.with_state(State::AfterFnKw))
             }
 
-            (State::ItemStart, _) => return Err(()),
+            (State::ItemStart, _) => return Err(Error::InvalidProducedAst),
 
             // fn foo
             (State::AfterFnKw, TokenTreeKind::Terminal(Terminal::Ident(_))) => {
@@ -106,16 +104,22 @@ where
             }
 
             (State::AfterFnKw, TokenTreeKind::Fragment(name)) => {
-                let kind = self.bindings.get(name).ok_or(())?;
+                let Some(kind) = self.bindings.get(name) else {
+                    let name = name.clone();
+                    return Err(Error::UnboundMetaVariable {
+                        name,
+                        where_: tree.span,
+                    });
+                };
 
                 if *kind != FragmentKind::Ident {
-                    return Err(());
+                    return Err(Error::InvalidMetaVariableContext { name: name.clone() });
                 }
 
                 DynamicStateSet::singleton(state.with_state(State::AfterFnName))
             }
 
-            (State::AfterFnKw, _) => return Err(()),
+            (State::AfterFnKw, _) => return Err(Error::InvalidProducedAst),
 
             // fn foo()
             (State::AfterFnName, TokenTreeKind::Parenthesed(params)) => {
@@ -127,16 +131,16 @@ where
                     .into_iter()
                     .any(|state| !state.is_accepting())
                 {
-                    return Err(());
+                    return Err(Error::InvalidProducedAst);
                 };
 
                 DynamicStateSet::singleton(state.with_state(State::AfterFnParam))
             }
 
             // fn foo(
-            (State::FnParamStart, _) => return Err(()),
+            (State::FnParamStart, _) => return Err(Error::InvalidProducedAst),
 
-            (State::AfterFnName, _) => return Err(()),
+            (State::AfterFnName, _) => return Err(Error::InvalidProducedAst),
 
             // fn foo() {}
             (State::AfterFnParam, TokenTreeKind::CurlyBraced(inner)) => {
@@ -148,13 +152,13 @@ where
                     .into_iter()
                     .any(|state| !state.is_accepting())
                 {
-                    return Err(());
+                    return Err(Error::InvalidProducedAst);
                 }
 
                 DynamicStateSet::singleton(state.with_state(State::ItemStart))
             }
 
-            (State::AfterFnParam, _) => return Err(()),
+            (State::AfterFnParam, _) => return Err(Error::InvalidProducedAst),
 
             (State::ExprStart, TokenTreeKind::Terminal(Terminal::Ident(_))) => {
                 DynamicStateSet::singleton(state.with_state(State::AfterBinop))
@@ -169,14 +173,20 @@ where
                     .into_iter()
                     .any(|state| !state.is_accepting())
                 {
-                    return Err(());
+                    return Err(Error::InvalidProducedAst);
                 };
 
                 DynamicStateSet::singleton(state.with_state(State::AfterBinop))
             }
 
             (State::ExprStart, TokenTreeKind::Fragment(name)) => {
-                let kind = self.bindings.get(name).ok_or(())?;
+                let Some(kind) = self.bindings.get(name) else {
+                    let name = name.clone();
+                    return Err(Error::UnboundMetaVariable {
+                        name,
+                        where_: tree.span,
+                    });
+                };
 
                 match kind {
                     FragmentKind::Ident => {
@@ -185,17 +195,19 @@ where
                     FragmentKind::Expr => {
                         DynamicStateSet::singleton(state.with_state(State::AfterBinop))
                     }
-                    FragmentKind::Item => return Err(()),
+                    FragmentKind::Item => {
+                        return Err(Error::InvalidMetaVariableContext { name: name.clone() })
+                    }
                 }
             }
 
-            (State::ExprStart, _) => return Err(()),
+            (State::ExprStart, _) => return Err(Error::InvalidProducedAst),
 
             (State::AfterBinop, TokenTreeKind::Terminal(Terminal::Plus | Terminal::Times)) => {
                 DynamicStateSet::singleton(state.with_state(State::ExprStart))
             }
 
-            (State::AfterBinop, _) => return Err(()),
+            (State::AfterBinop, _) => return Err(Error::InvalidProducedAst),
         })
     }
 
@@ -203,8 +215,7 @@ where
         &self,
         mut states: DynamicStateSet,
         stream: Cursor<Span>,
-    ) -> Result<DynamicStateSet>
-    {
+    ) -> Result<DynamicStateSet, Error<Span>> {
         for tree in stream {
             states = self.parse_single_tree(states, tree)?;
         }
@@ -218,8 +229,7 @@ where
         stream: Cursor<Span>,
         sep: Option<&TokenTree<Span>>,
         quantifier: RepetitionQuantifier<Span>,
-    ) -> Result<DynamicStateSet>
-    {
+    ) -> Result<DynamicStateSet, Error<Span>> {
         match quantifier.kind {
             RepetitionQuantifierKind::ZeroOrOne => {
                 assert!(sep.is_none());
@@ -240,8 +250,7 @@ where
         &self,
         states: DynamicStateSet,
         stream: Cursor<Span>,
-    ) -> Result<DynamicStateSet>
-    {
+    ) -> Result<DynamicStateSet, Error<Span>> {
         let candidates = states.clone();
         let candidates = candidates.union(self.parse_single_repetition(states, None, stream)?);
 
@@ -253,8 +262,7 @@ where
         states: DynamicStateSet,
         stream: Cursor<Span>,
         sep: Option<&TokenTree<Span>>,
-    ) -> Result<DynamicStateSet>
-    {
+    ) -> Result<DynamicStateSet, Error<Span>> {
         self.parse_zero_or_more_repetitions_inner(states, stream, sep, true)
     }
 
@@ -264,8 +272,7 @@ where
         stream: Cursor<Span>,
         sep: Option<&TokenTree<Span>>,
         mut first: bool,
-    ) -> Result<DynamicStateSet>
-    {
+    ) -> Result<DynamicStateSet, Error<Span>> {
         let mut outcomes = DynamicStateSet::empty();
         let mut to_test = states;
 
@@ -285,8 +292,7 @@ where
         states: DynamicStateSet,
         stream: Cursor<Span>,
         sep: Option<&TokenTree<Span>>,
-    ) -> Result<DynamicStateSet>
-    {
+    ) -> Result<DynamicStateSet, Error<Span>> {
         let states = self.parse_single_repetition(states, None, stream)?;
 
         self.parse_zero_or_more_repetitions_inner(states, stream, sep, false)
@@ -297,8 +303,7 @@ where
         states: DynamicStateSet,
         sep: Option<&TokenTree<Span>>,
         stream: Cursor<Span>,
-    ) -> Result<DynamicStateSet>
-    {
+    ) -> Result<DynamicStateSet, Error<Span>> {
         let states = match sep {
             Some(sep) => self.parse_single_tree(states, sep)?,
             None => states,

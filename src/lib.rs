@@ -1,12 +1,12 @@
 use std::{marker::Copy, str::FromStr};
 
+use error::{Error, MacroRuleNode};
 use grammar::State;
-
-use matcher::Matcher;
 
 #[cfg(test)]
 #[macro_use]
 mod macros;
+pub mod error;
 mod expansion;
 mod grammar;
 mod matcher;
@@ -18,38 +18,63 @@ mod substitution;
 /// This functions takes all the tokens that have been passed to the macro
 /// invocation and performs all the checks that have been implemented in this
 /// crate.
-pub fn check_macro<Span>(ctxt: InvocationContext, input: Vec<TokenTree<Span>>) -> Result<(), ()>
+pub fn check_macro<Span>(
+    ctxt: InvocationContext,
+    input: Vec<TokenTree<Span>>,
+) -> Result<(), Error<Span>>
 where
     Span: Copy,
 {
     let mut iter = input.into_iter();
 
     while let Some(head) = iter.next() {
-        let matcher = match head.kind {
-            TokenTreeKind::Parenthesed(inner) => {
-                let inner = matcher::TokenTree::from_generic(inner)?;
-                Matcher::from_generic(&inner)?
-            }
-            _ => return Err(()),
+        let TokenTreeKind::Parenthesed(matcher) = head.kind else {
+            return Err(Error::ParsingFailed {
+                what: vec![error::MacroRuleNode::Matcher],
+                where_: head.span,
+            });
         };
 
-        match iter.next().ok_or(())?.kind {
-            TokenTreeKind::Terminal(Terminal::FatArrow) => {}
-            _ => return Err(()),
-        }
+        let matcher = matcher::TokenTree::from_generic(matcher)?;
+        let matcher = matcher::Matcher::from_generic(&matcher)?;
 
-        let substitution = match iter.next().ok_or(())?.kind {
-            TokenTreeKind::CurlyBraced(inner) => substitution::TokenTree::from_generic(inner)?,
-            _ => return Err(()),
+        let Some(token) = iter.next() else {
+            return Err(Error::UnexpectedEnd {
+                last_token: Some(head.span),
+            });
         };
+
+        let TokenTreeKind::Terminal(Terminal::FatArrow) = token.kind else {
+            return Err(Error::ParsingFailed {
+                what: vec![MacroRuleNode::Terminal(Terminal::FatArrow)],
+                where_: token.span,
+            });
+        };
+
+        let Some(token) = iter.next() else {
+            return Err(Error::UnexpectedEnd {
+                last_token: Some(token.span),
+            });
+        };
+
+        let TokenTreeKind::CurlyBraced(substitution) = token.kind else {
+            return Err(Error::ParsingFailed {
+                what: vec![MacroRuleNode::Transcriber],
+                where_: token.span,
+            });
+        };
+
+        let substitution = substitution::TokenTree::from_generic(substitution)?;
 
         expansion::check_arm(ctxt.to_state(), matcher, &substitution)?;
 
         if let Some(semi) = iter.next() {
-            match semi.kind {
-                TokenTreeKind::Terminal(Terminal::Semi) => {}
-                _ => return Err(()),
-            }
+            let TokenTreeKind::Terminal(Terminal::Semi) = semi.kind else {
+                return Err(Error::ParsingFailed {
+                    what: vec![MacroRuleNode::Terminal(Terminal::Semi)],
+                    where_: semi.span,
+                });
+            };
         }
     }
 
