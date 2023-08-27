@@ -73,26 +73,38 @@ mod tests {
             { a b c d },
             expect_test::expect![[r#"
                 [
-                    Terminal(
-                        Ident(
-                            "a",
+                    TokenTree {
+                        kind: Terminal(
+                            Ident(
+                                "a",
+                            ),
                         ),
-                    ),
-                    Terminal(
-                        Ident(
-                            "b",
+                        span: (),
+                    },
+                    TokenTree {
+                        kind: Terminal(
+                            Ident(
+                                "b",
+                            ),
                         ),
-                    ),
-                    Terminal(
-                        Ident(
-                            "c",
+                        span: (),
+                    },
+                    TokenTree {
+                        kind: Terminal(
+                            Ident(
+                                "c",
+                            ),
                         ),
-                    ),
-                    Terminal(
-                        Ident(
-                            "d",
+                        span: (),
+                    },
+                    TokenTree {
+                        kind: Terminal(
+                            Ident(
+                                "d",
+                            ),
                         ),
-                    ),
+                        span: (),
+                    },
                 ]
             "#]],
         }
@@ -103,48 +115,81 @@ mod tests {
             { a + b @( @test:ident )+* },
             expect_test::expect![[r#"
                 [
-                    Terminal(
-                        Ident(
-                            "a",
+                    TokenTree {
+                        kind: Terminal(
+                            Ident(
+                                "a",
+                            ),
                         ),
-                    ),
-                    Terminal(
-                        Plus,
-                    ),
-                    Terminal(
-                        Ident(
-                            "b",
+                        span: (),
+                    },
+                    TokenTree {
+                        kind: Terminal(
+                            Plus,
                         ),
-                    ),
-                    Terminal(
-                        Dollar,
-                    ),
-                    Parenthesed(
-                        [
-                            Terminal(
-                                Dollar,
+                        span: (),
+                    },
+                    TokenTree {
+                        kind: Terminal(
+                            Ident(
+                                "b",
                             ),
-                            Terminal(
-                                Ident(
-                                    "test",
-                                ),
-                            ),
-                            Terminal(
-                                Colon,
-                            ),
-                            Terminal(
-                                Ident(
-                                    "ident",
-                                ),
-                            ),
-                        ],
-                    ),
-                    Terminal(
-                        Plus,
-                    ),
-                    Terminal(
-                        Times,
-                    ),
+                        ),
+                        span: (),
+                    },
+                    TokenTree {
+                        kind: Terminal(
+                            Dollar,
+                        ),
+                        span: (),
+                    },
+                    TokenTree {
+                        kind: Parenthesed(
+                            [
+                                TokenTree {
+                                    kind: Terminal(
+                                        Dollar,
+                                    ),
+                                    span: (),
+                                },
+                                TokenTree {
+                                    kind: Terminal(
+                                        Ident(
+                                            "test",
+                                        ),
+                                    ),
+                                    span: (),
+                                },
+                                TokenTree {
+                                    kind: Terminal(
+                                        Colon,
+                                    ),
+                                    span: (),
+                                },
+                                TokenTree {
+                                    kind: Terminal(
+                                        Ident(
+                                            "ident",
+                                        ),
+                                    ),
+                                    span: (),
+                                },
+                            ],
+                        ),
+                        span: (),
+                    },
+                    TokenTree {
+                        kind: Terminal(
+                            Plus,
+                        ),
+                        span: (),
+                    },
+                    TokenTree {
+                        kind: Terminal(
+                            Times,
+                        ),
+                        span: (),
+                    },
                 ]
             "#]],
         }
@@ -155,51 +200,87 @@ mod tests {
             { a + b @( + @c + a )+? },
             expect_test::expect![[r#"
                 [
-                    Terminal(
-                        Ident(
-                            "a",
+                    TokenTree {
+                        kind: Terminal(
+                            Ident(
+                                "a",
+                            ),
                         ),
-                    ),
-                    Terminal(
-                        Plus,
-                    ),
-                    Terminal(
-                        Ident(
-                            "b",
+                        span: (),
+                    },
+                    TokenTree {
+                        kind: Terminal(
+                            Plus,
                         ),
-                    ),
-                    Terminal(
-                        Dollar,
-                    ),
-                    Parenthesed(
-                        [
-                            Terminal(
-                                Plus,
+                        span: (),
+                    },
+                    TokenTree {
+                        kind: Terminal(
+                            Ident(
+                                "b",
                             ),
-                            Terminal(
-                                Dollar,
-                            ),
-                            Terminal(
-                                Ident(
-                                    "c",
-                                ),
-                            ),
-                            Terminal(
-                                Plus,
-                            ),
-                            Terminal(
-                                Ident(
-                                    "a",
-                                ),
-                            ),
-                        ],
-                    ),
-                    Terminal(
-                        Plus,
-                    ),
-                    Terminal(
-                        QuestionMark,
-                    ),
+                        ),
+                        span: (),
+                    },
+                    TokenTree {
+                        kind: Terminal(
+                            Dollar,
+                        ),
+                        span: (),
+                    },
+                    TokenTree {
+                        kind: Parenthesed(
+                            [
+                                TokenTree {
+                                    kind: Terminal(
+                                        Plus,
+                                    ),
+                                    span: (),
+                                },
+                                TokenTree {
+                                    kind: Terminal(
+                                        Dollar,
+                                    ),
+                                    span: (),
+                                },
+                                TokenTree {
+                                    kind: Terminal(
+                                        Ident(
+                                            "c",
+                                        ),
+                                    ),
+                                    span: (),
+                                },
+                                TokenTree {
+                                    kind: Terminal(
+                                        Plus,
+                                    ),
+                                    span: (),
+                                },
+                                TokenTree {
+                                    kind: Terminal(
+                                        Ident(
+                                            "a",
+                                        ),
+                                    ),
+                                    span: (),
+                                },
+                            ],
+                        ),
+                        span: (),
+                    },
+                    TokenTree {
+                        kind: Terminal(
+                            Plus,
+                        ),
+                        span: (),
+                    },
+                    TokenTree {
+                        kind: Terminal(
+                            QuestionMark,
+                        ),
+                        span: (),
+                    },
                 ]
             "#]],
         }

@@ -169,21 +169,30 @@ mod tests {
             expect_test::expect![[r#"
                 Ok(
                     [
-                        Terminal(
-                            Ident(
-                                "a",
+                        TokenTree {
+                            kind: Terminal(
+                                Ident(
+                                    "a",
+                                ),
                             ),
-                        ),
-                        Terminal(
-                            Ident(
-                                "b",
+                            span: (),
+                        },
+                        TokenTree {
+                            kind: Terminal(
+                                Ident(
+                                    "b",
+                                ),
                             ),
-                        ),
-                        Terminal(
-                            Ident(
-                                "c",
+                            span: (),
+                        },
+                        TokenTree {
+                            kind: Terminal(
+                                Ident(
+                                    "c",
+                                ),
                             ),
-                        ),
+                            span: (),
+                        },
                     ],
                 )
             "#]]
@@ -196,9 +205,12 @@ mod tests {
             expect_test::expect![[r#"
                 Ok(
                     [
-                        Fragment(
-                            "a",
-                        ),
+                        TokenTree {
+                            kind: Fragment(
+                                "a",
+                            ),
+                            span: (),
+                        },
                     ],
                 )
             "#]],
@@ -211,16 +223,25 @@ mod tests {
             expect_test::expect![[r#"
                 Ok(
                     [
-                        Repetition {
-                            inner: [
-                                Terminal(
-                                    Ident(
-                                        "test",
-                                    ),
-                                ),
-                            ],
-                            separator: None,
-                            quantifier: ZeroOrMore,
+                        TokenTree {
+                            kind: Repetition {
+                                inner: [
+                                    TokenTree {
+                                        kind: Terminal(
+                                            Ident(
+                                                "test",
+                                            ),
+                                        ),
+                                        span: (),
+                                    },
+                                ],
+                                separator: None,
+                                quantifier: RepetitionQuantifier {
+                                    kind: ZeroOrMore,
+                                    span: (),
+                                },
+                            },
+                            span: (),
                         },
                     ],
                 )
@@ -234,14 +255,23 @@ mod tests {
             expect_test::expect![[r#"
                 Ok(
                     [
-                        Repetition {
-                            inner: [
-                                Fragment(
-                                    "a",
-                                ),
-                            ],
-                            separator: None,
-                            quantifier: ZeroOrOne,
+                        TokenTree {
+                            kind: Repetition {
+                                inner: [
+                                    TokenTree {
+                                        kind: Fragment(
+                                            "a",
+                                        ),
+                                        span: (),
+                                    },
+                                ],
+                                separator: None,
+                                quantifier: RepetitionQuantifier {
+                                    kind: ZeroOrOne,
+                                    span: (),
+                                },
+                            },
+                            span: (),
                         },
                     ],
                 )

@@ -2,7 +2,7 @@ use std::{marker::Copy, str::FromStr};
 
 use grammar::State;
 
-use crate::matcher::Matcher;
+use matcher::Matcher;
 
 #[cfg(test)]
 #[macro_use]
