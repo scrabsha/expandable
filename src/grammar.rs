@@ -1,5 +1,7 @@
 use tinyset::Fits64;
 
+use crate::{FragmentKind, Terminal};
+
 #[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
 pub(crate) struct DynamicState {
     pub(crate) state: State,
@@ -23,9 +25,44 @@ pub(crate) struct DynamicState {
     pub(crate) opened_lts: u8,
 }
 
+type ExpectedTerminals = &'static [TokenDescription];
+
 impl DynamicState {
-    pub(crate) const fn with_state(self, state: State) -> DynamicState {
-        DynamicState { state, ..self }
+    pub(crate) fn accept_fragment(
+        self,
+        fragment: FragmentKind,
+    ) -> Result<DynamicState, ExpectedTerminals> {
+        let new_state = self.state.accept_fragment(fragment)?;
+        Ok(self.with_state_and_delta(new_state, Delta::Zero))
+    }
+    pub(crate) fn accept_terminal(
+        self,
+        terminal: &Terminal,
+    ) -> Result<DynamicState, ExpectedTerminals> {
+        let (new_state, delta) = self.state.accept_terminal(terminal)?;
+        Ok(self.with_state_and_delta(new_state, delta))
+    }
+
+    pub(crate) fn accept_paren(self) -> Result<(DynamicState, DynamicState), ExpectedTerminals> {
+        let (inner, next) = self.state.accept_paren()?;
+        Ok((
+            self.with_state_and_delta(inner, Delta::Zero),
+            self.with_state_and_delta(next, Delta::Zero),
+        ))
+    }
+
+    pub(crate) fn accept_curly(self) -> Result<(DynamicState, DynamicState), ExpectedTerminals> {
+        let (inner, next) = self.state.accept_curly()?;
+        Ok((
+            self.with_state_and_delta(inner, Delta::Zero),
+            self.with_state_and_delta(next, Delta::Zero),
+        ))
+    }
+
+    #[inline]
+    const fn with_state_and_delta(self, state: State, delta: Delta) -> DynamicState {
+        let opened_lts = self.opened_lts + delta as u8;
+        DynamicState { state, opened_lts }
     }
 
     pub(crate) fn is_accepting(self) -> bool {
@@ -56,40 +93,315 @@ impl Fits64 for DynamicState {
 
         DynamicState {
             opened_lts: a,
-            state: u16::from_ne_bytes([b, c]).into(),
+            state: State::from_u16(u16::from_ne_bytes([b, c])),
         }
     }
 
     fn to_u64(self) -> u64 {
         let a = self.opened_lts;
-        let [b, c] = u16::to_ne_bytes(self.state as u16);
+        let [b, c] = u16::to_ne_bytes(self.state.to_u16());
         u64::from_ne_bytes([a, b, c, 0, 0, 0, 0, 0])
     }
 }
 
-#[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
-pub(crate) enum State {
-    ExprStart,
-    AfterBinop,
+macro_rules! token_description {
+    (
+        $( #[$meta:meta] )*
+        $vis:vis enum $name:ident {
+            $(
+                $pattern:pat => $variant:ident
+            ),* $(,)?
+        }
+    ) => {
+        $( #[$meta] )*
+        $vis enum $name {
+            Paren,
+            Square,
+            Bracket,
+            Invalid,
 
-    ItemStart,
-    AfterFnKw,
-    AfterFnName,
+            $( $variant ),*
+        }
 
-    FnParamStart,
+        impl $name {
+            $vis fn matches(self, terminal: &$crate::Terminal) -> bool {
+                use $name::*;
 
-    AfterFnParam,
+                match self {
+                    Paren | Square | Bracket => false,
+                    Invalid => false,
+
+                    $( $name::$variant => matches!(terminal, $pattern) ),*
+                }
+            }
+        }
+    };
+}
+
+macro_rules! generate_grammar {
+    (@accepting accepting) => { true };
+    (@accepting) => { false };
+
+    (@mk_descr ()) => {
+        TokenDescription::Paren
+    };
+    (@mk_descr []) => {
+        TokenDescription::Square
+    };
+    (@mk_descr {}) => {
+        TokenDescription::Bracket
+    };
+    (@mk_descr $ident:ident) => {
+        TokenDescription::$ident
+    };
+    (@mk_descr $lit:literal) => {
+        TokenDescription::Invalid
+    };
+
+    (@terminal ( $inner:ident ), $out_state:ident ) => {
+        $out_state
+    };
+    (@terminal [ $inner:ident ], $out_state:ident ) => {
+        $out_state
+    };
+    (@terminal { $inner:ident }, $out_state:ident ) => {
+        $out_state
+    };
+    (@terminal $ident:ident) => {
+        $ident
+    };
+
+    (@inner ( $inner:ident ), $final:ident) => {
+        ($inner, $final)
+    };
+    (@inner [ $inner:ident ], $final:ident) => {
+        ($inner, $final)
+    };
+    (@inner { $inner:ident }, $final:ident) => {
+        ($inner, $final)
+    };
+    (@inner $any:tt) => {
+        panic!("Bad logic")
+    };
+
+    (@same_delim () ()) => { true };
+    (@same_delim [] []) => { true };
+    (@same_delim {} {}) => { true };
+    (@same_delim $any:tt $any_:tt) => { false };
+
+    (@as_fragment $kind:ident "ident") => {
+        $kind == FragmentKind::Ident
+    };
+    (@as_fragment $kind:ident "expr") => {
+        $kind == FragmentKind::Expr
+    };
+    (@as_fragment $a:tt $b:tt) => {
+        false
+    };
+
+    (
+        $( #[$meta:meta] )*
+        $vis:vis enum $name:ident {
+            $(
+                $( #[$accepting:ident] )?
+                $in_state:ident {
+                    $(
+                        $descr:tt => $out_state:tt $(, $out_state_2:ident )?
+                    );* $(;)?
+                }
+            ),* $(,)?
+        }
+    ) => {
+        $( #[$meta] )*
+        $vis enum $name {
+            $(
+                $in_state
+            ),*
+        }
+
+        impl $name {
+            #[allow(clippy::diverging_sub_expression)]
+            $vis fn accept_fragment(&self, kind: FragmentKind) -> Result<$name, ExpectedTerminals> {
+                use $name::*;
+                match self {
+                    $(
+                        $in_state => {
+                            $(
+                                if generate_grammar!(@as_fragment kind $descr) {
+                                    #[allow(unreachable_code, clippy::diverging_sub_expression)]
+                                    return Ok(generate_grammar!(@terminal $out_state $(, $out_state_2)?));
+                                }
+                            )*
+                            return Err(self.follow());
+                        }
+                    ),*
+                }
+            }
+
+            #[allow(clippy::diverging_sub_expression)]
+            $vis fn accept_paren(&self) -> Result<($name, $name), ExpectedTerminals> {
+                use $name::*;
+                match self {
+                    $(
+                        $in_state => {
+                            $(
+                                if generate_grammar!(@same_delim $descr ()) {
+                                    #[allow(unreachable_code)]
+                                    return Ok(generate_grammar!(@inner $out_state $(, $out_state_2)?));
+                                }
+                            )*
+                            return Err(self.follow());
+                        }
+                    ),*
+                }
+            }
+
+            #[allow(clippy::diverging_sub_expression, unused)]
+            $vis fn accept_square(&self) -> Result<($name, $name), ExpectedTerminals> {
+                use $name::*;
+                match self {
+                    $(
+                        $in_state => {
+                            $(
+                                if generate_grammar!(@same_delim $descr []) {
+                                    #[allow(unreachable_code, )]
+                                    #[allow(clippy::diverging_sub_expression)]
+                                    return Ok(generate_grammar!(@inner $out_state $(, $out_state_2)?));
+                                }
+                            )*
+                            return Err(self.follow());
+                        }
+                    ),*
+                }
+            }
+
+            #[allow(clippy::diverging_sub_expression)]
+            $vis fn accept_curly(&self) -> Result<($name, $name), ExpectedTerminals> {
+                use $name::*;
+                match self {
+                    $(
+                        $in_state => {
+                            $(
+                                if generate_grammar!(@same_delim $descr {}) {
+                                    #[allow(unreachable_code)]
+                                    #[allow(clippy::diverging_sub_expression)]
+                                    return Ok(generate_grammar!(@inner $out_state $(, $out_state_2)?));
+                                }
+                            )*
+                            return Err(self.follow());
+                        }
+                    ),*
+                }
+            }
+
+            #[allow(clippy::diverging_sub_expression)]
+            pub(crate) fn accept_terminal(
+                &self, terminal: &Terminal
+            ) -> Result<($name, Delta), ExpectedTerminals> {
+                use $name::*;
+
+                match self {
+                    $(
+                        $in_state => {
+                            $(
+                                if generate_grammar!(@mk_descr $descr).matches(terminal) {
+                                    #[allow(clippy::diverging_sub_expression)]
+                                    return Ok((generate_grammar!(@terminal $out_state $(, $out_state_2)?), Delta::Zero));
+                                }
+                            )*
+                            return Err(self.follow());
+                        }
+                    ),*
+                }
+            }
+
+            fn follow(&self) -> ExpectedTerminals {
+                use $name::*;
+
+                match self {
+                    $(
+                        $in_state => &[
+                            $(
+                                generate_grammar!(@mk_descr $descr)
+                            ),*
+                        ]
+                    ),*
+                }
+            }
+
+            fn is_accepting(&self) -> bool {
+                const ACCEPTING_VALUES: &[bool] = &[
+                    $(
+                        generate_grammar!(@accepting $( $accepting )?)
+                    ),*
+                ];
+
+                ACCEPTING_VALUES[*self as usize]
+            }
+
+            fn from_u16(input: u16) -> $name {
+                use $name::*;
+                const VALUES: &[$name] = &[ $( $in_state ),* ];
+
+                VALUES[input as usize]
+            }
+
+            fn to_u16(self) -> u16 {
+                self as u16
+            }
+        }
+    };
+}
+
+token_description! {
+    #[derive(Clone, Copy, Debug, PartialEq)]
+    pub enum TokenDescription {
+        Terminal::Ident(_) => Ident,
+        Terminal::Fn => Fn,
+        Terminal::Plus => Plus,
+        Terminal::Times => Times,
+    }
+}
+
+generate_grammar! {
+    #[derive(Copy, Clone, Debug, Eq, Hash, PartialEq)]
+    pub(crate) enum State {
+        ExprStart {
+            "ident" => AfterExpr;
+            "expr" => AfterExpr;
+            Ident => AfterExpr;
+        },
+
+        #[accepting]
+        AfterExpr {
+            Plus => ExprStart;
+            Times => ExprStart;
+        },
+
+        #[accepting]
+        ItemStart {
+            Fn => AfterFnKw;
+        },
+
+        AfterFnKw {
+            "ident" => AfterFnName;
+            Ident => AfterFnName;
+        },
+
+        AfterFnName {
+            () => (FnParamStart), AfterFnParam
+        },
+
+        AfterFnParam {
+            {} => { ExprStart }, ItemStart
+        },
+
+        #[accepting]
+        FnParamStart {}
+    }
 }
 
 impl State {
-    pub(crate) fn is_accepting(self) -> bool {
-        use State::*;
-
-        const ACCEPTING_STATES: [State; 3] = [AfterBinop, ItemStart, FnParamStart];
-
-        ACCEPTING_STATES.contains(&self)
-    }
-
     pub(crate) fn into_dynamic_state(self) -> DynamicState {
         DynamicState {
             state: self,
@@ -98,19 +410,8 @@ impl State {
     }
 }
 
-impl From<u16> for State {
-    fn from(value: u16) -> State {
-        use State::*;
-        const VALUES: [State; 7] = [
-            ExprStart,
-            AfterBinop,
-            ItemStart,
-            AfterFnKw,
-            AfterFnName,
-            FnParamStart,
-            AfterFnParam,
-        ];
-
-        VALUES[value as usize]
-    }
+pub(crate) enum Delta {
+    MinusOne = -1,
+    Zero = 0,
+    PlusOne = 1,
 }

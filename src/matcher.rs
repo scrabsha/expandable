@@ -5,7 +5,7 @@ use std::{
 
 use crate::{
     error::{Error, MacroRuleNode},
-    FragmentKind, RepetitionQuantifier, RepetitionQuantifierKind, Spanneable, Terminal,
+    FragmentKind, RepetitionQuantifier, RepetitionQuantifierKind, Spannable, Terminal,
     TokenTree as GenericTokenTree, TokenTreeKind as GenericTokenTreeKind,
 };
 
@@ -65,13 +65,7 @@ pub(crate) enum TokenTreeKind<Span> {
     },
 }
 
-impl<Span> Spanneable<Span> for TokenTreeKind<Span> {
-    type Output = TokenTree<Span>;
-
-    fn with_span(self, span: Span) -> TokenTree<Span> {
-        TokenTree { kind: self, span }
-    }
-}
+impl_spannable!(TokenTreeKind<Span> => TokenTree);
 
 impl<Span> TokenTree<Span>
 where
@@ -316,7 +310,7 @@ impl Matcher {
                 TokenTreeKind::Repetition { inner, .. }
                 | TokenTreeKind::Parenthesed(inner)
                 | TokenTreeKind::CurlyBraced(inner) => {
-                    inner.iter().for_each(|tt| visit(bindings, tt))
+                    inner.iter().for_each(|tt| visit(bindings, tt));
                 }
             }
         }

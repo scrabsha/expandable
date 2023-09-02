@@ -6,5 +6,7 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-expect-test = "1.4"
 tinyset = "0.4"
+
+[dev-dependencies]
+expect-test = "1.4"

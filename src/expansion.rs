@@ -2,12 +2,11 @@ use std::{collections::HashMap, marker::PhantomData};
 
 use crate::{
     error::Error,
-    expansion,
     grammar::{DynamicState, State},
     matcher::Matcher,
     states::DynamicStateSet,
     substitution::{TokenTree, TokenTreeKind},
-    FragmentKind, RepetitionQuantifier, RepetitionQuantifierKind, Terminal,
+    FragmentKind, RepetitionQuantifier, RepetitionQuantifierKind,
 };
 
 type Cursor<'ast, Span> = &'ast [TokenTree<Span>];
@@ -15,7 +14,7 @@ type Cursor<'ast, Span> = &'ast [TokenTree<Span>];
 pub(crate) fn check_arm<Span>(
     init_state: State,
     bindings: Matcher,
-    substitution: &[expansion::TokenTree<Span>],
+    substitution: &[TokenTree<Span>],
 ) -> Result<(), Error<Span>>
 where
     Span: Copy,
@@ -83,132 +82,75 @@ where
         state: DynamicState,
         tree: &TokenTree<Span>,
     ) -> Result<DynamicStateSet, Error<Span>> {
-        // TODO: we will have to deal with a huge number of transitions. We *have* to
-        // find a way to generate this function, perhaps with a macro
-        // :upside_down:.
-        Ok(match (state.state, &tree.kind) {
-            (_, TokenTreeKind::Repetition { .. }) => {
-                unreachable!("Repetitions should be handled by `parse_single_tree`")
-            }
-
-            // fn
-            (State::ItemStart, TokenTreeKind::Terminal(Terminal::Ident(fn_))) if fn_ == "fn" => {
-                DynamicStateSet::singleton(state.with_state(State::AfterFnKw))
-            }
-
-            (State::ItemStart, _) => return Err(Error::InvalidProducedAst),
-
-            // fn foo
-            (State::AfterFnKw, TokenTreeKind::Terminal(Terminal::Ident(_))) => {
-                DynamicStateSet::singleton(state.with_state(State::AfterFnName))
-            }
-
-            (State::AfterFnKw, TokenTreeKind::Fragment(name)) => {
-                let Some(kind) = self.bindings.get(name) else {
-                    let name = name.clone();
-                    return Err(Error::UnboundMetaVariable {
-                        name,
-                        where_: tree.span,
-                    });
-                };
-
-                if *kind != FragmentKind::Ident {
-                    return Err(Error::InvalidMetaVariableContext { name: name.clone() });
-                }
-
-                DynamicStateSet::singleton(state.with_state(State::AfterFnName))
-            }
-
-            (State::AfterFnKw, _) => return Err(Error::InvalidProducedAst),
-
-            // fn foo()
-            (State::AfterFnName, TokenTreeKind::Parenthesed(params)) => {
-                if self
-                    .parse_stream(
-                        DynamicStateSet::singleton(state.with_state(State::FnParamStart)),
-                        &params,
-                    )?
-                    .into_iter()
-                    .any(|state| !state.is_accepting())
-                {
-                    return Err(Error::InvalidProducedAst);
-                };
-
-                DynamicStateSet::singleton(state.with_state(State::AfterFnParam))
-            }
-
-            // fn foo(
-            (State::FnParamStart, _) => return Err(Error::InvalidProducedAst),
-
-            (State::AfterFnName, _) => return Err(Error::InvalidProducedAst),
-
-            // fn foo() {}
-            (State::AfterFnParam, TokenTreeKind::CurlyBraced(inner)) => {
-                if self
-                    .parse_stream(
-                        DynamicStateSet::singleton(state.with_state(State::ExprStart)),
-                        &inner,
-                    )?
-                    .into_iter()
-                    .any(|state| !state.is_accepting())
-                {
-                    return Err(Error::InvalidProducedAst);
-                }
-
-                DynamicStateSet::singleton(state.with_state(State::ItemStart))
-            }
-
-            (State::AfterFnParam, _) => return Err(Error::InvalidProducedAst),
-
-            (State::ExprStart, TokenTreeKind::Terminal(Terminal::Ident(_))) => {
-                DynamicStateSet::singleton(state.with_state(State::AfterBinop))
-            }
-
-            (State::ExprStart, TokenTreeKind::Parenthesed(inner)) => {
-                if self
-                    .parse_stream(
-                        DynamicStateSet::singleton(state.with_state(State::ExprStart)),
-                        &inner,
-                    )?
-                    .into_iter()
-                    .any(|state| !state.is_accepting())
-                {
-                    return Err(Error::InvalidProducedAst);
-                };
-
-                DynamicStateSet::singleton(state.with_state(State::AfterBinop))
-            }
-
-            (State::ExprStart, TokenTreeKind::Fragment(name)) => {
-                let Some(kind) = self.bindings.get(name) else {
-                    let name = name.clone();
-                    return Err(Error::UnboundMetaVariable {
-                        name,
-                        where_: tree.span,
-                    });
-                };
-
-                match kind {
-                    FragmentKind::Ident => {
-                        DynamicStateSet::singleton(state.with_state(State::AfterBinop))
+        Ok(match &tree.kind {
+            TokenTreeKind::Terminal(t) => {
+                DynamicStateSet::singleton(state.accept_terminal(t).map_err(|expected| {
+                    Error::InvalidProducedAst {
+                        span: tree.span,
+                        expected,
                     }
-                    FragmentKind::Expr => {
-                        DynamicStateSet::singleton(state.with_state(State::AfterBinop))
-                    }
-                    FragmentKind::Item => {
-                        return Err(Error::InvalidMetaVariableContext { name: name.clone() })
-                    }
-                }
+                })?)
             }
 
-            (State::ExprStart, _) => return Err(Error::InvalidProducedAst),
+            TokenTreeKind::Parenthesed(i) => {
+                let (inner_state, next_state) =
+                    state
+                        .accept_paren()
+                        .map_err(|expected| Error::InvalidProducedAst {
+                            span: tree.span,
+                            expected,
+                        })?;
 
-            (State::AfterBinop, TokenTreeKind::Terminal(Terminal::Plus | Terminal::Times)) => {
-                DynamicStateSet::singleton(state.with_state(State::ExprStart))
+                self.check_delimited_stream(i, inner_state)?;
+
+                DynamicStateSet::singleton(next_state)
             }
 
-            (State::AfterBinop, _) => return Err(Error::InvalidProducedAst),
+            TokenTreeKind::CurlyBraced(i) => {
+                let (inner_state, next_state) =
+                    state
+                        .accept_curly()
+                        .map_err(|expected| Error::InvalidProducedAst {
+                            span: tree.span,
+                            expected,
+                        })?;
+
+                self.check_delimited_stream(i, inner_state)?;
+
+                DynamicStateSet::singleton(next_state)
+            }
+
+            TokenTreeKind::Fragment(f) => {
+                // TODO: return a proper error
+                let kind = *self.bindings.get(f).expect("Fragment not found");
+                DynamicStateSet::singleton(
+                    state
+                        .accept_fragment(kind)
+                        .expect("Fragment kind not accepted"),
+                )
+            }
+            TokenTreeKind::Repetition { .. } => {
+                unreachable!("Repetitions should be handled by ExpCtx::parse_single_tree`")
+            }
         })
+    }
+
+    fn check_delimited_stream(
+        &self,
+        stream: &[TokenTree<Span>],
+        inner_state: DynamicState,
+    ) -> Result<(), Error<Span>> {
+        if self
+            .parse_stream(DynamicStateSet::singleton(inner_state), stream)?
+            .into_iter()
+            .any(|state| !state.is_accepting())
+        {
+            return Err(Error::UnexpectedEnd {
+                last_token: stream.last().map(|tree| tree.span),
+            });
+        }
+
+        Ok(())
     }
 
     fn parse_stream(

@@ -1,12 +1,132 @@
+#![deny(missing_debug_implementations)]
+#![warn(
+    missing_docs,
+    clippy::cast_sign_loss,
+    clippy::cast_precision_loss,
+    clippy::cast_lossless,
+    clippy::cast_possible_wrap,
+    clippy::clear_with_drain,
+    clippy::dbg_macro,
+    clippy::deref_by_slicing,
+    clippy::doc_link_with_quotes,
+    clippy::doc_markdown,
+    clippy::explicit_deref_methods,
+    clippy::get_unwrap,
+    clippy::impl_trait_in_params,
+    clippy::inefficient_to_string,
+    clippy::redundant_else,
+    clippy::semicolon_if_nothing_returned,
+    clippy::should_panic_without_expect,
+    clippy::string_add,
+    clippy::string_to_string,
+    clippy::used_underscore_binding,
+    clippy::wildcard_imports
+)]
+
+//! <div class="title-block" style="text-align: center;" align="center">
+//! <h1><code>expandable-impl</code></h1>
+//! A runtime-agnostic <code>macro_rules!</code> expansion checker.
+//! </div>
+//!
+//! ## Why?
+//!
+//! Let's consider the following Rust code:
+//!
+//! ```rust
+//! macro_rules! js_concat {
+//!     ($left:expr, $right:expr) => {
+//!         $left ++ $right
+//!     };
+//! }
+//! ```
+//!
+//! This macro is obviously not correct, as the `++` operator does not exist in
+//! Rust. Any call to the `js_concat` macro will result in a compilation error.
+//! However, the snippet above compiles.
+//!
+//! Let's now consider the following equally incorrect Rust code:
+//!
+//! ```rust,compile_fail,E0277
+//! fn add(a: u8, b: char) {
+//!     a + b;
+//! }
+//! ```
+//!
+//! This code is incorrect because `char` cannot be added to `u8`
+//! [^error-message]. Rustc rightfully refuses to compile this snippet and emits
+//! a cute error message we all love and cherish.
+//!
+//! Interestingly, macros and functions share a lot of things in common:
+//! - They take _things_ an input and return _things_ as well,
+//! - We have some information about the kind of _things_ that they take is
+//! input[^things].
+//!
+//! So that's a bit unfair: why would functions have so much checks when macros
+//! don't?
+//!
+//! <video controls >
+//!     <!-- Yes, this is me using github as a CDN -->
+//!     <source src="https://github.com/scrabsha/expendable/raw/main/assets/objection.mp4" type="video/mp4" />
+//! </video>
+//!
+//! That's the purpose of this crate.
+//!
+//! ## What?
+//!
+//! This crate provides a _reasonably simple_[^simple] algorithm aiming to
+//! guarantee that any call to a specific macro that match one of its rule will
+//! produce a parseable output. Beside the macro definition itself, the only
+//! required additional information is the context in which the macro will be
+//! called[^weakness].
+//!
+//! It also handles poorly recursive macros. For now, it treats any macro
+//! invocation occurring in macro expansion as an obscure chunk of code. It
+//! does not check that this macro invocation will match any of its rule and
+//! does not try to guess if its expansion is valid in the context it is called.
+//! This restriction may be lifted in the future.
+//!
+//! ## Case study
+//!
+//! TODO
+//!
+//! ## Usage
+//!
+//! The entry point of this crate is the [`check_macro`] function. The library
+//! user gives to this function the content of the macro to be checked (as a
+//! sequence of [`TokenTree`], as well as the context the macro should be called
+//! in (as an [`InvocationContext`]). The crate machinery will then check the
+//! macro content, and return any error it encounters.
+//!
+//! ## Spanning
+//!
+//! In order to stay as reusable as possible, all the data structures
+//! representing AST nodes have a generic `Span` parameter. This allows library
+//! users to use the span type provided by their use case without any trouble.
+//! The only requirement is that the `Span` must be `Copy`. There may be more
+//! restrictions in the future.
+//!
+//! [^error-message]: I'm just paraphrasing the `rustc` output here. Nothing too
+//!     controversial here.
+//!
+//! [^things]: Rust functions also specify information about the _things_ that they
+//!     return. That's actually the only weakness of this crate 😭.
+//!
+//! [^simple]: It is definitely simpler than most industrial static analyzer.
+//!
+//! [^weakness]: That is, whether if the macro will be called in an expression context,
+//!     a pattern context, or an item context. This restriction may be slightly
+//!     lifted in the future: each macro arm should be able to override this
+//!     context.
+
+pub use error::{Error, MacroRuleNode};
+
 use std::{marker::Copy, str::FromStr};
 
-use error::{Error, MacroRuleNode};
 use grammar::State;
 
-#[cfg(test)]
 #[macro_use]
 mod macros;
-pub mod error;
+mod error;
 mod expansion;
 mod grammar;
 mod matcher;
@@ -30,7 +150,7 @@ where
     while let Some(head) = iter.next() {
         let TokenTreeKind::Parenthesed(matcher) = head.kind else {
             return Err(Error::ParsingFailed {
-                what: vec![error::MacroRuleNode::Matcher],
+                what: vec![MacroRuleNode::Matcher],
                 where_: head.span,
             });
         };
@@ -81,6 +201,12 @@ where
     Ok(())
 }
 
+pub(crate) trait Spannable<Span> {
+    type Output;
+
+    fn with_span(self, span: Span) -> Self::Output;
+}
+
 /// An untyped tree of tokens.
 ///
 /// This type allows the end-user to represent the tokens that is passed in the
@@ -99,14 +225,10 @@ where
 ///     https://doc.rust-lang.org/reference/procedural-macros.html#declarative-macro-tokens-and-procedural-macro-tokens
 #[derive(Clone, Debug, PartialEq)]
 pub struct TokenTree<Span> {
+    /// What kind of token tree is this?
     pub kind: TokenTreeKind<Span>,
+    /// Its position in the input code (useful for error message generation).
     pub span: Span,
-}
-
-pub trait Spanneable<Span> {
-    type Output;
-
-    fn with_span(self, span: Span) -> Self::Output;
 }
 
 #[cfg(test)]
@@ -134,26 +256,24 @@ impl TokenTree<()> {
     }
 }
 
+/// Represents the different types of token tree.
 #[derive(Clone, Debug, PartialEq)]
 pub enum TokenTreeKind<Span> {
+    /// A terminal (ie: a leaf tree node).
     Terminal(Terminal),
+    /// A sequence of [`TokenTree`] that is delimited by parenthesis.
     Parenthesed(Vec<TokenTree<Span>>),
+    /// A sequence of [`TokenTree`] that is delimited by curly brackets.
     CurlyBraced(Vec<TokenTree<Span>>),
 }
 
-impl<Span> Spanneable<Span> for TokenTreeKind<Span> {
-    type Output = TokenTree<Span>;
-
-    fn with_span(self, span: Span) -> TokenTree<Span> {
-        TokenTree { kind: self, span }
-    }
-}
+impl_spannable!(TokenTreeKind<Span> => TokenTree);
 
 /// A terminal symbol.
 ///
-/// # Multicharacter operators
+/// # Multi-character operators
 ///
-/// Multicharacter operators (`+=`, `->`, ...) must _not_ be split in multiple
+/// Multi-character operators (`+=`, `->`, ...) must _not_ be split in multiple
 /// [`Terminal`]. Any use of the [`check_macro`] function that does not respect
 /// this invariant will is subject to unexpected results.
 #[derive(Clone, Debug, Eq, Hash, PartialEq)]
@@ -166,6 +286,8 @@ pub enum Terminal {
     Dollar,
     /// A fat arrow (`=>`).
     FatArrow,
+    /// The `fn` keyword.
+    Fn,
     /// An identifier (`foo`, `bar`).
     Ident(String),
     /// A plus (`+`).
@@ -178,16 +300,7 @@ pub enum Terminal {
     Times,
 }
 
-impl<Span> Spanneable<Span> for Terminal {
-    type Output = TokenTree<Span>;
-
-    fn with_span(self, span: Span) -> TokenTree<Span> {
-        TokenTree {
-            kind: self.into(),
-            span,
-        }
-    }
-}
+impl_spannable!(Terminal => TokenTree);
 
 impl<Span> From<Terminal> for TokenTreeKind<Span> {
     fn from(value: Terminal) -> TokenTreeKind<Span> {
@@ -210,7 +323,7 @@ pub enum InvocationContext {
 }
 
 impl InvocationContext {
-    fn to_state(&self) -> State {
+    fn to_state(self) -> State {
         match self {
             InvocationContext::Expr => State::ExprStart,
             InvocationContext::Item => State::ItemStart,
@@ -290,13 +403,7 @@ enum RepetitionQuantifierKind {
     OneOrMore,
 }
 
-impl<Span> Spanneable<Span> for RepetitionQuantifierKind {
-    type Output = RepetitionQuantifier<Span>;
-
-    fn with_span(self, span: Span) -> RepetitionQuantifier<Span> {
-        RepetitionQuantifier { kind: self, span }
-    }
-}
+impl_spannable!(RepetitionQuantifierKind => RepetitionQuantifier);
 
 #[cfg(test)]
 mod tests {

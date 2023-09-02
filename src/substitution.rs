@@ -1,6 +1,6 @@
 use crate::{
     error::{Error, MacroRuleNode},
-    RepetitionQuantifier, RepetitionQuantifierKind, Spanneable, Terminal,
+    RepetitionQuantifier, RepetitionQuantifierKind, Spannable, Terminal,
     TokenTree as GenericTokenTree, TokenTreeKind as GenericTokenTreeKind,
 };
 
@@ -23,13 +23,7 @@ pub(crate) enum TokenTreeKind<Span> {
     },
 }
 
-impl<Span> Spanneable<Span> for TokenTreeKind<Span> {
-    type Output = TokenTree<Span>;
-
-    fn with_span(self, span: Span) -> TokenTree<Span> {
-        TokenTree { kind: self, span }
-    }
-}
+impl_spannable!(TokenTreeKind<Span> => TokenTree);
 
 impl<Span> TokenTree<Span>
 where
@@ -180,7 +174,7 @@ where
 mod tests {
     use super::*;
 
-    macro_rules! convertion_test {
+    macro_rules! conversion_test {
         ( $name:ident {
             { $( $left:tt )* },
             $right:expr $(,)?
@@ -195,7 +189,7 @@ mod tests {
         };
     }
 
-    convertion_test! {
+    conversion_test! {
         just_idents {
             { a b c },
             expect_test::expect![[r#"
@@ -231,7 +225,7 @@ mod tests {
         }
     }
 
-    convertion_test! {
+    conversion_test! {
         with_fragment {
             { @a },
             expect_test::expect![[r#"
@@ -249,7 +243,7 @@ mod tests {
         }
     }
 
-    convertion_test! {
+    conversion_test! {
         with_repetition {
             { @( test )* },
             expect_test::expect![[r#"
@@ -281,7 +275,7 @@ mod tests {
         }
     }
 
-    convertion_test! {
+    conversion_test! {
         with_repetition_and_fragment {
             { @( @a )? },
             expect_test::expect![[r#"

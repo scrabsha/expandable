@@ -1,3 +1,4 @@
+#[cfg(test)]
 macro_rules! quote {
     (@inner, ( $( $tt:tt )* ) ) => {
         $crate::TokenTree::Parenthesed(quote! { $( $tt )* })
@@ -7,12 +8,12 @@ macro_rules! quote {
         $crate::TokenTree::CurlyBraced(quote! { $( $tt )* })
     };
 
-    (@inner, $id:ident) => {
-        $crate::TokenTree::Terminal($crate::Terminal::Ident(stringify!($id).to_string()))
+    (@inner, fn) => {
+        $crate::TokenTree::Terminal($crate::Terminal::Fn)
     };
 
-    (@inner, fn) => {
-        $crate::TokenTree::Terminal($crate::Terminal::Ident("fn".to_string()))
+    (@inner, $id:ident) => {
+        $crate::TokenTree::Terminal($crate::Terminal::Ident(stringify!($id).to_string()))
     };
 
     (@inner, @) => {
@@ -49,6 +50,18 @@ macro_rules! quote {
                 quote!(@inner, $tt)
             ),*
         ]
+    };
+}
+
+macro_rules! impl_spannable {
+    ($in:ident $( <$span:ident> )? => $out:ident) => {
+        impl<Span> $crate::Spannable<Span> for $in$(<$span>)? {
+            type Output = $out<Span>;
+
+            fn with_span(self, span: Span) -> $out<Span> {
+                $out { kind: self.into(), span }
+            }
+        }
     };
 }
 
