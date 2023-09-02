@@ -1,9 +1,9 @@
 [package]
-name = "mbe_expansion_checker"
+name = "expandable-impl"
 version = "0.1.0"
 edition = "2021"
-
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+description = "Name squatting before releasing my pet project - email me if you're interested by this crate name."
+license = "MIT OR Apache-2.0"
 
 [dependencies]
 tinyset = "0.4"
