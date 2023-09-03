@@ -1,6 +1,7 @@
 extern crate proc_macro;
 
 use proc_macro::TokenStream as TokenStream1;
+use std::any::Any;
 use proc_macro2::{Delimiter, Punct, Spacing, Span, TokenStream, TokenTree};
 use quote::{quote, quote_spanned};
 use std::str::FromStr;
@@ -10,6 +11,7 @@ use syn::{
     spanned::Spanned,
     Error, Ident, ItemMacro,
 };
+use expandable_impl::TokenDescription;
 
 #[proc_macro_attribute]
 pub fn expandable(attrs: TokenStream1, item: TokenStream1) -> TokenStream1 {
@@ -52,9 +54,12 @@ fn mk_error_msg(mut item: TokenStream1, error: expandable_impl::Error<Span>) -> 
             }
         }
 
-        expandable_impl::Error::InvalidProducedAst { span, .. } => quote_spanned! {
-            // TODO: name what is expected
-            span => compile_error!("This may expand to invalid Rust code.");
+        expandable_impl::Error::InvalidProducedAst { span, expected, .. } => {
+            let expected = expected.iter().map(describe).collect::<Vec<_>>().join(", ");
+            quote_spanned! {
+                // TODO: name what is expected
+                span => compile_error!(concat!("Potentially invalid expansion. Expected ", #expected, "."));
+            }
         },
 
         expandable_impl::Error::UnboundMetavariable { name, where_, .. } => quote_spanned! {
@@ -71,6 +76,19 @@ fn mk_error_msg(mut item: TokenStream1, error: expandable_impl::Error<Span>) -> 
     item.extend(TokenStream1::from(compile_error));
 
     item
+}
+
+fn describe(descr: &TokenDescription) -> &'static str {
+    match descr {
+        TokenDescription::Paren => "a parenthesis",
+        TokenDescription::Square => "a bracket",
+        TokenDescription::Bracket => "a brace",
+        TokenDescription::Invalid => unreachable!(),
+        TokenDescription::Ident => "an identifier",
+        TokenDescription::Fn => "`fn`",
+        TokenDescription::Plus => "`+`",
+        TokenDescription::Times => "`*`",
+    }
 }
 
 fn parse_macro_stream(stream: TokenStream) -> Vec<expandable_impl::TokenTree<proc_macro2::Span>> {

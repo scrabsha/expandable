@@ -120,6 +120,8 @@
 
 pub use error::{Error, MacroRuleNode};
 
+pub use grammar::TokenDescription;
+
 use std::{marker::Copy, str::FromStr};
 
 use grammar::State;
@@ -410,18 +412,22 @@ mod tests {
     use super::*;
 
     macro_rules! check_macro_test {
-        ( $test_name:ident {
-            #[$kind:ident]
-            {
-                $( $tt:tt )*
+        (
+            $( #[ $meta:meta ] )*
+            $test_name:ident {
+                #[$kind:ident]
+                {
+                    $( $tt:tt )*
+                }
             }
-        }) => {
+        ) => {
+            $( #[ $meta ] )*
             #[test]
             fn $test_name() {
                 let tokens = quote! { $( $tt )* };
                 let ctxt = stringify!($kind).parse::<InvocationContext>().expect("Failed to parse `InvocationContext`");
 
-                check_macro(ctxt, tokens).unwrap();
+                check_macro(ctxt, tokens).expect("Macro check returned error");
             }
         };
     }
@@ -450,6 +456,16 @@ mod tests {
             {
                 () => { a };
                 (()) => { b };
+            }
+        }
+    }
+
+    check_macro_test! {
+        #[should_panic = "Macro check returned error: UnexpectedEnd { last_token: None }"]
+        empty_expr_is_not_an_expr {
+            #[expr]
+            {
+                () => {}
             }
         }
     }
