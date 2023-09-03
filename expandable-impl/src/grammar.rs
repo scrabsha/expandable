@@ -25,25 +25,25 @@ pub(crate) struct DynamicState {
     pub(crate) opened_lts: u8,
 }
 
-type ExpectedTerminals = &'static [TokenDescription];
-
 impl DynamicState {
     pub(crate) fn accept_fragment(
         self,
         fragment: FragmentKind,
-    ) -> Result<DynamicState, ExpectedTerminals> {
+    ) -> Result<DynamicState, Vec<TokenDescription>> {
         let new_state = self.state.accept_fragment(fragment)?;
         Ok(self.with_state_and_delta(new_state, Delta::Zero))
     }
     pub(crate) fn accept_terminal(
         self,
         terminal: &Terminal,
-    ) -> Result<DynamicState, ExpectedTerminals> {
+    ) -> Result<DynamicState, Vec<TokenDescription>> {
         let (new_state, delta) = self.state.accept_terminal(terminal)?;
         Ok(self.with_state_and_delta(new_state, delta))
     }
 
-    pub(crate) fn accept_paren(self) -> Result<(DynamicState, DynamicState), ExpectedTerminals> {
+    pub(crate) fn accept_paren(
+        self,
+    ) -> Result<(DynamicState, DynamicState), Vec<TokenDescription>> {
         let (inner, next) = self.state.accept_paren()?;
         Ok((
             self.with_state_and_delta(inner, Delta::Zero),
@@ -51,7 +51,9 @@ impl DynamicState {
         ))
     }
 
-    pub(crate) fn accept_curly(self) -> Result<(DynamicState, DynamicState), ExpectedTerminals> {
+    pub(crate) fn accept_curly(
+        self,
+    ) -> Result<(DynamicState, DynamicState), Vec<TokenDescription>> {
         let (inner, next) = self.state.accept_curly()?;
         Ok((
             self.with_state_and_delta(inner, Delta::Zero),
@@ -221,7 +223,7 @@ macro_rules! generate_grammar {
 
         impl $name {
             #[allow(clippy::diverging_sub_expression)]
-            $vis fn accept_fragment(&self, kind: FragmentKind) -> Result<$name, ExpectedTerminals> {
+            $vis fn accept_fragment(&self, kind: FragmentKind) -> Result<$name, Vec<TokenDescription>> {
                 use $name::*;
                 match self {
                     $(
@@ -239,7 +241,7 @@ macro_rules! generate_grammar {
             }
 
             #[allow(clippy::diverging_sub_expression)]
-            $vis fn accept_paren(&self) -> Result<($name, $name), ExpectedTerminals> {
+            $vis fn accept_paren(&self) -> Result<($name, $name), Vec<TokenDescription>> {
                 use $name::*;
                 match self {
                     $(
@@ -257,7 +259,7 @@ macro_rules! generate_grammar {
             }
 
             #[allow(clippy::diverging_sub_expression, unused)]
-            $vis fn accept_square(&self) -> Result<($name, $name), ExpectedTerminals> {
+            $vis fn accept_square(&self) -> Result<($name, $name), Vec<TokenDescription>> {
                 use $name::*;
                 match self {
                     $(
@@ -276,7 +278,7 @@ macro_rules! generate_grammar {
             }
 
             #[allow(clippy::diverging_sub_expression)]
-            $vis fn accept_curly(&self) -> Result<($name, $name), ExpectedTerminals> {
+            $vis fn accept_curly(&self) -> Result<($name, $name), Vec<TokenDescription>> {
                 use $name::*;
                 match self {
                     $(
@@ -297,7 +299,7 @@ macro_rules! generate_grammar {
             #[allow(clippy::diverging_sub_expression)]
             pub(crate) fn accept_terminal(
                 &self, terminal: &Terminal
-            ) -> Result<($name, Delta), ExpectedTerminals> {
+            ) -> Result<($name, Delta), Vec<TokenDescription>> {
                 use $name::*;
 
                 match self {
@@ -315,16 +317,21 @@ macro_rules! generate_grammar {
                 }
             }
 
-            fn follow(&self) -> ExpectedTerminals {
+            // A helper for the `follow` method
+            fn remove_invalid_descrs(descrs: &[TokenDescription]) -> Vec<TokenDescription> {
+                descrs.iter().filter(|descr| **descr != TokenDescription::Invalid).copied().collect()
+            }
+
+            fn follow(&self) -> Vec<TokenDescription> {
                 use $name::*;
 
                 match self {
                     $(
-                        $in_state => &[
+                        $in_state => $name::remove_invalid_descrs(&[
                             $(
                                 generate_grammar!(@mk_descr $descr)
                             ),*
-                        ]
+                        ])
                     ),*
                 }
             }

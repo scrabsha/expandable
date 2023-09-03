@@ -38,8 +38,8 @@ where
         subst: &[TokenTree<Span>],
         initial_state: DynamicState,
     ) -> Result<(), Error<Span>> {
-        let ctxt = ExpCtx::new(bindings);
-        ctxt.parse_stream(DynamicStateSet::singleton(initial_state), subst)
+        let ctx = ExpCtx::new(bindings);
+        ctx.parse_stream(DynamicStateSet::singleton(initial_state), subst)
             .map(drop)
     }
 
