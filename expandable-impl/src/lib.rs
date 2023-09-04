@@ -282,8 +282,10 @@ impl_spannable!(TokenTreeKind<Span> => TokenTree);
 pub enum Terminal {
     /// An arrow (`->`).
     Arrow,
-    /// A colon (':').
+    /// A colon (',').
     Colon,
+    /// A comma (`,`).
+    Comma,
     /// A dollar (`@`).
     Dollar,
     /// A fat arrow (`=>`).

@@ -33,6 +33,7 @@ impl DynamicState {
         let new_state = self.state.accept_fragment(fragment)?;
         Ok(self.with_state_and_delta(new_state, Delta::Zero))
     }
+
     pub(crate) fn accept_terminal(
         self,
         terminal: &Terminal,
@@ -54,7 +55,7 @@ impl DynamicState {
     pub(crate) fn accept_curly(
         self,
     ) -> Result<(DynamicState, DynamicState), Vec<TokenDescription>> {
-        let (inner, next) = self.state.accept_curly()?;
+        let (inner, next) = self.state.accept_brace()?;
         Ok((
             self.with_state_and_delta(inner, Delta::Zero),
             self.with_state_and_delta(next, Delta::Zero),
@@ -71,12 +72,14 @@ impl DynamicState {
         self.state.is_accepting() && self.opened_lts == 0
     }
 
+    #[allow(unused)]
     pub(crate) const fn increment_to(self, state: State) -> DynamicState {
         let opened_lts = self.opened_lts + 1;
 
         DynamicState { state, opened_lts }
     }
 
+    #[allow(unused)]
     pub(crate) const fn decrement_to(self, state: State) -> Option<DynamicState> {
         // HACK: once `?` is legal in const context, replace this `match` with
         // a `?` thing.
@@ -111,26 +114,34 @@ macro_rules! token_description {
         $( #[$meta:meta] )*
         $vis:vis enum $name:ident {
             $(
+                $( #[$meta_:meta] )*
                 $pattern:pat => $variant:ident
             ),* $(,)?
         }
     ) => {
         $( #[$meta] )*
         $vis enum $name {
+            /// An opening or closing parenthesis.
             Paren,
-            Square,
+            /// An opening or closing bracket.
             Bracket,
+            /// An opening or closing brace.
+            Brace,
+            /// An invalid token.
             Invalid,
 
-            $( $variant ),*
+            $(
+                $( #[$meta_] )*
+                $variant
+            ),*
         }
 
         impl $name {
-            $vis fn matches(self, terminal: &$crate::Terminal) -> bool {
+            pub(crate) fn matches(self, terminal: &$crate::Terminal) -> bool {
                 use $name::*;
 
                 match self {
-                    Paren | Square | Bracket => false,
+                    Paren | Brace | Bracket => false,
                     Invalid => false,
 
                     $( $name::$variant => matches!(terminal, $pattern) ),*
@@ -148,10 +159,10 @@ macro_rules! generate_grammar {
         TokenDescription::Paren
     };
     (@mk_descr []) => {
-        TokenDescription::Square
+        TokenDescription::Bracket
     };
     (@mk_descr {}) => {
-        TokenDescription::Bracket
+        TokenDescription::Brace
     };
     (@mk_descr $ident:ident) => {
         TokenDescription::$ident
@@ -223,7 +234,7 @@ macro_rules! generate_grammar {
 
         impl $name {
             #[allow(clippy::diverging_sub_expression)]
-            $vis fn accept_fragment(&self, kind: FragmentKind) -> Result<$name, Vec<TokenDescription>> {
+            pub(crate) fn accept_fragment(&self, kind: FragmentKind) -> Result<$name, Vec<TokenDescription>> {
                 use $name::*;
                 match self {
                     $(
@@ -241,7 +252,7 @@ macro_rules! generate_grammar {
             }
 
             #[allow(clippy::diverging_sub_expression)]
-            $vis fn accept_paren(&self) -> Result<($name, $name), Vec<TokenDescription>> {
+            pub(crate) fn accept_paren(&self) -> Result<($name, $name), Vec<TokenDescription>> {
                 use $name::*;
                 match self {
                     $(
@@ -259,7 +270,7 @@ macro_rules! generate_grammar {
             }
 
             #[allow(clippy::diverging_sub_expression, unused)]
-            $vis fn accept_square(&self) -> Result<($name, $name), Vec<TokenDescription>> {
+            pub(crate) fn accept_bracket(&self) -> Result<($name, $name), Vec<TokenDescription>> {
                 use $name::*;
                 match self {
                     $(
@@ -278,7 +289,7 @@ macro_rules! generate_grammar {
             }
 
             #[allow(clippy::diverging_sub_expression)]
-            $vis fn accept_curly(&self) -> Result<($name, $name), Vec<TokenDescription>> {
+            pub(crate) fn accept_brace(&self) -> Result<($name, $name), Vec<TokenDescription>> {
                 use $name::*;
                 match self {
                     $(
@@ -361,11 +372,21 @@ macro_rules! generate_grammar {
 }
 
 token_description! {
+    /// Describes a [`Terminal`]..
+    ///
+    /// This allows library user to accurately report what kind of token is
+    /// expected.
+    ///
+    /// [`Terminal`]: crate::Terminal
     #[derive(Clone, Copy, Debug, PartialEq)]
     pub enum TokenDescription {
+        /// An identifier. Does not include keywords.
         Terminal::Ident(_) => Ident,
+        /// The `fn` token.
         Terminal::Fn => Fn,
+        /// A plus (`+`).
         Terminal::Plus => Plus,
+        /// A times (`*`).
         Terminal::Times => Times,
     }
 }
@@ -418,7 +439,9 @@ impl State {
 }
 
 pub(crate) enum Delta {
+    #[allow(dead_code)]
     MinusOne = -1,
     Zero = 0,
+    #[allow(dead_code)]
     PlusOne = 1,
 }

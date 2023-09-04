@@ -81,8 +81,8 @@ fn mk_error_msg(mut item: TokenStream1, error: expandable_impl::Error<Span>) -> 
 fn describe(descr: &TokenDescription) -> &'static str {
     match descr {
         TokenDescription::Paren => "a parenthesis",
-        TokenDescription::Square => "a bracket",
-        TokenDescription::Bracket => "a brace",
+        TokenDescription::Bracket => "a bracket",
+        TokenDescription::Brace => "a brace",
         TokenDescription::Invalid => unreachable!(),
         TokenDescription::Ident => "an identifier",
         TokenDescription::Fn => "`fn`",
@@ -91,7 +91,7 @@ fn describe(descr: &TokenDescription) -> &'static str {
     }
 }
 
-fn parse_macro_stream(stream: TokenStream) -> Vec<expandable_impl::TokenTree<proc_macro2::Span>> {
+fn parse_macro_stream(stream: TokenStream) -> Vec<expandable_impl::TokenTree<Span>> {
     let mut output = Vec::new();
     let iter = stream.into_iter().collect::<Vec<_>>();
     let mut iter = iter.as_slice();
@@ -132,6 +132,7 @@ fn parse_macro_stream(stream: TokenStream) -> Vec<expandable_impl::TokenTree<pro
                         expandable_impl::Terminal::FatArrow
                     }
                     s if s.starts_with(':') => expandable_impl::Terminal::Colon,
+                    s if s.starts_with(',') => expandable_impl::Terminal::Comma,
                     s if s.starts_with('$') => expandable_impl::Terminal::Dollar,
                     s if s.starts_with('+') => expandable_impl::Terminal::Plus,
                     s if s.starts_with('?') => expandable_impl::Terminal::QuestionMark,
@@ -191,5 +192,6 @@ impl Parse for InvocationContext {
 #[test]
 fn ui() {
     let t = trybuild::TestCases::new();
-    t.pass("tests/ui/*.rs");
+    t.pass("tests/ui/pass/*.rs");
+    t.compile_fail("tests/ui/fail/*.rs");
 }
