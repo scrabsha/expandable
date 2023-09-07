@@ -3,13 +3,12 @@
 //! An attribute-macro based <code>macro_rules!</code> expansion checker.
 //! </div>
 //!
-//! ## Example
+//! ## Textbook example
 //!
-//! Let's consider the following Rust code:
+//! `rustc` treats macro definitions as some opaque piece of tokens and don't
+//! do any check on it. For instance, the following macro definition is valid:
 //!
-//! ```rust,compile_fail
-//! use expandable::expandable;
-//! #[expandable(expr)]
+//! ```rust
 //! macro_rules! js_concat {
 //!     ($left:expr, $right:expr) => {
 //!         $left ++ $right
@@ -17,83 +16,40 @@
 //! }
 //! ```
 //!
-//! This macro is obviously not correct, as the `++` operator does not exist in
-//! Rust. Any call to the `js_concat` macro will result in a compilation error.
-//! However, the snippet above compiles.
+//! However, any call to the `js_concat` macro is invalid, as the `++` operator
+//! does not exist in Rust. Luckily for us, this crate provides the
+//! [`expandable::expr`] macro, that checks that the macro expands to a valid
+//! expression. Let's use it on `js_concat`:
 //!
-//! Let's now consider the following equally incorrect Rust code:
+//! [`expandable::expr`]: macro@crate::expr
 //!
-//! ```rust,compile_fail,E0277
-//! fn add(a: u8, b: char) {
-//!     a + b;
+//! ```rust,compile_fail
+//! #[expandable::expr]
+//! macro_rules! js_concat {
+//!     ($left:expr, $right:expr) => {
+//!         $left ++ $right
+//!     };
 //! }
 //! ```
 //!
-//! This code is incorrect because `char` cannot be added to `u8`
-//! [^error-message]. Rustc rightfully refuses to compile this snippet and emits
-//! a cute error message we all love and cherish.
+//! This emits the following error [^error-message]:
+//! ```none
+//! error: Potentially invalid expansion. Expected an identifier.
+//!  --> tests/ui/fail/js_concat.rs:4:16
+//!   |
+//! 4 |         $left ++ $right
+//!   |                ^
+//! ```
 //!
-//! Interestingly, macros and functions share a lot of things in common:
-//! - They take _things_ an input and return _things_ as well,
-//! - We have some information about the kind of _things_ that they take is
-//! input[^things].
+//! ## Expansion context
 //!
-//! So that's a bit unfair: why would functions have so much checks when macros
-//! don't?
+//! Ever wondered what the `expr` of `#[expandable::expr]` stands for?
 //!
-//! <video controls >
-//!     <!-- Yes, this is me using github as a CDN -->
-//!     <source src="https://github.com/scrabsha/expendable/raw/main/assets/objection.mp4" type="video/mp4" />
-//! </video>
+//! TODO
 //!
-//! That's the purpose of this crate.
-//!
-//! ## What?
-//!
-//! This crate provides a _reasonably simple_[^simple] algorithm aiming to
-//! guarantee that any call to a specific macro that match one of its rule will
-//! produce a parseable output. Beside the macro definition itself, the only
-//! required additional information is the context in which the macro will be
-//! called[^weakness].
-//!
-//! It also handles poorly recursive macros. For now, it treats any macro
-//! invocation occurring in macro expansion as an obscure chunk of code. It
-//! does not check that this macro invocation will match any of its rule and
-//! does not try to guess if its expansion is valid in the context it is called.
-//! This restriction may be lifted in the future.
-//!
-//! ## Case study
-//!
-//!
-//!
-//! ## Usage
-//!
-//! The entry point of this crate is the [`check_macro`] function. The library
-//! user gives to this function the content of the macro to be checked (as a
-//! sequence of [`TokenTree`], as well as the context the macro should be called
-//! in (as an [`InvocationContext`]). The crate machinery will then check the
-//! macro content, and return any error it encounters.
-//!
-//! ## Spanning
-//!
-//! In order to stay as reusable as possible, all the data structures
-//! representing AST nodes have a generic `Span` parameter. This allows library
-//! users to use the span type provided by their use case without any trouble.
-//! The only requirement is that the `Span` must be `Copy`. There may be more
-//! restrictions in the future.
-//!
-//! [^error-message]: I'm just paraphrasing the `rustc` output here. Nothing too
-//!     controversial here.
-//!
-//! [^things]: Rust functions also specify information about the _things_ that they
-//!     return. That's actually the only weakness of this crate 😭.
-//!
-//! [^simple]: It is definitely simpler than most industrial static analyzer.
-//!
-//! [^weakness]: That is, whether if the macro will be called in an expression context,
-//!     a pattern context, or an item context. This restriction may be slightly
-//!     lifted in the future: each macro arm should be able to override this
-//!     context.
+//! [^error-message]: The Rust grammar is not fully implemented at the moment,
+//!     leading to incomplete "expected xxx" list this will be fixed before the
+//!     first non-alpha release of this crate.
 
 extern crate proc_macro;
 
@@ -109,27 +65,32 @@ use syn::{
 };
 use expandable_impl::TokenDescription;
 
-#[proc_macro_attribute]
-pub fn expandable(attrs: TokenStream1, item: TokenStream1) -> TokenStream1 {
-    let item_ = item.clone();
-    let ctx = parse_macro_input!(attrs as InvocationContext);
-    let macro_ = parse_macro_input!(item as ItemMacro);
+macro_rules! attribute_macro {
+    ($name:ident => $variant:ident) => {
+        #[proc_macro_attribute]
+        pub fn $name(_: TokenStream1, item: TokenStream1) -> TokenStream1 {
+            let item_ = item.clone();
 
-    // We need to ensure that it is a macro_rule thing.
-    if macro_.ident.is_none() {
-        return quote_spanned! { macro_.mac.path.span() => compile_error!("Expected a `macro_rules!` macro")}
-            .into();
-    }
+            let macro_ = parse_macro_input!(item as ItemMacro);
+            // We need to ensure that it is a macro_rule thing.
+            if macro_.ident.is_none() {
+                return quote_spanned! { macro_.mac.path.span() => compile_error!("Expected a `macro_rules!` macro")}
+                    .into();
+            }
 
-    let stream = parse_macro_stream(macro_.mac.tokens);
+            let stream = parse_macro_stream(macro_.mac.tokens);
 
-    if let Err(e) = expandable_impl::check_macro(ctx.0, stream) {
-        // We found an error. Yay!!
-        return mk_error_msg(item_, e);
-    }
+            if let Err(e) = expandable_impl::check_macro(expandable_impl::InvocationContext::$variant, stream) {
+                return mk_error_msg(item_, e);
+            }
 
-    item_
+            item_
+        }
+    };
 }
+
+attribute_macro!(expr => Expr);
+attribute_macro!(item => Item);
 
 fn mk_error_msg(mut item: TokenStream1, error: expandable_impl::Error<Span>) -> TokenStream1 {
     let compile_error = match error {
