@@ -1,5 +1,5 @@
 #[allow(unused_macros)]
-#[expandable::expandable(expr)]
+#[expandable::expr]
 macro_rules! mac {
     () => { a + b + c };
     () => { a * b * c };
