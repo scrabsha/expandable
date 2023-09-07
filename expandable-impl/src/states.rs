@@ -1,14 +1,14 @@
-use tinyset::{set64, Set64};
+use std::collections::HashSet;
 
 use crate::grammar::DynamicState;
 
 // Let's pretend this is fast enough and use clone when required.
-#[derive(Clone, Debug, Eq, Hash, PartialEq)]
-pub(crate) struct DynamicStateSet(Set64<DynamicState>);
+#[derive(Clone, Debug, PartialEq)]
+pub(crate) struct DynamicStateSet(HashSet<DynamicState>);
 
 impl DynamicStateSet {
     pub(crate) fn empty() -> DynamicStateSet {
-        DynamicStateSet(Set64::new())
+        DynamicStateSet(HashSet::new())
     }
 
     fn set(mut self, state: DynamicState) -> DynamicStateSet {
@@ -50,7 +50,7 @@ impl FromIterator<DynamicState> for DynamicStateSet {
     }
 }
 
-pub(crate) struct IntoIter(set64::IntoIter<DynamicState>);
+pub(crate) struct IntoIter(std::collections::hash_set::IntoIter<DynamicState>);
 
 impl Iterator for IntoIter {
     type Item = DynamicState;

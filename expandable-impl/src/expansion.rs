@@ -47,7 +47,7 @@ where
             // As a matter of facts, rustc emits the following message:
             // > macro expansion ends with an incomplete expression: expected expression
             // https://play.rust-lang.org/?version=stable&mode=debug&edition=2021&gist=19fb5e7169f37e967ad84e155fe92e22
-            return Err(Error::UnexpectedEnd { last_token: None })
+            return Err(Error::UnexpectedEnd { last_token: None });
         }
 
         Ok(())

@@ -53,6 +53,7 @@
 
 extern crate proc_macro;
 
+use expandable_impl::TokenDescription;
 use proc_macro::TokenStream as TokenStream1;
 use proc_macro2::{Delimiter, Punct, Spacing, Span, TokenStream, TokenTree};
 use quote::{quote, quote_spanned};
@@ -63,7 +64,6 @@ use syn::{
     spanned::Spanned,
     Error, Ident, ItemMacro,
 };
-use expandable_impl::TokenDescription;
 
 macro_rules! attribute_macro {
     ($name:ident => $variant:ident) => {
@@ -117,7 +117,7 @@ fn mk_error_msg(mut item: TokenStream1, error: expandable_impl::Error<Span>) -> 
                 // TODO: name what is expected
                 span => compile_error!(concat!("Potentially invalid expansion. Expected ", #expected, "."));
             }
-        },
+        }
 
         expandable_impl::Error::UnboundMetavariable { name, where_, .. } => quote_spanned! {
             where_ => compile_error!("Unbound metavariable `{}`", #name);
@@ -145,6 +145,8 @@ fn describe(descr: &TokenDescription) -> &'static str {
         TokenDescription::Fn => "`fn`",
         TokenDescription::Plus => "`+`",
         TokenDescription::Times => "`*`",
+        TokenDescription::Comma => "`,`",
+        TokenDescription::Colon => "`:`",
     }
 }
 

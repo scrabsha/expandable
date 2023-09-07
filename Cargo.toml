@@ -1,3 +1,9 @@
+[workspace]
+members = [
+    "",
+    "expandable-impl",
+]
+
 [package]
 name = "expandable"
 version = "0.1.0"
@@ -9,7 +15,7 @@ edition = "2021"
 proc-macro = true
 
 [dependencies]
-expandable-impl = { path    = "expandable-impl" }
+expandable-impl = { path = "expandable-impl" }
 proc-macro2 = "1.0.66"
 quote = "1.0"
 # TODO: we don't actually use much of `syn` - how hard would it be to remove it?

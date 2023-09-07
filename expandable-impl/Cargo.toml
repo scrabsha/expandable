@@ -6,7 +6,7 @@ description = "Name squatting before releasing my pet project - email me if you'
 license = "MIT OR Apache-2.0"
 
 [dependencies]
-tinyset = "0.4"
+smallvec = "1.11"
 
 [dev-dependencies]
 expect-test = "1.4"

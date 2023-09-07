@@ -1,28 +1,10 @@
-use tinyset::Fits64;
+use smallvec::{smallvec, SmallVec};
 
 use crate::{FragmentKind, Terminal};
 
-#[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
+#[derive(Clone, Debug, Eq, Hash, PartialEq)]
 pub(crate) struct DynamicState {
-    pub(crate) state: State,
-    // This is probably the most disappointing part of the codebase.
-    //
-    // The Rust grammar is definitely not regular. It should be parsed with
-    // pushdown automaton. We circumvent this issue by manipulating trees
-    // instead of raw sequence of tokens. This approach works well, as long as
-    // we can guess in advance if a token is a delimiter or not.
-    //
-    // Depending on the situation, `<` and `>` may or may not be considered as
-    // delimiters. For instance, `<` and `>` are delimiters in
-    // `Iterator<Item = u8>`, but are definitely not delimiters in
-    // `4 < x && 6 > y`. As a result, we do have to use a pushdown automaton in
-    // order to parse the Rust syntax.
-    //
-    // Luckily for us, there is only one symbol that is pushed and popped in the
-    // state machine's stack, which represent the amount of "delimiter `<`" that
-    // have not been closed by a "delimiter `>`". This means that this entire
-    // stack can be represented with an integer.
-    pub(crate) opened_lts: u8,
+    pub(crate) states: SmallVec<[State; 8]>,
 }
 
 impl DynamicState {
@@ -30,82 +12,104 @@ impl DynamicState {
         self,
         fragment: FragmentKind,
     ) -> Result<DynamicState, Vec<TokenDescription>> {
-        let new_state = self.state.accept_fragment(fragment)?;
-        Ok(self.with_state_and_delta(new_state, Delta::Zero))
+        self.top()
+            .accept_fragment(fragment)
+            .map(|trans| self.with(trans))
     }
 
     pub(crate) fn accept_terminal(
         self,
         terminal: &Terminal,
     ) -> Result<DynamicState, Vec<TokenDescription>> {
-        let (new_state, delta) = self.state.accept_terminal(terminal)?;
-        Ok(self.with_state_and_delta(new_state, delta))
+        self.top()
+            .accept_terminal(terminal)
+            .map(|trans| self.with(trans))
     }
 
     pub(crate) fn accept_paren(
         self,
     ) -> Result<(DynamicState, DynamicState), Vec<TokenDescription>> {
-        let (inner, next) = self.state.accept_paren()?;
-        Ok((
-            self.with_state_and_delta(inner, Delta::Zero),
-            self.with_state_and_delta(next, Delta::Zero),
-        ))
+        let (inner, next) = self.top().accept_paren()?;
+        Ok((inner.into_dynamic_state(), self.with_top_state(next)))
     }
 
     pub(crate) fn accept_curly(
         self,
     ) -> Result<(DynamicState, DynamicState), Vec<TokenDescription>> {
-        let (inner, next) = self.state.accept_brace()?;
-        Ok((
-            self.with_state_and_delta(inner, Delta::Zero),
-            self.with_state_and_delta(next, Delta::Zero),
-        ))
+        let (inner, next) = self.top().accept_brace()?;
+        Ok((inner.into_dynamic_state(), self.with_top_state(next)))
+    }
+
+    pub(crate) fn is_accepting(&self) -> bool {
+        self.states.len() == 1 && self.top().is_accepting()
+    }
+
+    fn with(mut self, trans: FragmentTransition) -> DynamicState {
+        match trans {
+            FragmentTransition::Nest { inner, next } => {
+                *self.top_mut() = next;
+                self.states.push(inner);
+            }
+            FragmentTransition::Flat { next } => {
+                *self.top_mut() = next;
+            }
+            FragmentTransition::Finish => {
+                self.states.pop().unwrap();
+            }
+        }
+
+        self
     }
 
     #[inline]
-    const fn with_state_and_delta(self, state: State, delta: Delta) -> DynamicState {
-        let opened_lts = self.opened_lts + delta as u8;
-        DynamicState { state, opened_lts }
+    fn top(&self) -> State {
+        *self.states.last().unwrap()
     }
 
-    pub(crate) fn is_accepting(self) -> bool {
-        self.state.is_accepting() && self.opened_lts == 0
+    #[inline]
+    fn top_mut(&mut self) -> &mut State {
+        self.states.last_mut().unwrap()
     }
 
-    #[allow(unused)]
-    pub(crate) const fn increment_to(self, state: State) -> DynamicState {
-        let opened_lts = self.opened_lts + 1;
-
-        DynamicState { state, opened_lts }
-    }
-
-    #[allow(unused)]
-    pub(crate) const fn decrement_to(self, state: State) -> Option<DynamicState> {
-        // HACK: once `?` is legal in const context, replace this `match` with
-        // a `?` thing.
-        let opened_lts = match self.opened_lts.checked_sub(1) {
-            Some(v) => v,
-            None => return None,
-        };
-
-        Some(DynamicState { state, opened_lts })
+    #[inline]
+    fn with_top_state(mut self, state: State) -> DynamicState {
+        *self.top_mut() = state;
+        self
     }
 }
 
-impl Fits64 for DynamicState {
-    unsafe fn from_u64(x: u64) -> DynamicState {
-        let [a, b, c, ..] = u64::to_ne_bytes(x);
+pub(crate) enum FragmentTransition {
+    // The terminal we just accepted is a delimiter. Advance to a new state
+    // and push the old state to the stack.
+    Nest { inner: State, next: State },
+    // The terminal we just accepted is not a delimiter.
+    Flat { next: State },
+    // The terminal we just accepted is a closing delimiter. Pop the stack and
+    // continue.
+    Finish,
+}
 
-        DynamicState {
-            opened_lts: a,
-            state: State::from_u16(u16::from_ne_bytes([b, c])),
-        }
+impl From<[State; 2]> for FragmentTransition {
+    fn from([inner, next]: [State; 2]) -> Self {
+        FragmentTransition::Nest { inner, next }
     }
+}
 
-    fn to_u64(self) -> u64 {
-        let a = self.opened_lts;
-        let [b, c] = u16::to_ne_bytes(self.state.to_u16());
-        u64::from_ne_bytes([a, b, c, 0, 0, 0, 0, 0])
+impl From<[State; 1]> for FragmentTransition {
+    fn from([next]: [State; 1]) -> Self {
+        FragmentTransition::Flat { next }
+    }
+}
+
+impl From<[State; 0]> for FragmentTransition {
+    fn from(_: [State; 0]) -> Self {
+        FragmentTransition::Finish
+    }
+}
+
+impl From<[State; 1]> for State {
+    fn from([state]: [State; 1]) -> Self {
+        state
     }
 }
 
@@ -172,16 +176,19 @@ macro_rules! generate_grammar {
     };
 
     (@terminal ( $inner:ident ), $out_state:ident ) => {
-        $out_state
+        [ $out_state ].into()
     };
     (@terminal [ $inner:ident ], $out_state:ident ) => {
-        $out_state
+        [ $out_state ].into()
     };
     (@terminal { $inner:ident }, $out_state:ident ) => {
-        $out_state
+        [ $out_state ].into()
     };
-    (@terminal $ident:ident) => {
-        $ident
+    (@terminal _) => {
+        FragmentTransition::Finish
+    };
+    (@terminal $( $ident:ident ),*) => {
+        [ $( $ident ),* ].into()
     };
 
     (@inner ( $inner:ident ), $final:ident) => {
@@ -193,7 +200,7 @@ macro_rules! generate_grammar {
     (@inner { $inner:ident }, $final:ident) => {
         ($inner, $final)
     };
-    (@inner $any:tt) => {
+    (@inner $( $tail:tt )* ) => {
         panic!("Bad logic")
     };
 
@@ -219,7 +226,7 @@ macro_rules! generate_grammar {
                 $( #[$accepting:ident] )?
                 $in_state:ident {
                     $(
-                        $descr:tt => $out_state:tt $(, $out_state_2:ident )?
+                        $descr:tt => $( $out_state:tt ),*
                     );* $(;)?
                 }
             ),* $(,)?
@@ -234,7 +241,7 @@ macro_rules! generate_grammar {
 
         impl $name {
             #[allow(clippy::diverging_sub_expression)]
-            pub(crate) fn accept_fragment(&self, kind: FragmentKind) -> Result<$name, Vec<TokenDescription>> {
+            pub(crate) fn accept_fragment(&self, kind: FragmentKind) -> Result<FragmentTransition, Vec<TokenDescription>> {
                 use $name::*;
                 match self {
                     $(
@@ -242,7 +249,7 @@ macro_rules! generate_grammar {
                             $(
                                 if generate_grammar!(@as_fragment kind $descr) {
                                     #[allow(unreachable_code, clippy::diverging_sub_expression)]
-                                    return Ok(generate_grammar!(@terminal $out_state $(, $out_state_2)?));
+                                    return Ok(generate_grammar!(@terminal $( $out_state ),*));
                                 }
                             )*
                             return Err(self.follow());
@@ -260,7 +267,7 @@ macro_rules! generate_grammar {
                             $(
                                 if generate_grammar!(@same_delim $descr ()) {
                                     #[allow(unreachable_code)]
-                                    return Ok(generate_grammar!(@inner $out_state $(, $out_state_2)?));
+                                    return Ok(generate_grammar!(@inner $( $out_state ),* ));
                                 }
                             )*
                             return Err(self.follow());
@@ -279,7 +286,7 @@ macro_rules! generate_grammar {
                                 if generate_grammar!(@same_delim $descr []) {
                                     #[allow(unreachable_code, )]
                                     #[allow(clippy::diverging_sub_expression)]
-                                    return Ok(generate_grammar!(@inner $out_state $(, $out_state_2)?));
+                                    return Ok(generate_grammar!(@inner $( $out_state ),*));
                                 }
                             )*
                             return Err(self.follow());
@@ -298,7 +305,7 @@ macro_rules! generate_grammar {
                                 if generate_grammar!(@same_delim $descr {}) {
                                     #[allow(unreachable_code)]
                                     #[allow(clippy::diverging_sub_expression)]
-                                    return Ok(generate_grammar!(@inner $out_state $(, $out_state_2)?));
+                                    return Ok(generate_grammar!(@inner $( $out_state ),*));
                                 }
                             )*
                             return Err(self.follow());
@@ -310,7 +317,7 @@ macro_rules! generate_grammar {
             #[allow(clippy::diverging_sub_expression)]
             pub(crate) fn accept_terminal(
                 &self, terminal: &Terminal
-            ) -> Result<($name, Delta), Vec<TokenDescription>> {
+            ) -> Result<FragmentTransition, Vec<TokenDescription>> {
                 use $name::*;
 
                 match self {
@@ -319,7 +326,7 @@ macro_rules! generate_grammar {
                             $(
                                 if generate_grammar!(@mk_descr $descr).matches(terminal) {
                                     #[allow(clippy::diverging_sub_expression)]
-                                    return Ok((generate_grammar!(@terminal $out_state $(, $out_state_2)?), Delta::Zero));
+                                    return Ok((generate_grammar!(@terminal $( $out_state ),*)));
                                 }
                             )*
                             return Err(self.follow());
@@ -372,12 +379,12 @@ macro_rules! generate_grammar {
 }
 
 token_description! {
-    /// Describes a [`Terminal`]..
+    /// Describes a [`Terminal`].
     ///
     /// This allows library user to accurately report what kind of token is
     /// expected.
     ///
-    /// [`Terminal`]: crate::Terminal
+    /// [`Terminal`]: Terminal
     #[derive(Clone, Copy, Debug, PartialEq)]
     pub enum TokenDescription {
         /// An identifier. Does not include keywords.
@@ -388,6 +395,10 @@ token_description! {
         Terminal::Plus => Plus,
         /// A times (`*`).
         Terminal::Times => Times,
+        /// A colon (`:`).
+        Terminal::Colon => Colon,
+        /// A comma (`,`).
+        Terminal::Comma => Comma,
     }
 }
 
@@ -425,23 +436,28 @@ generate_grammar! {
         },
 
         #[accepting]
-        FnParamStart {}
+        FnParamStart {
+            "ident" => AfterFnParamName;
+            Ident => AfterFnParamName;
+        },
+
+        AfterFnParamName {
+            Colon => TypeStart, AfterFnParamType;
+        },
+
+        TypeStart {
+        },
+
+        AfterFnParamType {
+            Comma => FnParamStart
+        },
     }
 }
 
 impl State {
     pub(crate) fn into_dynamic_state(self) -> DynamicState {
         DynamicState {
-            state: self,
-            opened_lts: 0,
+            states: smallvec![self],
         }
     }
-}
-
-pub(crate) enum Delta {
-    #[allow(dead_code)]
-    MinusOne = -1,
-    Zero = 0,
-    #[allow(dead_code)]
-    PlusOne = 1,
 }
