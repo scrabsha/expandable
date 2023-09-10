@@ -1,0 +1,19 @@
+error: Potentially invalid expansion. Expected an identifier.
+ --> tests/ui/fail/js_concat.rs:4:16
+  |
+4 |         $left ++ $right
+  |                ^
+
+warning: unused macro definition: `js_concat`
+ --> tests/ui/fail/js_concat.rs:2:14
+  |
+2 | macro_rules! js_concat {
+  |              ^^^^^^^^^
+  |
+  = note: `#[warn(unused_macros)]` on by default
+
+error[E0601]: `main` function not found in crate `$CRATE`
+ --> tests/ui/fail/js_concat.rs:6:2
+  |
+6 | }
+  |  ^ consider adding a `main` function to `$DIR/tests/ui/fail/js_concat.rs`
