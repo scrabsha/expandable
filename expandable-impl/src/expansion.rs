@@ -3,10 +3,10 @@ use std::{collections::HashMap, marker::PhantomData};
 use crate::{
     error::Error,
     grammar::{DynamicState, State},
-    matcher::Matcher,
+    matcher::{Matcher,BindingData},
     states::DynamicStateSet,
     substitution::{TokenTree, TokenTreeKind},
-    FragmentKind, RepetitionQuantifier, RepetitionQuantifierKind,
+    RepetitionQuantifier, RepetitionQuantifierKind,
 };
 
 type Cursor<'ast, Span> = &'ast [TokenTree<Span>];
@@ -25,7 +25,7 @@ where
 
 struct ExpCtx<Span> {
     // todo: we also want to see which depth a macro repeats at.
-    bindings: HashMap<String, FragmentKind>,
+    bindings: HashMap<String, BindingData>,
     span: PhantomData<Span>,
 }
 
@@ -34,7 +34,7 @@ where
     Span: Copy,
 {
     fn check_rule(
-        bindings: HashMap<String, FragmentKind>,
+        bindings: HashMap<String, BindingData>,
         subst: &[TokenTree<Span>],
         initial_state: DynamicState,
     ) -> Result<(), Error<Span>> {
@@ -53,7 +53,7 @@ where
         Ok(())
     }
 
-    fn new(bindings: HashMap<String, FragmentKind>) -> ExpCtx<Span> {
+    fn new(bindings: HashMap<String, BindingData>) -> ExpCtx<Span> {
         ExpCtx {
             bindings,
             span: PhantomData,
@@ -132,7 +132,7 @@ where
 
             TokenTreeKind::Fragment(f) => {
                 // TODO: return a proper error
-                let kind = *self.bindings.get(f).expect("Fragment not found");
+                let kind = self.bindings.get(f).expect("Fragment not found").kind;
                 DynamicStateSet::singleton(
                     state
                         .accept_fragment(kind)

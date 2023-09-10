@@ -267,7 +267,7 @@ where
 
 #[derive(Clone, PartialEq)]
 pub(crate) struct Matcher {
-    pub(crate) bindings: HashMap<String, FragmentKind>,
+    pub(crate) bindings: HashMap<String, BindingData>,
 }
 
 impl Debug for Matcher {
@@ -275,7 +275,7 @@ impl Debug for Matcher {
         // HashMaps are not ordered. As we need a deterministic debug output,
         // we have to make a shiny debug impl.
 
-        struct Helper<'a>(Vec<(&'a String, &'a FragmentKind)>);
+        struct Helper<'a>(Vec<(&'a String, &'a BindingData)>);
 
         impl Debug for Helper<'_> {
             fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
@@ -296,28 +296,64 @@ impl Matcher {
     pub(crate) fn from_generic<Span>(tokens: &[TokenTree<Span>]) -> Result<Matcher, Error<Span>> {
         let mut bindings = HashMap::new();
 
-        fn visit<Span>(bindings: &mut HashMap<String, FragmentKind>, token: &TokenTree<Span>) {
+        fn visit<Span>(bindings: &mut HashMap<String, BindingData>, stack: &LameLinkedList<RepetitionQuantifierKind>, token: &TokenTree<Span>) {
             match &token.kind {
                 TokenTreeKind::Terminal(_) => {}
 
                 TokenTreeKind::Binding { name, kind } => {
+                    let kind = *kind;
+                    let repetition_stack = stack.to_vec();
+                    let data = BindingData {
+                        kind,
+                        repetition_stack,
+                    };
+
                     // TODO: properly check that there is no other binding with
                     // that name.
-                    let prev = bindings.insert(name.clone(), *kind);
+                    let prev = bindings.insert(name.clone(), data);
                     assert!(prev.is_none());
                 }
 
-                TokenTreeKind::Repetition { inner, .. }
-                | TokenTreeKind::Parenthesed(inner)
+                TokenTreeKind::Repetition { inner, quantifier, ..} => {
+                    let stack = LameLinkedList::Cons(quantifier.kind, stack);
+                    inner.iter().for_each(|tt| visit(bindings, &stack, tt));
+                }
+
+                TokenTreeKind::Parenthesed(inner)
                 | TokenTreeKind::CurlyBraced(inner) => {
-                    inner.iter().for_each(|tt| visit(bindings, tt));
+                    inner.iter().for_each(|tt| visit(bindings, stack, tt));
                 }
             }
         }
 
-        tokens.iter().for_each(|tt| visit(&mut bindings, tt));
+        let stack = LameLinkedList::Nil;
+        tokens.iter().for_each(|tt| visit(&mut bindings, &stack, tt));
 
         Ok(Matcher { bindings })
+    }
+}
+
+#[derive(Clone, Debug, PartialEq)]
+pub(crate) struct BindingData {
+    pub(crate) kind: FragmentKind,
+    pub(crate) repetition_stack: Vec<RepetitionQuantifierKind>,
+}
+
+enum LameLinkedList<'a, T> {
+    Nil,
+    Cons(T, &'a LameLinkedList<'a, T>),
+}
+
+impl<'a, T> LameLinkedList<'a, T> {
+    fn to_vec(&self) -> Vec<T> where T: Clone {
+        match self {
+            LameLinkedList::Nil => Vec::new(),
+            LameLinkedList::Cons(head, tail) => {
+                let mut out = tail.to_vec();
+                out.push(head.clone());
+                out
+            }
+        }
     }
 }
 
@@ -365,8 +401,14 @@ mod local_tree_to_matcher {
                 Ok(
                     Matcher {
                         bindings: {
-                            "a": Ident,
-                            "b": Expr,
+                            "a": BindingData {
+                                kind: Ident,
+                                repetition_stack: [],
+                            },
+                            "b": BindingData {
+                                kind: Expr,
+                                repetition_stack: [],
+                            },
                         },
                     },
                 )
@@ -381,7 +423,10 @@ mod local_tree_to_matcher {
                 Ok(
                     Matcher {
                         bindings: {
-                            "a": Ident,
+                            "a": BindingData {
+                                kind: Ident,
+                                repetition_stack: [],
+                            },
                         },
                     },
                 )
@@ -396,7 +441,12 @@ mod local_tree_to_matcher {
                 Ok(
                     Matcher {
                         bindings: {
-                            "a": Ident,
+                            "a": BindingData {
+                                kind: Ident,
+                                repetition_stack: [
+                                    ZeroOrMore,
+                                ],
+                            },
                         },
                     },
                 )
