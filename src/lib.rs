@@ -186,7 +186,10 @@ fn parse_macro_stream(stream: TokenStream) -> Vec<expandable_impl::TokenTree<Spa
                     }
                     s if s.starts_with("=>") => {
                         let (last, tail_) = tail.split_first().unwrap();
-                        span = span.join(last.span()).unwrap();
+                        // FIXME: the following call to `join` always returns
+                        // `None` on stable because it relies on the
+                        // `proc_macro_span` feature.
+                        span = span.join(last.span()).unwrap_or_else(|| p.span());
                         tail = tail_;
                         expandable_impl::Terminal::FatArrow
                     }
