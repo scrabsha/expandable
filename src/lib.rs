@@ -21,7 +21,7 @@
 //! [`expandable::expr`] macro, that checks that the macro expands to a valid
 //! expression. Let's use it on `js_concat`:
 //!
-//! [`expandable::expr`]: macro@crate::expr
+//! [`expandable::expr`]: macro@expr
 //!
 //! ```rust,compile_fail
 //! #[expandable::expr]
@@ -178,17 +178,16 @@ fn parse_macro_stream(stream: TokenStream) -> Vec<expandable_impl::TokenTree<Spa
 
             TokenTree::Punct(p) => {
                 expandable_impl::TokenTreeKind::Terminal(match contiguous_punct(p, tail).as_str() {
+                    // FIXME: the following calls to `join` always returns `None`
+                    // on stable because it relies on the`proc_macro_span` feature.
                     s if s.starts_with("->") => {
                         let (last, tail_) = tail.split_first().unwrap();
-                        span = span.join(last.span()).unwrap();
+                        span = span.join(last.span()).unwrap_or_else(|| p.span());
                         tail = tail_;
                         expandable_impl::Terminal::Arrow
                     }
                     s if s.starts_with("=>") => {
                         let (last, tail_) = tail.split_first().unwrap();
-                        // FIXME: the following call to `join` always returns
-                        // `None` on stable because it relies on the
-                        // `proc_macro_span` feature.
                         span = span.join(last.span()).unwrap_or_else(|| p.span());
                         tail = tail_;
                         expandable_impl::Terminal::FatArrow
