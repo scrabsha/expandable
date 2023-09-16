@@ -1,9 +1,9 @@
-use std::{collections::HashMap, marker::PhantomData};
+use std::collections::HashMap;
 
 use crate::{
     error::Error,
     grammar::{DynamicState, State},
-    matcher::{Matcher,BindingData},
+    matcher::{BindingData, Matcher},
     states::DynamicStateSet,
     substitution::{TokenTree, TokenTreeKind},
     RepetitionQuantifier, RepetitionQuantifierKind,
@@ -13,7 +13,7 @@ type Cursor<'ast, Span> = &'ast [TokenTree<Span>];
 
 pub(crate) fn check_arm<Span>(
     init_state: State,
-    bindings: Matcher,
+    bindings: Matcher<Span>,
     substitution: &[TokenTree<Span>],
 ) -> Result<(), Error<Span>>
 where
@@ -25,8 +25,7 @@ where
 
 struct ExpCtx<Span> {
     // todo: we also want to see which depth a macro repeats at.
-    bindings: HashMap<String, BindingData>,
-    span: PhantomData<Span>,
+    bindings: HashMap<String, BindingData<Span>>,
 }
 
 impl<Span> ExpCtx<Span>
@@ -34,7 +33,7 @@ where
     Span: Copy,
 {
     fn check_rule(
-        bindings: HashMap<String, BindingData>,
+        bindings: HashMap<String, BindingData<Span>>,
         subst: &[TokenTree<Span>],
         initial_state: DynamicState,
     ) -> Result<(), Error<Span>> {
@@ -53,11 +52,8 @@ where
         Ok(())
     }
 
-    fn new(bindings: HashMap<String, BindingData>) -> ExpCtx<Span> {
-        ExpCtx {
-            bindings,
-            span: PhantomData,
-        }
+    fn new(bindings: HashMap<String, BindingData<Span>>) -> ExpCtx<Span> {
+        ExpCtx { bindings }
     }
 
     fn parse_single_tree(

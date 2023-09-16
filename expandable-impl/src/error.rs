@@ -1,4 +1,4 @@
-use crate::{grammar::TokenDescription, Terminal};
+use crate::{grammar::TokenDescription, RepetitionQuantifierKind, Terminal};
 
 /// An error that is generated when checking an incorrect macro.
 ///
@@ -65,6 +65,36 @@ pub enum Error<Span> {
         name: String,
         /// Where it was used.
         where_: Span,
+    },
+
+    /// A variable is being repeated with a repetition stack that does not
+    /// match the matched repetition stack.
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// macro_rules! subtraction {
+    ///     ( $( $a:literal )-* ) => {
+    ///         $( $a )-+
+    ///     };
+    /// }
+    ///
+    /// subtraction!(101 - 42);
+    /// ```
+    ///
+    /// In this example, the repetition nesting of the matched metavariable `a`
+    /// is `*`, while the nesting of the metavariable indication `a` is `+`.
+    InvalidRepetitionNesting {
+        /// The name of the metavariable.
+        metavariable_name: String,
+        /// Where the metavariable was declared.
+        decl_span: Span,
+        /// Where the metavariable was used with an incorrecting nesting.
+        usage_span: Span,
+        /// The nesting used when the metavariable was declared.
+        expected_nesting: Vec<RepetitionQuantifierKind>,
+        /// The nesting encountered when the metavariable was used.
+        got_nesting: Vec<RepetitionQuantifierKind>,
     },
 }
 

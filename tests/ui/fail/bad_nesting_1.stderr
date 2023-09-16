@@ -1,0 +1,13 @@
+warning: unused macro definition: `bad_nesting_example`
+ --> tests/ui/fail/bad_nesting_1.rs:1:14
+  |
+1 | macro_rules! bad_nesting_example {
+  |              ^^^^^^^^^^^^^^^^^^^
+  |
+  = note: `#[warn(unused_macros)]` on by default
+
+error[E0601]: `main` function not found in crate `$CRATE`
+ --> tests/ui/fail/bad_nesting_1.rs:3:2
+  |
+3 | }
+  |  ^ consider adding a `main` function to `$DIR/tests/ui/fail/bad_nesting_1.rs`

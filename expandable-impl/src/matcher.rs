@@ -3,6 +3,7 @@ use std::{
     fmt::{self, Debug},
 };
 
+use crate::list::LameLinkedList;
 use crate::{
     error::{Error, MacroRuleNode},
     FragmentKind, RepetitionQuantifier, RepetitionQuantifierKind, Spannable, Terminal,
@@ -266,18 +267,23 @@ where
 }
 
 #[derive(Clone, PartialEq)]
-pub(crate) struct Matcher {
-    pub(crate) bindings: HashMap<String, BindingData>,
+pub(crate) struct Matcher<Span> {
+    pub(crate) bindings: HashMap<String, BindingData<Span>>,
 }
 
-impl Debug for Matcher {
+impl<Span> Debug for Matcher<Span>
+where
+    Span: Debug,
+{
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         // HashMaps are not ordered. As we need a deterministic debug output,
         // we have to make a shiny debug impl.
+        struct Helper<'a, Span>(Vec<(&'a String, &'a BindingData<Span>)>);
 
-        struct Helper<'a>(Vec<(&'a String, &'a BindingData)>);
-
-        impl Debug for Helper<'_> {
+        impl<Span> Debug for Helper<'_, Span>
+        where
+            Span: Debug,
+        {
             fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
                 f.debug_map().entries(self.0.iter().copied()).finish()
             }
@@ -292,11 +298,20 @@ impl Debug for Matcher {
     }
 }
 
-impl Matcher {
-    pub(crate) fn from_generic<Span>(tokens: &[TokenTree<Span>]) -> Result<Matcher, Error<Span>> {
+impl<Span> Matcher<Span>
+where
+    Span: Copy,
+{
+    pub(crate) fn from_generic(tokens: &[TokenTree<Span>]) -> Result<Matcher<Span>, Error<Span>> {
         let mut bindings = HashMap::new();
 
-        fn visit<Span>(bindings: &mut HashMap<String, BindingData>, stack: &LameLinkedList<RepetitionQuantifierKind>, token: &TokenTree<Span>) {
+        fn visit<Span>(
+            bindings: &mut HashMap<String, BindingData<Span>>,
+            stack: &LameLinkedList<RepetitionQuantifierKind>,
+            token: &TokenTree<Span>,
+        ) where
+            Span: Copy,
+        {
             match &token.kind {
                 TokenTreeKind::Terminal(_) => {}
 
@@ -305,6 +320,7 @@ impl Matcher {
                     let repetition_stack = stack.to_vec();
                     let data = BindingData {
                         kind,
+                        span: token.span,
                         repetition_stack,
                     };
 
@@ -314,47 +330,33 @@ impl Matcher {
                     assert!(prev.is_none());
                 }
 
-                TokenTreeKind::Repetition { inner, quantifier, ..} => {
+                TokenTreeKind::Repetition {
+                    inner, quantifier, ..
+                } => {
                     let stack = LameLinkedList::Cons(quantifier.kind, stack);
                     inner.iter().for_each(|tt| visit(bindings, &stack, tt));
                 }
 
-                TokenTreeKind::Parenthesed(inner)
-                | TokenTreeKind::CurlyBraced(inner) => {
+                TokenTreeKind::Parenthesed(inner) | TokenTreeKind::CurlyBraced(inner) => {
                     inner.iter().for_each(|tt| visit(bindings, stack, tt));
                 }
             }
         }
 
         let stack = LameLinkedList::Nil;
-        tokens.iter().for_each(|tt| visit(&mut bindings, &stack, tt));
+        tokens
+            .iter()
+            .for_each(|tt| visit(&mut bindings, &stack, tt));
 
         Ok(Matcher { bindings })
     }
 }
 
 #[derive(Clone, Debug, PartialEq)]
-pub(crate) struct BindingData {
+pub(crate) struct BindingData<Span> {
     pub(crate) kind: FragmentKind,
+    pub(crate) span: Span,
     pub(crate) repetition_stack: Vec<RepetitionQuantifierKind>,
-}
-
-enum LameLinkedList<'a, T> {
-    Nil,
-    Cons(T, &'a LameLinkedList<'a, T>),
-}
-
-impl<'a, T> LameLinkedList<'a, T> {
-    fn to_vec(&self) -> Vec<T> where T: Clone {
-        match self {
-            LameLinkedList::Nil => Vec::new(),
-            LameLinkedList::Cons(head, tail) => {
-                let mut out = tail.to_vec();
-                out.push(head.clone());
-                out
-            }
-        }
-    }
 }
 
 #[cfg(test)]
@@ -403,10 +405,12 @@ mod local_tree_to_matcher {
                         bindings: {
                             "a": BindingData {
                                 kind: Ident,
+                                span: (),
                                 repetition_stack: [],
                             },
                             "b": BindingData {
                                 kind: Expr,
+                                span: (),
                                 repetition_stack: [],
                             },
                         },
@@ -425,6 +429,7 @@ mod local_tree_to_matcher {
                         bindings: {
                             "a": BindingData {
                                 kind: Ident,
+                                span: (),
                                 repetition_stack: [],
                             },
                         },
@@ -443,6 +448,7 @@ mod local_tree_to_matcher {
                         bindings: {
                             "a": BindingData {
                                 kind: Ident,
+                                span: (),
                                 repetition_stack: [
                                     ZeroOrMore,
                                 ],

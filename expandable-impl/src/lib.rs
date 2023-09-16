@@ -131,7 +131,9 @@ mod macros;
 mod error;
 mod expansion;
 mod grammar;
+mod list;
 mod matcher;
+mod repetition_stack;
 mod states;
 mod substitution;
 
@@ -187,6 +189,7 @@ where
         };
 
         let substitution = substitution::TokenTree::from_generic(substitution)?;
+        repetition_stack::check(&matcher, &substitution)?;
 
         expansion::check_arm(ctx.to_state(), matcher, &substitution)?;
 
@@ -370,7 +373,7 @@ impl FromStr for InvocationContext {
 }
 
 #[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
-struct RepetitionQuantifier<Span> {
+pub(crate) struct RepetitionQuantifier<Span> {
     kind: RepetitionQuantifierKind,
     span: Span,
 }
@@ -400,10 +403,14 @@ impl RepetitionQuantifier<()> {
     }
 }
 
+/// Denotes how much times a repetition shall be repeated.
 #[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
-enum RepetitionQuantifierKind {
+pub enum RepetitionQuantifierKind {
+    /// Zero or one repetitions (`?` operator).
     ZeroOrOne,
+    /// Zero or more repetitions (`*` operator).
     ZeroOrMore,
+    /// One or more repetitions (`+` operator).
     OneOrMore,
 }
 
