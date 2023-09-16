@@ -66,7 +66,7 @@ use syn::{
 
 use syn_shim::ItemMacroRules;
 
-use expandable_impl::TokenDescription;
+use expandable_impl::{RepetitionQuantifierKind, TokenDescription};
 
 macro_rules! attribute_macro {
     ($name:ident => $variant:ident) => {
@@ -116,6 +116,33 @@ fn mk_error_msg(error: expandable_impl::Error<Span>) -> syn::Error {
 
         expandable_impl::Error::UnboundMetavariable { name, where_, .. } => {
             (format!("Unbound metavariable `{name}`"), Some(where_))
+        }
+
+        expandable_impl::Error::InvalidRepetitionNesting {
+            metavariable_name,
+            decl_span,
+            usage_span,
+            expected_nesting,
+            got_nesting,
+        } => {
+            let quantifier_to_char = |quantifier| match quantifier {
+                RepetitionQuantifierKind::ZeroOrOne => '?',
+                RepetitionQuantifierKind::ZeroOrMore => '*',
+                RepetitionQuantifierKind::OneOrMore => '+',
+            };
+
+            let nesting_to_string = |nesting: Vec<RepetitionQuantifierKind>| {
+                nesting
+                    .iter()
+                    .copied()
+                    .map(quantifier_to_char)
+                    .collect::<String>()
+            };
+
+            let expected = nesting_to_string(expected_nesting);
+            let got = nesting_to_string(got_nesting);
+
+            (format!("Metavariable `{metavariable_name}` must be repeated with `{expected}` nesting. It is repeated with `{got}`"), Some(usage_span))
         }
 
         _ => (
