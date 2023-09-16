@@ -51,37 +51,40 @@
 //!     leading to incomplete "expected xxx" list this will be fixed before the
 //!     first non-alpha release of this crate.
 
+mod syn_shim;
+
 extern crate proc_macro;
 
-use expandable_impl::TokenDescription;
 use proc_macro::TokenStream as TokenStream1;
-use proc_macro2::{Delimiter, Punct, Spacing, Span, TokenStream, TokenTree};
-use quote::{quote, quote_spanned};
 use std::str::FromStr;
-use syn::parse_macro_input;
+
+use proc_macro2::{Delimiter, Punct, Spacing, Span, TokenStream, TokenTree};
 use syn::{
     parse::{Parse, ParseStream},
-    spanned::Spanned,
-    Error, Ident, ItemMacro,
+    Ident,
 };
+
+use syn_shim::ItemMacroRules;
+
+use expandable_impl::TokenDescription;
 
 macro_rules! attribute_macro {
     ($name:ident => $variant:ident) => {
         #[proc_macro_attribute]
         pub fn $name(_: TokenStream1, item: TokenStream1) -> TokenStream1 {
-            let item_ = item.clone();
+            let mut item_ = item.clone();
 
-            let macro_ = parse_macro_input!(item as ItemMacro);
-            // We need to ensure that it is a macro_rule thing.
-            if macro_.ident.is_none() {
-                return quote_spanned! { macro_.mac.path.span() => compile_error!("Expected a `macro_rules!` macro")}
-                    .into();
-            }
+            let macro_ = match syn::parse2::<ItemMacroRules>(item.into()) {
+                Ok(macro_) => macro_,
+                Err(e) => return e.to_compile_error().into(),
+            };
+            let stream = parse_macro_stream(macro_.tokens);
 
-            let stream = parse_macro_stream(macro_.mac.tokens);
-
-            if let Err(e) = expandable_impl::check_macro(expandable_impl::InvocationContext::$variant, stream) {
-                return mk_error_msg(item_, e);
+            if let Err(e) =
+                expandable_impl::check_macro(expandable_impl::InvocationContext::$variant, stream)
+            {
+                item_.extend(TokenStream1::from(mk_error_msg(e).into_compile_error()));
+                return item_;
             }
 
             item_
@@ -92,47 +95,37 @@ macro_rules! attribute_macro {
 attribute_macro!(expr => Expr);
 attribute_macro!(item => Item);
 
-fn mk_error_msg(mut item: TokenStream1, error: expandable_impl::Error<Span>) -> TokenStream1 {
-    let compile_error = match error {
-        expandable_impl::Error::ParsingFailed { where_, .. } => quote_spanned! {
-            where_ => compile_error!("Failed to parse `macro_rules` body");
-        },
+fn mk_error_msg(error: expandable_impl::Error<Span>) -> syn::Error {
+    let (message, span) = match error {
+        expandable_impl::Error::ParsingFailed { where_, .. } => (
+            "Failed to parse `macro_rules` body".to_string(),
+            Some(where_),
+        ),
 
-        expandable_impl::Error::UnexpectedEnd {
-            last_token: Some(span),
-            ..
-        } => quote_spanned! {
-            span => compile_error!("Unexpected end of macro invocation");
-        },
-
-        expandable_impl::Error::UnexpectedEnd { .. } => {
-            quote! {
-                compile_error!("Unexpected end of macro invocation");
-            }
+        expandable_impl::Error::UnexpectedEnd { last_token, .. } => {
+            ("Unexpected end of macro invocation".to_string(), last_token)
         }
 
         expandable_impl::Error::InvalidProducedAst { span, expected, .. } => {
             let expected = expected.iter().map(describe).collect::<Vec<_>>().join(", ");
-            quote_spanned! {
-                // TODO: name what is expected
-                span => compile_error!(concat!("Potentially invalid expansion. Expected ", #expected, "."));
-            }
+            (
+                format!("Potentially invalid expansion. Expected {expected}."),
+                Some(span),
+            )
         }
 
-        expandable_impl::Error::UnboundMetavariable { name, where_, .. } => quote_spanned! {
-            where_ => compile_error!("Unbound metavariable `{}`", #name);
-        },
-
-        _ => {
-            quote! {
-                compile_error!("`expandable` returned an error the expandable macro does not handle (yet)");
-            }
+        expandable_impl::Error::UnboundMetavariable { name, where_, .. } => {
+            (format!("Unbound metavariable `{name}`"), Some(where_))
         }
+
+        _ => (
+            "`expandable` returned an error the expandable macro does not handle (yet)".to_string(),
+            None,
+        ),
     };
 
-    item.extend(TokenStream1::from(compile_error));
-
-    item
+    let span = span.unwrap_or_else(Span::call_site);
+    syn::Error::new(span, message)
 }
 
 fn describe(descr: &TokenDescription) -> &'static str {
@@ -241,7 +234,7 @@ impl Parse for InvocationContext {
         expandable_impl::InvocationContext::from_str(&ident.to_string())
             .map(InvocationContext)
             .map_err(|()| {
-                Error::new(
+                syn::Error::new(
                     ident.span(),
                     "Unknown invocation context. Expected `item` or `expr`",
                 )

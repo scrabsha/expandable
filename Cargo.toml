@@ -18,8 +18,7 @@ proc-macro = true
 expandable-impl = { path = "expandable-impl" }
 proc-macro2 = "1.0.66"
 quote = "1.0"
-# TODO: we don't actually use much of `syn` - how hard would it be to remove it?
-syn = { version = "2.0", features = ["full"] }
+syn = { version = "2.0", default-features = false, features = ["parsing"] }
 
 [dev-dependencies]
 trybuild = "1.0"
