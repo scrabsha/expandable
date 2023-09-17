@@ -6,7 +6,7 @@
 //! <br />
 //! <br />
 //!
-//! <p style="text-align:center">
+//! <p style="text-align:center" align="center">
 //! <img src="https://cdn.githubraw.com/scrabsha/expendable/main/assets/top_image.png"
 //!      width=70%
 //!      style="text-align:center"
