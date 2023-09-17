@@ -135,12 +135,4 @@ mod tests {
             }
         }
     }
-
-    repetition_match_test! {
-        fn wtf() {
-            {
-                ( @( @bad_nesting_test:ident )? ) => { @( @t )* }
-            }
-        }
-    }
 }
