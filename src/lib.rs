@@ -89,28 +89,30 @@ macro_rules! attribute_macro {
         /// *Refer to the [crate-level documentation][crate] for more.*
         #[proc_macro_attribute]
         pub fn $name(_: TokenStream1, item: TokenStream1) -> TokenStream1 {
-            let mut item_ = item.clone();
-
-            let macro_ = match syn::parse2::<ItemMacroRules>(item.into()) {
-                Ok(macro_) => macro_,
-                Err(e) => return e.to_compile_error().into(),
-            };
-            let stream = parse_macro_stream(macro_.tokens);
-
-            if let Err(e) =
-                expandable_impl::check_macro(expandable_impl::InvocationContext::$variant, stream)
-            {
-                item_.extend(TokenStream1::from(mk_error_msg(e).into_compile_error()));
-                return item_;
-            }
-
-            item_
+            expandable_inner(expandable_impl::InvocationContext::$variant, item)
         }
     };
 }
 
 attribute_macro!(expr => Expr);
 attribute_macro!(item => Item);
+
+fn expandable_inner(ctx: expandable_impl::InvocationContext, item: TokenStream1) -> TokenStream1 {
+    let mut item_ = item.clone();
+
+    let macro_ = match syn::parse2::<ItemMacroRules>(item.into()) {
+        Ok(macro_) => macro_,
+        Err(e) => return e.to_compile_error().into(),
+    };
+    let input = parse_macro_stream(macro_.tokens);
+
+    if let Err(e) = expandable_impl::check_macro(ctx, input) {
+        item_.extend(TokenStream1::from(mk_error_msg(e).into_compile_error()));
+        return item_;
+    }
+
+    item_
+}
 
 fn mk_error_msg(error: expandable_impl::Error<Span>) -> syn::Error {
     let (message, span) = match error {
