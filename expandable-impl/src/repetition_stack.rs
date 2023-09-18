@@ -1,3 +1,10 @@
+// Architecture invariant: this module allows to check that the repetition
+// nesting of a metavariable in the substitution matches the nesting in the
+// matcher.
+
+// TODO: vocabulary - we must use repetition _nesting_ instead of repetition
+// _stack_.
+
 use crate::list::LameLinkedList;
 use crate::matcher::{BindingData, Matcher};
 use crate::substitution::{TokenTree, TokenTreeKind};

@@ -1,3 +1,6 @@
+// Architecture invariant: this module contains macros that are used across the
+// crate.
+
 #[cfg(test)]
 macro_rules! quote {
     (@inner, ( $( $tt:tt )* ) ) => {

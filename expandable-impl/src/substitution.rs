@@ -1,3 +1,6 @@
+// Architectural invariant: this module contains types and functions that allow
+// to represent a macro substitution in a meaningful way.
+
 use crate::{
     error::{Error, MacroRuleNode},
     RepetitionQuantifier, RepetitionQuantifierKind, Spannable, Terminal,

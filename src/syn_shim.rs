@@ -1,3 +1,6 @@
+// Architecture invariant: this module contains the definition of various AST
+// nodes that are used to represent the parsed Rust code.
+
 use proc_macro2::extra::DelimSpan;
 use proc_macro2::{Delimiter, Ident, TokenStream};
 use syn::{

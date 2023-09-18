@@ -1,3 +1,6 @@
+// Architectural invariant: this module contains basic types that allow to parse
+// the Rust language.
+
 use smallvec::{smallvec, SmallVec};
 
 use crate::{FragmentKind, Terminal};

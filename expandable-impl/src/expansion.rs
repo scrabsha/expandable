@@ -1,3 +1,6 @@
+// Architectural invariant: this module contains the parsing logic for macro
+// transcribers.
+
 use std::collections::HashMap;
 
 use crate::{

@@ -1,3 +1,6 @@
+// Architectural invariant: this module contains types that are useful for error
+// reporting and nothing else.
+
 use crate::{grammar::TokenDescription, RepetitionQuantifierKind, Terminal};
 
 /// An error that is generated when checking an incorrect macro.

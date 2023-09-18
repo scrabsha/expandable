@@ -1,3 +1,6 @@
+// Architectural invariant: this module contains a dead-simple linked list that
+// is useful for recursive functions.
+
 pub enum LameLinkedList<'a, T> {
     Nil,
     Cons(T, &'a LameLinkedList<'a, T>),

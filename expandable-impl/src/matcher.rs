@@ -1,3 +1,6 @@
+// Architecture invariant: this module contains constructs that allow to
+// extract information out of macro matchers.
+
 use std::{
     collections::HashMap,
     fmt::{self, Debug},
