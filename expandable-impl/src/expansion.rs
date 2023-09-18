@@ -6,7 +6,7 @@ use crate::{
     matcher::{BindingData, Matcher},
     states::DynamicStateSet,
     substitution::{TokenTree, TokenTreeKind},
-    RepetitionQuantifier, RepetitionQuantifierKind,
+    RepetitionQuantifier, RepetitionQuantifierKind, TokenDescription,
 };
 
 type Cursor<'ast, Span> = &'ast [TokenTree<Span>];
@@ -88,75 +88,79 @@ where
         state: DynamicState,
         tree: &TokenTree<Span>,
     ) -> Result<DynamicStateSet, Error<Span>> {
-        Ok(match &tree.kind {
-            TokenTreeKind::Terminal(t) => {
-                DynamicStateSet::singleton(state.accept_terminal(t).map_err(|expected| {
-                    Error::InvalidProducedAst {
-                        span: tree.span,
-                        expected,
-                    }
-                })?)
-            }
+        match &tree.kind {
+            TokenTreeKind::Terminal(t) => state
+                .accept(t)
+                .map_err(|expected| Error::InvalidProducedAst {
+                    span: tree.span,
+                    expected,
+                })
+                .map(DynamicStateSet::singleton),
 
-            TokenTreeKind::Parenthesed(i) => {
-                let (inner_state, next_state) =
-                    state
-                        .accept_paren()
-                        .map_err(|expected| Error::InvalidProducedAst {
-                            span: tree.span,
-                            expected,
-                        })?;
+            TokenTreeKind::Parenthesed(inner) => self.check_delimited_stream(
+                TokenDescription::LParen,
+                inner,
+                TokenDescription::RParen,
+                tree.span,
+                state,
+            ),
 
-                self.check_delimited_stream(i, inner_state)?;
-
-                DynamicStateSet::singleton(next_state)
-            }
-
-            TokenTreeKind::CurlyBraced(i) => {
-                let (inner_state, next_state) =
-                    state
-                        .accept_curly()
-                        .map_err(|expected| Error::InvalidProducedAst {
-                            span: tree.span,
-                            expected,
-                        })?;
-
-                self.check_delimited_stream(i, inner_state)?;
-
-                DynamicStateSet::singleton(next_state)
-            }
+            TokenTreeKind::CurlyBraced(inner) => self.check_delimited_stream(
+                TokenDescription::LBrace,
+                inner,
+                TokenDescription::RBrace,
+                tree.span,
+                state,
+            ),
 
             TokenTreeKind::Fragment(f) => {
-                // TODO: return a proper error
+                // This is safe because we ensured at the previous step that
+                // a fragment with that name indeed exists.
                 let kind = self.bindings.get(f).expect("Fragment not found").kind;
-                DynamicStateSet::singleton(
-                    state
-                        .accept_fragment(kind)
-                        .expect("Fragment kind not accepted"),
-                )
+                state
+                    .accept_fragment(kind)
+                    .map(DynamicStateSet::singleton)
+                    .map_err(|expected| Error::InvalidProducedAst {
+                        span: tree.span,
+                        expected,
+                    })
             }
+
             TokenTreeKind::Repetition { .. } => {
                 unreachable!("Repetitions should be handled by ExpCtx::parse_single_tree`")
             }
-        })
+        }
     }
 
     fn check_delimited_stream(
         &self,
-        stream: &[TokenTree<Span>],
-        inner_state: DynamicState,
-    ) -> Result<(), Error<Span>> {
-        if self
-            .parse_stream(DynamicStateSet::singleton(inner_state), stream)?
-            .into_iter()
-            .any(|state| !state.is_accepting())
-        {
-            return Err(Error::UnexpectedEnd {
-                last_token: stream.last().map(|tree| tree.span),
-            });
-        }
+        open: TokenDescription,
+        inner: &[TokenTree<Span>],
+        close: TokenDescription,
+        span: Span,
+        initial_state: DynamicState,
+    ) -> Result<DynamicStateSet, Error<Span>> {
+        // Parse open delimiter
+        let state = initial_state
+            .clone()
+            .accept(open)
+            .map_err(|expected| Error::InvalidProducedAst { span, expected })?;
 
-        Ok(())
+        let inner_state = state.fresh_stack();
+        let states = self.parse_stream(DynamicStateSet::singleton(inner_state), inner)?;
+
+        // Parse close delimiter
+        let states = states
+            .into_iter()
+            .map(|state| {
+                state
+                    .accept(close)
+                    .map(|state| state.with_old_stack(&initial_state))
+                    .map_err(|expected| Error::InvalidProducedAst { span, expected })
+            })
+            .collect::<Result<DynamicStateSet, _>>()?;
+
+        Ok(states)
     }
 
     fn parse_stream(

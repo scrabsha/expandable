@@ -176,9 +176,12 @@ fn mk_error_msg(error: expandable_impl::Error<Span>) -> syn::Error {
 
 fn describe(descr: &TokenDescription) -> &'static str {
     match descr {
-        TokenDescription::Paren => "a parenthesis",
-        TokenDescription::Bracket => "a bracket",
-        TokenDescription::Brace => "a brace",
+        TokenDescription::LParen => "a `(`",
+        TokenDescription::RParen => "a `)`",
+        TokenDescription::LBracket => "a `[`",
+        TokenDescription::RBracket => "a `]`",
+        TokenDescription::LBrace => "a `{`",
+        TokenDescription::RBrace => "a `}`",
         TokenDescription::Invalid => unreachable!(),
         TokenDescription::Ident => "an identifier",
         TokenDescription::Fn => "`fn`",
@@ -186,6 +189,13 @@ fn describe(descr: &TokenDescription) -> &'static str {
         TokenDescription::Times => "`*`",
         TokenDescription::Comma => "`,`",
         TokenDescription::Colon => "`:`",
+        TokenDescription::Semi => "`;`",
+        TokenDescription::Arrow => "`->`",
+        TokenDescription::FatArrow => "`=>`",
+        TokenDescription::QuestionMark => "`?`",
+        TokenDescription::Dollar => "`$`",
+
+        _ => todo!(),
     }
 }
 

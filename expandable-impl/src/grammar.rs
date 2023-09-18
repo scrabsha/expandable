@@ -4,7 +4,8 @@ use crate::{FragmentKind, Terminal};
 
 #[derive(Clone, Debug, Eq, Hash, PartialEq)]
 pub(crate) struct DynamicState {
-    pub(crate) states: SmallVec<[State; 8]>,
+    pub(crate) state: State,
+    pub(crate) stack: SmallVec<[StackSymbol; 16]>,
 }
 
 impl DynamicState {
@@ -12,105 +13,64 @@ impl DynamicState {
         self,
         fragment: FragmentKind,
     ) -> Result<DynamicState, Vec<TokenDescription>> {
-        self.top()
-            .accept_fragment(fragment)
-            .map(|trans| self.with(trans))
+        self.trans(TokenDescription::Fragment(fragment))
     }
 
-    pub(crate) fn accept_terminal(
-        self,
-        terminal: &Terminal,
-    ) -> Result<DynamicState, Vec<TokenDescription>> {
-        self.top()
-            .accept_terminal(terminal)
-            .map(|trans| self.with(trans))
-    }
-
-    pub(crate) fn accept_paren(
-        self,
-    ) -> Result<(DynamicState, DynamicState), Vec<TokenDescription>> {
-        let (inner, next) = self.top().accept_paren()?;
-        Ok((inner.into_dynamic_state(), self.with_top_state(next)))
-    }
-
-    pub(crate) fn accept_curly(
-        self,
-    ) -> Result<(DynamicState, DynamicState), Vec<TokenDescription>> {
-        let (inner, next) = self.top().accept_brace()?;
-        Ok((inner.into_dynamic_state(), self.with_top_state(next)))
+    pub(crate) fn accept<Descr>(self, descr: Descr) -> Result<DynamicState, Vec<TokenDescription>>
+    where
+        Descr: Into<TokenDescription>,
+    {
+        self.trans(descr.into())
     }
 
     pub(crate) fn is_accepting(&self) -> bool {
-        self.states.len() == 1 && self.top().is_accepting()
+        self.stack.is_empty() && self.state.is_accepting()
     }
 
-    fn with(mut self, trans: FragmentTransition) -> DynamicState {
-        match trans {
-            FragmentTransition::Nest { inner, next } => {
-                *self.top_mut() = next;
-                self.states.push(inner);
-            }
-            FragmentTransition::Flat { next } => {
-                *self.top_mut() = next;
-            }
-            FragmentTransition::Finish => {
-                self.states.pop().unwrap();
-            }
+    pub(crate) fn fresh_stack(&self) -> DynamicState {
+        let symbol = self.stack.last().unwrap();
+        DynamicState {
+            state: self.state,
+            stack: smallvec![*symbol],
+        }
+    }
+
+    pub(crate) fn with_old_stack(&self, old_state: &DynamicState) -> DynamicState {
+        DynamicState {
+            state: self.state,
+            stack: old_state.stack.clone(),
+        }
+    }
+
+    fn trans(self, descr: TokenDescription) -> Result<DynamicState, Vec<TokenDescription>> {
+        self.state
+            .trans(descr, self.stack_top())
+            .map(|transition| self.with(transition))
+    }
+
+    fn stack_top(&self) -> Option<StackSymbol> {
+        self.stack.last().copied()
+    }
+
+    fn with(mut self, trans: Transition) -> DynamicState {
+        if trans.pop {
+            self.stack.pop().unwrap();
         }
 
-        self
-    }
+        if let Some(symbol) = trans.push {
+            self.stack.push(symbol);
+        }
 
-    #[inline]
-    fn top(&self) -> State {
-        *self.states.last().unwrap()
-    }
+        self.state = trans.state;
 
-    #[inline]
-    fn top_mut(&mut self) -> &mut State {
-        self.states.last_mut().unwrap()
-    }
-
-    #[inline]
-    fn with_top_state(mut self, state: State) -> DynamicState {
-        *self.top_mut() = state;
         self
     }
 }
 
-pub(crate) enum FragmentTransition {
-    // The terminal we just accepted is a delimiter. Advance to a new state
-    // and push the old state to the stack.
-    Nest { inner: State, next: State },
-    // The terminal we just accepted is not a delimiter.
-    Flat { next: State },
-    // The terminal we just accepted is a closing delimiter. Pop the stack and
-    // continue.
-    Finish,
-}
-
-impl From<[State; 2]> for FragmentTransition {
-    fn from([inner, next]: [State; 2]) -> Self {
-        FragmentTransition::Nest { inner, next }
-    }
-}
-
-impl From<[State; 1]> for FragmentTransition {
-    fn from([next]: [State; 1]) -> Self {
-        FragmentTransition::Flat { next }
-    }
-}
-
-impl From<[State; 0]> for FragmentTransition {
-    fn from(_: [State; 0]) -> Self {
-        FragmentTransition::Finish
-    }
-}
-
-impl From<[State; 1]> for State {
-    fn from([state]: [State; 1]) -> Self {
-        state
-    }
+pub(crate) struct Transition {
+    pub(crate) state: State,
+    pub(crate) pop: bool,
+    pub(crate) push: Option<StackSymbol>,
 }
 
 macro_rules! token_description {
@@ -124,13 +84,33 @@ macro_rules! token_description {
         }
     ) => {
         $( #[$meta] )*
+        #[non_exhaustive]
         $vis enum $name {
-            /// An opening or closing parenthesis.
-            Paren,
-            /// An opening or closing bracket.
-            Bracket,
-            /// An opening or closing brace.
-            Brace,
+            /// An opening parenthesis.
+            LParen,
+            /// A closing parenthesis.
+            RParen,
+            /// An opening bracket.
+            LBracket,
+            /// A closing bracket.
+            RBracket,
+            /// An opening brace.
+            LBrace,
+            /// A closing brace.
+            RBrace,
+
+            // `FragmentKind` is a private enum, and this enum is exposed to the
+            // end user, triggering the `private_interfaces` warning.
+            //
+            // `$name` has to stay public for error reporting reasons, but it
+            // feels incorrect to mark `FragmentKind` as public as well. Adding
+            // a public-only type that does not have the `FragmentKind` variant
+            // seems like a waste of time and a slightly too overengineered
+            // solution.
+            #[doc(hidden)]
+            #[allow(private_interfaces)]
+            Fragment(FragmentKind),
+
             /// An invalid token.
             Invalid,
 
@@ -140,15 +120,10 @@ macro_rules! token_description {
             ),*
         }
 
-        impl $name {
-            pub(crate) fn matches(self, terminal: &$crate::Terminal) -> bool {
-                use $name::*;
-
-                match self {
-                    Paren | Brace | Bracket => false,
-                    Invalid => false,
-
-                    $( $name::$variant => matches!(terminal, $pattern) ),*
+        impl From<&Terminal> for $name {
+            fn from(value: &Terminal) -> $name {
+                match value {
+                    $( $pattern => $name::$variant, )*
                 }
             }
         }
@@ -156,66 +131,34 @@ macro_rules! token_description {
 }
 
 macro_rules! generate_grammar {
-    (@accepting accepting) => { true };
-    (@accepting) => { false };
-
-    (@mk_descr ()) => {
-        TokenDescription::Paren
-    };
-    (@mk_descr []) => {
-        TokenDescription::Bracket
-    };
-    (@mk_descr {}) => {
-        TokenDescription::Brace
-    };
-    (@mk_descr $ident:ident) => {
-        TokenDescription::$ident
-    };
-    (@mk_descr $lit:literal) => {
-        TokenDescription::Invalid
+    (@descr "ident") => {
+        TokenDescription::Fragment(FragmentKind::Ident)
     };
 
-    (@terminal ( $inner:ident ), $out_state:ident ) => {
-        [ $out_state ].into()
-    };
-    (@terminal [ $inner:ident ], $out_state:ident ) => {
-        [ $out_state ].into()
-    };
-    (@terminal { $inner:ident }, $out_state:ident ) => {
-        [ $out_state ].into()
-    };
-    (@terminal _) => {
-        FragmentTransition::Finish
-    };
-    (@terminal $( $ident:ident ),*) => {
-        [ $( $ident ),* ].into()
+    (@descr "expr") => {
+        TokenDescription::Fragment(FragmentKind::Expr)
     };
 
-    (@inner ( $inner:ident ), $final:ident) => {
-        ($inner, $final)
-    };
-    (@inner [ $inner:ident ], $final:ident) => {
-        ($inner, $final)
-    };
-    (@inner { $inner:ident }, $final:ident) => {
-        ($inner, $final)
-    };
-    (@inner $( $tail:tt )* ) => {
-        panic!("Bad logic")
+    (@descr $descr:tt) => {
+        TokenDescription::$descr
     };
 
-    (@same_delim () ()) => { true };
-    (@same_delim [] []) => { true };
-    (@same_delim {} {}) => { true };
-    (@same_delim $any:tt $any_:tt) => { false };
+    (@symbol) => {
+        None
+    };
 
-    (@as_fragment $kind:ident "ident") => {
-        $kind == FragmentKind::Ident
+    (@symbol $symbol:tt) => {
+        Some(StackSymbol::$symbol)
     };
-    (@as_fragment $kind:ident "expr") => {
-        $kind == FragmentKind::Expr
+
+    (@state $state:tt) => {
+        State::$state
     };
-    (@as_fragment $a:tt $b:tt) => {
+
+    (@accepting accepting) => {
+        true
+    };
+    (@accepting) => {
         false
     };
 
@@ -226,7 +169,7 @@ macro_rules! generate_grammar {
                 $( #[$accepting:ident] )?
                 $in_state:ident {
                     $(
-                        $descr:tt => $( $out_state:tt ),*
+                        $descr:tt $(, $in_symbol:tt )? => $out_state:tt $(, $out_symbol:tt )?
                     );* $(;)?
                 }
             ),* $(,)?
@@ -240,139 +183,53 @@ macro_rules! generate_grammar {
         }
 
         impl $name {
-            #[allow(clippy::diverging_sub_expression)]
-            pub(crate) fn accept_fragment(&self, kind: FragmentKind) -> Result<FragmentTransition, Vec<TokenDescription>> {
-                use $name::*;
-                match self {
-                    $(
-                        $in_state => {
-                            $(
-                                if generate_grammar!(@as_fragment kind $descr) {
-                                    #[allow(unreachable_code, clippy::diverging_sub_expression)]
-                                    return Ok(generate_grammar!(@terminal $( $out_state ),*));
-                                }
-                            )*
-                            return Err(self.follow());
-                        }
-                    ),*
-                }
+            const TRANSITIONS: &'static[
+                &'static [(TokenDescription, Option<StackSymbol>, State, Option<StackSymbol>)]
+            ] = &[
+                $(
+                    &[
+                        $(
+                            (
+                                generate_grammar!(@descr $descr),
+                                generate_grammar!(@symbol $( $in_symbol )?),
+                                generate_grammar!(@state $out_state),
+                                generate_grammar!(@symbol $( $out_symbol )?),
+                            )
+                        ),*
+                    ]
+                ),*
+            ];
+
+            const ACCEPTING_STATES: &'static [bool] = &[
+                $(
+                    generate_grammar!(@accepting $( $accepting )?),
+                )*
+            ];
+
+            pub(crate) fn trans(self, descr: TokenDescription, top: Option<StackSymbol>) -> Result<Transition, Vec<TokenDescription>> {
+                Self::TRANSITIONS[self as usize].iter().find_map(|(descr_, in_sym, out_state, out_sym)| {
+                    if descr_ == &descr && (in_sym.is_none() || in_sym == &top) {
+                        Some(Transition {
+                            state: *out_state,
+                            pop: in_sym.is_some(),
+                            push: *out_sym,
+                        })
+                    } else { None }
+                }).ok_or_else(|| self.follow())
             }
 
-            #[allow(clippy::diverging_sub_expression)]
-            pub(crate) fn accept_paren(&self) -> Result<($name, $name), Vec<TokenDescription>> {
-                use $name::*;
-                match self {
-                    $(
-                        $in_state => {
-                            $(
-                                if generate_grammar!(@same_delim $descr ()) {
-                                    #[allow(unreachable_code)]
-                                    return Ok(generate_grammar!(@inner $( $out_state ),* ));
-                                }
-                            )*
-                            return Err(self.follow());
-                        }
-                    ),*
-                }
+            fn follow(self) -> Vec<TokenDescription> {
+               Self::TRANSITIONS[self as usize].iter().filter_map(|(descr, _, _, _)| {
+                    if matches!(descr, TokenDescription::Fragment(_)) {
+                        None
+                    } else {
+                        Some(*descr)
+                    }
+                }).collect()
             }
 
-            #[allow(clippy::diverging_sub_expression, unused)]
-            pub(crate) fn accept_bracket(&self) -> Result<($name, $name), Vec<TokenDescription>> {
-                use $name::*;
-                match self {
-                    $(
-                        $in_state => {
-                            $(
-                                if generate_grammar!(@same_delim $descr []) {
-                                    #[allow(unreachable_code, )]
-                                    #[allow(clippy::diverging_sub_expression)]
-                                    return Ok(generate_grammar!(@inner $( $out_state ),*));
-                                }
-                            )*
-                            return Err(self.follow());
-                        }
-                    ),*
-                }
-            }
-
-            #[allow(clippy::diverging_sub_expression)]
-            pub(crate) fn accept_brace(&self) -> Result<($name, $name), Vec<TokenDescription>> {
-                use $name::*;
-                match self {
-                    $(
-                        $in_state => {
-                            $(
-                                if generate_grammar!(@same_delim $descr {}) {
-                                    #[allow(unreachable_code)]
-                                    #[allow(clippy::diverging_sub_expression)]
-                                    return Ok(generate_grammar!(@inner $( $out_state ),*));
-                                }
-                            )*
-                            return Err(self.follow());
-                        }
-                    ),*
-                }
-            }
-
-            #[allow(clippy::diverging_sub_expression)]
-            pub(crate) fn accept_terminal(
-                &self, terminal: &Terminal
-            ) -> Result<FragmentTransition, Vec<TokenDescription>> {
-                use $name::*;
-
-                match self {
-                    $(
-                        $in_state => {
-                            $(
-                                if generate_grammar!(@mk_descr $descr).matches(terminal) {
-                                    #[allow(clippy::diverging_sub_expression)]
-                                    return Ok((generate_grammar!(@terminal $( $out_state ),*)));
-                                }
-                            )*
-                            return Err(self.follow());
-                        }
-                    ),*
-                }
-            }
-
-            // A helper for the `follow` method
-            fn remove_invalid_descrs(descrs: &[TokenDescription]) -> Vec<TokenDescription> {
-                descrs.iter().filter(|descr| **descr != TokenDescription::Invalid).copied().collect()
-            }
-
-            fn follow(&self) -> Vec<TokenDescription> {
-                use $name::*;
-
-                match self {
-                    $(
-                        $in_state => $name::remove_invalid_descrs(&[
-                            $(
-                                generate_grammar!(@mk_descr $descr)
-                            ),*
-                        ])
-                    ),*
-                }
-            }
-
-            fn is_accepting(&self) -> bool {
-                const ACCEPTING_VALUES: &[bool] = &[
-                    $(
-                        generate_grammar!(@accepting $( $accepting )?)
-                    ),*
-                ];
-
-                ACCEPTING_VALUES[*self as usize]
-            }
-
-            fn from_u16(input: u16) -> $name {
-                use $name::*;
-                const VALUES: &[$name] = &[ $( $in_state ),* ];
-
-                VALUES[input as usize]
-            }
-
-            fn to_u16(self) -> u16 {
-                self as u16
+            fn is_accepting(self) -> bool {
+                Self::ACCEPTING_STATES[self as usize]
             }
         }
     };
@@ -399,6 +256,16 @@ token_description! {
         Terminal::Colon => Colon,
         /// A comma (`,`).
         Terminal::Comma => Comma,
+        /// An arrow (`->`).
+        Terminal::Arrow => Arrow,
+        /// A fat arrow (`=>`).
+        Terminal::FatArrow => FatArrow,
+        /// A semicolon (`;`).
+        Terminal::Semi => Semi,
+        /// A question mark (`?`).
+        Terminal::QuestionMark => QuestionMark,
+        /// The dollar sign (`$`).
+        Terminal::Dollar => Dollar,
     }
 }
 
@@ -415,6 +282,7 @@ generate_grammar! {
         AfterExpr {
             Plus => ExprStart;
             Times => ExprStart;
+            RBrace, FnBlockExpr => ItemStart;
         },
 
         #[accepting]
@@ -428,28 +296,30 @@ generate_grammar! {
         },
 
         AfterFnName {
-            () => (FnParamStart), AfterFnParam
+            LParen => FnParamStart, FnParamList
         },
 
-        AfterFnParam {
-            {} => { ExprStart }, ItemStart
+        AfterFnParams {
+            LBrace => ExprStart, FnBlockExpr;
         },
 
-        #[accepting]
         FnParamStart {
             "ident" => AfterFnParamName;
             Ident => AfterFnParamName;
+            RParen, FnParamList => AfterFnParams
         },
 
         AfterFnParamName {
-            Colon => TypeStart, AfterFnParamType;
+            Colon => TypeStart;
         },
 
         TypeStart {
+            "ident" => AfterType;
+            Ident => AfterType;
         },
 
-        AfterFnParamType {
-            Comma => FnParamStart
+        AfterType {
+            Comma, FnParamList => FnParamStart, FnParamList;
         },
     }
 }
@@ -457,7 +327,15 @@ generate_grammar! {
 impl State {
     pub(crate) fn into_dynamic_state(self) -> DynamicState {
         DynamicState {
-            states: smallvec![self],
+            state: self,
+            stack: smallvec![],
         }
     }
+}
+
+// We probably want more, more descriptive, names for these.
+#[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
+pub(crate) enum StackSymbol {
+    FnParamList,
+    FnBlockExpr,
 }
