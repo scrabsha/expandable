@@ -39,9 +39,18 @@ impl DynamicState {
     }
 
     pub(crate) fn with_old_stack(&self, old_state: &DynamicState) -> DynamicState {
+        let len = old_state.stack.len().saturating_sub(1);
+        let stack = old_state
+            .stack
+            .iter()
+            .copied()
+            .take(len)
+            .chain(self.stack_top())
+            .collect::<SmallVec<[_; 16]>>();
+
         DynamicState {
             state: self.state,
-            stack: old_state.stack.clone(),
+            stack,
         }
     }
 
@@ -70,6 +79,7 @@ impl DynamicState {
     }
 }
 
+#[derive(Clone, Debug, PartialEq)]
 pub(crate) struct Transition {
     pub(crate) state: State,
     pub(crate) pop: bool,
