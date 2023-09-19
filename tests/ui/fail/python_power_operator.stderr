@@ -1,13 +1,5 @@
 error: Potentially invalid expansion. Expected an identifier.
- --> tests/ui/fail/python_power_operator.rs:3:24
+ --> tests/ui/fail/python_power_operator.rs:5:14
   |
-3 |     ($e:expr) => { $e ** $e }
-  |                        ^
-
-warning: unused macro definition: `square`
- --> tests/ui/fail/python_power_operator.rs:2:14
-  |
-2 | macro_rules! square {
-  |              ^^^^^^
-  |
-  = note: `#[warn(unused_macros)]` on by default
+5 |         $e * *$e
+  |              ^
