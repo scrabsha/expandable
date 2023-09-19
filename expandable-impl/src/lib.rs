@@ -281,6 +281,7 @@ impl_spannable!(TokenTreeKind<Span> => TokenTree);
 /// Multi-character operators (`+=`, `->`, ...) must _not_ be split in multiple
 /// [`Terminal`]. Any use of the [`check_macro`] function that does not respect
 /// this invariant will is subject to unexpected results.
+#[non_exhaustive]
 #[derive(Clone, Debug, Eq, Hash, PartialEq)]
 pub enum Terminal {
     /// An arrow (`->`).
@@ -293,8 +294,6 @@ pub enum Terminal {
     Dollar,
     /// A fat arrow (`=>`).
     FatArrow,
-    /// The `fn` keyword.
-    Fn,
     /// An identifier (`foo`, `bar`).
     Ident(String),
     /// A plus (`+`).
@@ -305,6 +304,114 @@ pub enum Terminal {
     Semi,
     /// A times (`*`).
     Times,
+
+    // Currently used keywords
+    /// The `as` keyword.
+    As,
+    /// The `async` keyword.
+    Async,
+    /// The `await` keyword.
+    Await,
+    /// The `break` keyword.
+    Break,
+    /// The `const` keyword.
+    Const,
+    /// The `continue` keyword.
+    Continue,
+    /// The `crate` keyword.
+    Crate,
+    /// The `dyn` keyword.
+    Dyn,
+    /// The `else` keyword.
+    Else,
+    /// The `enum` keyword.
+    Enum,
+    /// The `extern` keyword.
+    Extern,
+    /// The `false` keyword.
+    False,
+    /// The `fn` keyword.
+    Fn,
+    /// The `for` keyword.
+    For,
+    /// The `if` keyword.
+    If,
+    /// The `impl` keyword.
+    Impl,
+    /// The `in` keyword.
+    In,
+    /// The `let` keyword.
+    Let,
+    /// The `loop` keyword.
+    Loop,
+    /// The `match` keyword.
+    Match,
+    /// The `mod` keyword.
+    Mod,
+    /// The `move` keyword.
+    Move,
+    /// The `mut` keyword.
+    Mut,
+    /// The `pub` keyword.
+    Pub,
+    /// The `ref` keyword.
+    Ref,
+    /// The `return` keyword.
+    Return,
+    /// The `self` keyword.
+    Self_,
+    /// The `Self` keyword.
+    SelfUpper,
+    /// The `static` keyword.
+    Static,
+    /// The `struct` keyword.
+    Struct,
+    /// The `super` keyword.
+    Super,
+    /// The `trait` keyword.
+    Trait,
+    /// The `true` keyword.
+    True,
+    /// The `type` keyword.
+    Type,
+    /// The `union` keyword.
+    Union,
+    /// The `unsafe` keyword.
+    Unsafe,
+    /// The `use` keyword.
+    Use,
+    /// The `where` keyword.
+    Where,
+    /// The `while` keyword.
+    While,
+
+    // Keywords reserved for future use
+    /// The `abstract` keyword.
+    Abstract,
+    /// The `become` keyword.
+    Become,
+    /// The `box` keyword.
+    Box,
+    /// The `do` keyword.
+    Do,
+    /// The `final` keyword.
+    Final,
+    /// The `macro` keyword.
+    Macro,
+    /// The `override` keyword.
+    Override,
+    /// The `priv` keyword.
+    Priv,
+    /// The `try` keyword.
+    Try,
+    /// The `typeof` keyword.
+    Typeof,
+    /// The `unsized` keyword.
+    Unsized,
+    /// The `virtual` keyword.
+    Virtual,
+    /// The `yield` keyword.
+    Yield,
 }
 
 impl_spannable!(Terminal => TokenTree);

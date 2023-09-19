@@ -249,8 +249,6 @@ token_description! {
     pub enum TokenDescription {
         /// An identifier. Does not include keywords.
         Terminal::Ident(_) => Ident,
-        /// The `fn` token.
-        Terminal::Fn => Fn,
         /// A plus (`+`).
         Terminal::Plus => Plus,
         /// A times (`*`).
@@ -269,6 +267,102 @@ token_description! {
         Terminal::QuestionMark => QuestionMark,
         /// The dollar sign (`$`).
         Terminal::Dollar => Dollar,
+
+        // Keywords
+        /// The `as` keyword.
+        Terminal::As => As,
+        /// The `async` keyword.
+        Terminal::Async => Async,
+        /// The `await` keyword.
+        Terminal::Await => Await,
+        /// The `break` keyword.
+        Terminal::Break => Break,
+        /// The `const` keyword.
+        Terminal::Const => Const,
+        /// The `continue` keyword.
+        Terminal::Continue => Continue,
+        /// The `crate` keyword.
+        Terminal::Crate => Crate,
+        /// The `dyn` keyword.
+        Terminal::Dyn => Dyn,
+        /// The `else` keyword.
+        Terminal::Else => Else,
+        /// The `enum` keyword.
+        Terminal::Enum => Enum,
+        /// The `extern` keyword.
+        Terminal::Extern => Extern,
+        /// The `false` keyword.
+        Terminal::False => False,
+        /// The `fn` keyword.
+        Terminal::Fn => Fn,
+        /// The `for` keyword.
+        Terminal::For => For,
+        /// The `if` keyword.
+        Terminal::If => If,
+        /// The `impl` keyword.
+        Terminal::Impl => Impl,
+        /// The `in` keyword.
+        Terminal::In => In,
+        /// The `let` keyword.
+        Terminal::Let => Let,
+        /// The `loop` keyword.
+        Terminal::Loop => Loop,
+        /// The `match` keyword.
+        Terminal::Match => Match,
+        /// The `mod` keyword.
+        Terminal::Mod => Mod,
+        /// The `move` keyword.
+        Terminal::Move => Move,
+        /// The `mut` keyword.
+        Terminal::Mut => Mut,
+        /// The `pub` keyword.
+        Terminal::Pub => Pub,
+        /// The `ref` keyword.
+        Terminal::Ref => Ref,
+        /// The `return` keyword.
+        Terminal::Return => Return,
+        /// The `self` keyword.
+        Terminal::Self_ => Self_,
+        /// The `Self` keyword.
+        Terminal::SelfUpper => SelfUpper,
+        /// The `static` keyword.
+        Terminal::Static => Static,
+        /// The `struct` keyword.
+        Terminal::Struct => Struct,
+        /// The `super` keyword.
+        Terminal::Super => Super,
+        /// The `trait` keyword.
+        Terminal::Trait => Trait,
+        /// The `true` keyword.
+        Terminal::True => True,
+        /// The `type` keyword.
+        Terminal::Type => Type,
+        /// The `union` keyword.
+        Terminal::Union => Union,
+        /// The `unsafe` keyword.
+        Terminal::Unsafe => Unsafe,
+        /// The `use` keyword.
+        Terminal::Use => Use,
+        /// The `where` keyword.
+        Terminal::Where => Where,
+        /// The `while` keyword.
+        Terminal::While => While,
+        /// The `async` keyword.
+        Terminal::Yield => Yield,
+
+        /// An unused keyword.
+        Terminal::Abstract
+        | Terminal::Become
+        | Terminal::Box
+        | Terminal::Do
+        | Terminal::Final
+        | Terminal::Macro
+        | Terminal::Override
+        | Terminal::Priv
+        | Terminal::Try
+        | Terminal::Typeof
+        | Terminal::Unsized
+        | Terminal::Virtual => UnusedKeyword,
     }
 }
 
