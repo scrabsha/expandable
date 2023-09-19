@@ -243,8 +243,6 @@ token_description! {
     ///
     /// This allows library user to accurately report what kind of token is
     /// expected.
-    ///
-    /// [`Terminal`]: Terminal
     #[derive(Clone, Copy, Debug, PartialEq)]
     pub enum TokenDescription {
         /// An identifier. Does not include keywords.
