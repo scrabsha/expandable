@@ -80,7 +80,7 @@ use syn::{
 
 use syn_shim::ItemMacroRules;
 
-use expandable_impl::{RepetitionQuantifierKind, TokenDescription};
+use expandable_impl::{RepetitionQuantifierKind, Terminal, TokenDescription};
 
 macro_rules! attribute_macro {
     ($name:ident => $variant:ident) => {
@@ -174,6 +174,93 @@ fn mk_error_msg(error: expandable_impl::Error<Span>) -> syn::Error {
     syn::Error::new(span, message)
 }
 
+// TODO: we need to move the TokenTree -> TokenTree (lmao funny) to another
+// module so that we don't scare newcomers too much.
+// TODO: also we should use a hashmap or something :woman_shrugging:.
+const DESCRS_AND_STRS: &[(TokenDescription, &str)] = &[
+    (TokenDescription::As, "as"),
+    (TokenDescription::Async, "async"),
+    (TokenDescription::Await, "await"),
+    (TokenDescription::Break, "break"),
+    (TokenDescription::Const, "const"),
+    (TokenDescription::Continue, "continue"),
+    (TokenDescription::Crate, "crate"),
+    (TokenDescription::Dyn, "dyn"),
+    (TokenDescription::Else, "else"),
+    (TokenDescription::Enum, "enum"),
+    (TokenDescription::Extern, "extern"),
+    (TokenDescription::False, "false"),
+    (TokenDescription::Fn, "fn"),
+    (TokenDescription::For, "for"),
+    (TokenDescription::If, "if"),
+    (TokenDescription::Impl, "impl"),
+    (TokenDescription::In, "in"),
+    (TokenDescription::Let, "let"),
+    (TokenDescription::Loop, "loop"),
+    (TokenDescription::Match, "match"),
+    (TokenDescription::Mod, "mod"),
+    (TokenDescription::Move, "move"),
+    (TokenDescription::Mut, "mut"),
+    (TokenDescription::Pub, "pub"),
+    (TokenDescription::Ref, "ref"),
+    (TokenDescription::Return, "return"),
+    (TokenDescription::Self_, "self"),
+    (TokenDescription::SelfUpper, "Self"),
+    (TokenDescription::Static, "static"),
+    (TokenDescription::Struct, "struct"),
+    (TokenDescription::Super, "super"),
+    (TokenDescription::Trait, "trait"),
+    (TokenDescription::True, "true"),
+    (TokenDescription::Type, "type"),
+    (TokenDescription::Union, "union"),
+    (TokenDescription::Unsafe, "unsafe"),
+    (TokenDescription::Use, "use"),
+    (TokenDescription::Where, "where"),
+    (TokenDescription::While, "while"),
+];
+
+const TERMS_AND_STRS: &[(Terminal, &str)] = &[
+    (Terminal::As, "as"),
+    (Terminal::Async, "async"),
+    (Terminal::Await, "await"),
+    (Terminal::Break, "break"),
+    (Terminal::Const, "const"),
+    (Terminal::Continue, "continue"),
+    (Terminal::Crate, "crate"),
+    (Terminal::Dyn, "dyn"),
+    (Terminal::Else, "else"),
+    (Terminal::Enum, "enum"),
+    (Terminal::Extern, "extern"),
+    (Terminal::False, "false"),
+    (Terminal::Fn, "fn"),
+    (Terminal::For, "for"),
+    (Terminal::If, "if"),
+    (Terminal::Impl, "impl"),
+    (Terminal::In, "in"),
+    (Terminal::Let, "let"),
+    (Terminal::Loop, "loop"),
+    (Terminal::Match, "match"),
+    (Terminal::Mod, "mod"),
+    (Terminal::Move, "move"),
+    (Terminal::Mut, "mut"),
+    (Terminal::Pub, "pub"),
+    (Terminal::Ref, "ref"),
+    (Terminal::Return, "return"),
+    (Terminal::Self_, "self"),
+    (Terminal::SelfUpper, "Self"),
+    (Terminal::Static, "static"),
+    (Terminal::Struct, "struct"),
+    (Terminal::Super, "super"),
+    (Terminal::Trait, "trait"),
+    (Terminal::True, "true"),
+    (Terminal::Type, "type"),
+    (Terminal::Union, "union"),
+    (Terminal::Unsafe, "unsafe"),
+    (Terminal::Use, "use"),
+    (Terminal::Where, "where"),
+    (Terminal::While, "while"),
+];
+
 fn describe(descr: &TokenDescription) -> &'static str {
     match descr {
         TokenDescription::LParen => "a `(`",
@@ -194,47 +281,10 @@ fn describe(descr: &TokenDescription) -> &'static str {
         TokenDescription::QuestionMark => "`?`",
         TokenDescription::Dollar => "`$`",
 
-        TokenDescription::As => "`as`",
-        TokenDescription::Async => "`async`",
-        TokenDescription::Await => "`await`",
-        TokenDescription::Break => "`break`",
-        TokenDescription::Const => "`const`",
-        TokenDescription::Continue => "`continue`",
-        TokenDescription::Crate => "`crate`",
-        TokenDescription::Dyn => "`dyn`",
-        TokenDescription::Else => "`else`",
-        TokenDescription::Enum => "`enum`",
-        TokenDescription::Extern => "`extern`",
-        TokenDescription::False => "`false`",
-        TokenDescription::Fn => "`fn`",
-        TokenDescription::For => "`for`",
-        TokenDescription::If => "`if`",
-        TokenDescription::Impl => "`impl`",
-        TokenDescription::In => "`in`",
-        TokenDescription::Let => "`let`",
-        TokenDescription::Loop => "`loop`",
-        TokenDescription::Match => "`match`",
-        TokenDescription::Mod => "`mod`",
-        TokenDescription::Move => "`move`",
-        TokenDescription::Mut => "`mut`",
-        TokenDescription::Pub => "`pub`",
-        TokenDescription::Ref => "`ref`",
-        TokenDescription::Return => "`return`",
-        TokenDescription::Self_ => "`self`",
-        TokenDescription::SelfUpper => "`Self`",
-        TokenDescription::Static => "`static`",
-        TokenDescription::Struct => "`struct`",
-        TokenDescription::Super => "`super`",
-        TokenDescription::Trait => "`trait`",
-        TokenDescription::True => "`true`",
-        TokenDescription::Type => "`type`",
-        TokenDescription::Union => "`union`",
-        TokenDescription::Unsafe => "`unsafe`",
-        TokenDescription::Use => "`use`",
-        TokenDescription::Where => "`where`",
-        TokenDescription::While => "`while`",
-
-        _ => todo!(),
+        other => DESCRS_AND_STRS
+            .iter()
+            .find_map(|(k, v)| if k == other { Some(v) } else { None })
+            .unwrap_or_else(|| todo!("Unknown token description: {:?}", other)),
     }
 }
 
@@ -256,13 +306,19 @@ fn parse_macro_stream(stream: TokenStream) -> Vec<expandable_impl::TokenTree<Spa
                 }
             }
 
-            TokenTree::Ident(id) if id == "fn" => {
-                expandable_impl::TokenTreeKind::Terminal(expandable_impl::Terminal::Fn)
-            }
+            TokenTree::Ident(id) => {
+                let kw = TERMS_AND_STRS
+                    .iter()
+                    .find_map(|(k, v)| if v == &id.to_string() { Some(k) } else { None })
+                    .cloned();
 
-            TokenTree::Ident(id) => expandable_impl::TokenTreeKind::Terminal(
-                expandable_impl::Terminal::Ident(id.to_string()),
-            ),
+                let terminal = match kw {
+                    Some(kw) => kw,
+                    None => expandable_impl::Terminal::Ident(id.to_string()),
+                };
+
+                expandable_impl::TokenTreeKind::Terminal(terminal)
+            }
 
             TokenTree::Punct(p) => {
                 expandable_impl::TokenTreeKind::Terminal(match contiguous_punct(p, tail).as_str() {
