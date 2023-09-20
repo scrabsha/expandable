@@ -102,4 +102,4 @@ jobs:
         run: cargo fmt --all -- --check
 
       - name: Check ui tests formatting
-        run: find find tests/ -name "*.rs" -exec rustfmt --check {} +
+        run: find tests/ -name "*.rs" -exec rustfmt --check {} +
