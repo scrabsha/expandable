@@ -112,16 +112,7 @@ macro_rules! token_description {
             /// A closing brace.
             RBrace,
 
-            // `FragmentKind` is a private enum, and this enum is exposed to the
-            // end user, triggering the `private_interfaces` warning.
-            //
-            // `$name` has to stay public for error reporting reasons, but it
-            // feels incorrect to mark `FragmentKind` as public as well. Adding
-            // a public-only type that does not have the `FragmentKind` variant
-            // seems like a waste of time and a slightly too overengineered
-            // solution.
-            #[doc(hidden)]
-            #[allow(private_interfaces)]
+            /// A fragment.
             Fragment(FragmentKind),
 
             /// An invalid token.

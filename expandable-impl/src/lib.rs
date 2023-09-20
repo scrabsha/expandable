@@ -445,10 +445,14 @@ impl InvocationContext {
     }
 }
 
+/// A specific kind of fragment.
 #[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
-enum FragmentKind {
+pub enum FragmentKind {
+    /// An expression (`expr`).
     Expr,
+    /// An identifier (`ident`).
     Ident,
+    /// An item (`item`).
     Item,
 }
 
