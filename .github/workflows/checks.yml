@@ -51,11 +51,10 @@ jobs:
       - name: Restore cache
         uses: Swatinem/rust-cache@v2
         with:
-          prefix-key: "v1"
           key: lint
 
       - name: Lint the project
-        run: cargo clippy --workspace
+        run: cargo +nightly clippy --workspace
 
   test:
     runs-on: ubuntu-latest
