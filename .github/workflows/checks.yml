@@ -98,5 +98,8 @@ jobs:
       - name: Restore cache
         uses: Swatinem/rust-cache@v2
 
-      - name: Format the project
+      - name: Check crate source formatting
         run: cargo fmt --all -- --check
+
+      - name: Check ui tests formatting
+        run: find find tests/ -name "*.rs" -exec rustfmt --check {} +
