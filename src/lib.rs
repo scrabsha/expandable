@@ -61,6 +61,46 @@
 //! [`expandable::expr`]: macro@expr
 //! [`expandable::item`]: macro@item
 //!
+//! ## What can it detect?
+//!
+//! ### Invalid matcher
+//!
+//! TODO: detect invalid matcher (for instance local ambiguity)
+//!
+//! ### Invalid transcription
+//!
+//! Some macros can't be expanded because they don't respect the rules for
+//! a transcription to happen. For instance, the following macro exhibits
+//! a transcription error:
+//!
+//! ```rust
+//! macro_rules! invalid_expansion {
+//!   ( $( $a:ident )? ) => { $( $a )* }
+//! }
+//! ```
+//!
+//! In this example, the repetition nesting of `$a` used in the macro
+//! transcription does not match the repetition nesting of `$a` defined in the
+//! matcher.
+//!
+//! TODO: find the list of the transcription errors that can happen and make
+//! sure we respect all of them.
+//!
+//! ### Invalid produced AST
+//!
+//! Some macro expand correctly (ie: they respect the transcription rules), but
+//! the produced AST is invalid. For instance, the following macro expands to
+//! an invalid AST:
+//!
+//! ```rust
+//! macro_rules! invalid_expansion {
+//!     () => { * }
+//! }
+//! ```
+//!
+//! TODO: explain why the previous macro is invalid, explain what we can detect
+//! and the limitiations.
+//!
 //! ## Minimal Supported Rust Version (MSRV), syntax support and stability
 //!
 //! _`expandable` supports Rust 1.56 and above. Bumping the MSRV is
