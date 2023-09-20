@@ -382,7 +382,7 @@ generate_grammar! {
             Times => ExprStart;
             RBrace, FnBlockExpr => ItemStart;
             LBrace, Condition => ExprStart, Consequence;
-            // We don't continue to `AfterIf` because we want to parse an
+            // We don't continue to `AfterExpr` because we want to parse an
             // optional `else` branch.
             RBrace, Consequence => AfterIf;
             RBrace, Alternative => AfterExpr;
