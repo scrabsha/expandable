@@ -17,6 +17,8 @@ pub(crate) fn check<Span>(
 where
     Span: Copy,
 {
+    // TODO(perf): we could avoid many allocations by storing the stack depth
+    // instead of the stack itself.
     let usages = substitution
         .iter()
         .flat_map(|e| collect_usages(e, &LameLinkedList::Nil));
@@ -30,7 +32,7 @@ where
                 span,
                 ..
             }) => {
-                if &stack != repetition_stack {
+                if stack.len() != repetition_stack.len() {
                     return Err(Error::InvalidRepetitionNesting {
                         metavariable_name: name.to_string(),
                         decl_span: *span,
@@ -127,18 +129,17 @@ mod tests {
     }
 
     repetition_match_test! {
-        #[should_panic(expected = "called `Result::unwrap()` on an `Err` value: \
-            InvalidRepetitionNesting { \
-                metavariable_name: \"a\", \
-                decl_span: (), \
-                usage_span: (), \
-                expected_nesting: [ZeroOrMore], \
-                got_nesting: [OneOrMore] \
-            }\
-        ")]
-        fn nonmatching_stack() {
+        fn nonmatching_stack_1() {
             {
                 ( @( @a:ident )* ) => { @( @a )+ }
+            }
+        }
+    }
+
+    repetition_match_test! {
+        fn nonmatching_stack_2() {
+            {
+                ( @( @( @( @a:ident )? )* )+ ) => { @( @( @( @a )* )? )+ }
             }
         }
     }

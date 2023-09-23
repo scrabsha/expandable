@@ -70,6 +70,7 @@ mod syn_shim;
 extern crate proc_macro;
 
 use proc_macro::TokenStream as TokenStream1;
+use std::fmt::Display;
 use std::str::FromStr;
 
 use proc_macro2::{Delimiter, Punct, Spacing, Span, TokenStream, TokenTree};
@@ -144,24 +145,10 @@ fn mk_error_msg(error: expandable_impl::Error<Span>) -> syn::Error {
             got_nesting,
             ..
         } => {
-            let quantifier_to_char = |quantifier| match quantifier {
-                RepetitionQuantifierKind::ZeroOrOne => '?',
-                RepetitionQuantifierKind::ZeroOrMore => '*',
-                RepetitionQuantifierKind::OneOrMore => '+',
-            };
+            let expected_nesting = pp_repetition(&expected_nesting);
+            let got_nesting = pp_repetition(&got_nesting);
 
-            let nesting_to_string = |nesting: Vec<RepetitionQuantifierKind>| {
-                nesting
-                    .iter()
-                    .copied()
-                    .map(quantifier_to_char)
-                    .collect::<String>()
-            };
-
-            let expected = nesting_to_string(expected_nesting);
-            let got = nesting_to_string(got_nesting);
-
-            (format!("Metavariable `{metavariable_name}` must be repeated with `{expected}` nesting. It is repeated with `{got}`"), Some(usage_span))
+            (format!("the matcher defines {expected_nesting} for {metavariable_name} but the transcriber uses {got_nesting}"), Some(usage_span))
         }
 
         _ => (
@@ -172,6 +159,49 @@ fn mk_error_msg(error: expandable_impl::Error<Span>) -> syn::Error {
 
     let span = span.unwrap_or_else(Span::call_site);
     syn::Error::new(span, message)
+}
+
+fn pp_repetition(stack: &[RepetitionQuantifierKind]) -> impl Display + '_ {
+    PpRepetitionStack(stack)
+}
+
+struct PpRepetitionStack<'a>(&'a [RepetitionQuantifierKind]);
+
+impl<'a> Display for PpRepetitionStack<'a> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let len = self.0.len();
+
+        match len {
+            0 => {
+                write!(f, "no repetition")
+            }
+
+            1 => {
+                write!(f, "one repetition (`")?;
+                write!(f, "{}", quantifier_to_char(self.0[0]))?;
+                write!(f, "`)")
+            }
+
+            len => {
+                write!(f, "{len} repetitions (`")?;
+                self.0
+                    .iter()
+                    .copied()
+                    .map(quantifier_to_char)
+                    .try_for_each(|c| write!(f, "{}", c))?;
+
+                write!(f, "`)")
+            }
+        }
+    }
+}
+
+fn quantifier_to_char(q: RepetitionQuantifierKind) -> char {
+    match q {
+        RepetitionQuantifierKind::ZeroOrOne => '?',
+        RepetitionQuantifierKind::ZeroOrMore => '*',
+        RepetitionQuantifierKind::OneOrMore => '+',
+    }
 }
 
 // TODO: we need to move the TokenTree -> TokenTree (lmao funny) to another
@@ -314,7 +344,7 @@ fn parse_macro_stream(stream: TokenStream) -> Vec<expandable_impl::TokenTree<Spa
 
                 let terminal = match kw {
                     Some(kw) => kw,
-                    None => expandable_impl::Terminal::Ident(id.to_string()),
+                    None => Terminal::Ident(id.to_string()),
                 };
 
                 expandable_impl::TokenTreeKind::Terminal(terminal)
@@ -328,21 +358,21 @@ fn parse_macro_stream(stream: TokenStream) -> Vec<expandable_impl::TokenTree<Spa
                         let (last, tail_) = tail.split_first().unwrap();
                         span = span.join(last.span()).unwrap_or_else(|| p.span());
                         tail = tail_;
-                        expandable_impl::Terminal::Arrow
+                        Terminal::Arrow
                     }
                     s if s.starts_with("=>") => {
                         let (last, tail_) = tail.split_first().unwrap();
                         span = span.join(last.span()).unwrap_or_else(|| p.span());
                         tail = tail_;
-                        expandable_impl::Terminal::FatArrow
+                        Terminal::FatArrow
                     }
-                    s if s.starts_with(':') => expandable_impl::Terminal::Colon,
-                    s if s.starts_with(',') => expandable_impl::Terminal::Comma,
-                    s if s.starts_with('$') => expandable_impl::Terminal::Dollar,
-                    s if s.starts_with('+') => expandable_impl::Terminal::Plus,
-                    s if s.starts_with('?') => expandable_impl::Terminal::QuestionMark,
-                    s if s.starts_with(';') => expandable_impl::Terminal::Semi,
-                    s if s.starts_with('*') => expandable_impl::Terminal::Times,
+                    s if s.starts_with(':') => Terminal::Colon,
+                    s if s.starts_with(',') => Terminal::Comma,
+                    s if s.starts_with('$') => Terminal::Dollar,
+                    s if s.starts_with('+') => Terminal::Plus,
+                    s if s.starts_with('?') => Terminal::QuestionMark,
+                    s if s.starts_with(';') => Terminal::Semi,
+                    s if s.starts_with('*') => Terminal::Times,
 
                     s => todo!("Unknown start of token: {s}"),
                 })
