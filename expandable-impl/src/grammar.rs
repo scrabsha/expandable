@@ -372,13 +372,37 @@ generate_grammar! {
             "ident" => AfterExpr;
             "expr" => AfterExpr;
             Ident => AfterExpr;
+            If => ExprStart, Condition;
         },
 
         #[accepting]
+        // Transitions added here must be added in `AfterIf` as well.
         AfterExpr {
             Plus => ExprStart;
             Times => ExprStart;
             RBrace, FnBlockExpr => ItemStart;
+            LBrace, Condition => ExprStart, Consequence;
+            // We don't continue to `AfterExpr` because we want to parse an
+            // optional `else` branch.
+            RBrace, Consequence => AfterIf;
+            RBrace, Alternative => AfterExpr;
+        },
+
+        #[accepting]
+        // Must be a superset of `AfterExpr`.
+        AfterIf {
+            Else => AfterElse;
+            Plus => ExprStart;
+            Times => ExprStart;
+            RBrace, FnBlockExpr => ItemStart;
+            LBrace, Condition => ExprStart, Consequence;
+            // We don't continue to `AfterIf` because we want to parse an
+            // optional `else` branch.
+            RBrace, Consequence => AfterIf;
+        },
+
+        AfterElse {
+            LBrace => ExprStart, Alternative;
         },
 
         #[accepting]
@@ -434,4 +458,7 @@ impl State {
 pub(crate) enum StackSymbol {
     FnParamList,
     FnBlockExpr,
+    Condition,
+    Consequence,
+    Alternative,
 }

@@ -589,4 +589,22 @@ mod tests {
             }
         }
     }
+
+    check_macro_test! {
+        just_a_simple_if {
+            #[expr]
+            {
+                () => { if a { a } }
+            }
+        }
+    }
+
+    check_macro_test! {
+        if_with_else {
+            #[expr]
+            {
+                () => { if a { a } else { a } }
+            }
+        }
+    }
 }
