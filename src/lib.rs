@@ -63,9 +63,22 @@
 //!
 //! ## What can it detect?
 //!
+//! This section briefly describes what the macros can detect and what they
+//! can't. All the terminology used in this section is taken from the
+//! [Ferrocene Language Specification][ferrocene-spec].
+//!
+//! This crate aims to detect all the things that are not considered by `rustc`
+//! as an invalid macro definition. It may or may not detect what `rustc`
+//! already detects. Some errors can't be detected because they are not
+//! possible to detect in the first place.
+//!
+//! [ferrocene-spec]: https://spec.ferrocene.dev/
+//!
 //! ### Invalid matcher
 //!
-//! TODO: detect invalid matcher (for instance local ambiguity)
+//! `rustc` is quite good at detecting invalid matchers. This crate deliberately
+//! does not try to compete with it. Whether if this crate returns an error on
+//! an invalid matcher is left unspecified.
 //!
 //! ### Invalid transcription
 //!
@@ -75,7 +88,7 @@
 //!
 //! ```rust
 //! macro_rules! invalid_expansion {
-//!   ( $( $a:ident )? ) => { $( $a )* }
+//!   ( $( $a:ident )? ) => { $a }
 //! }
 //! ```
 //!
@@ -99,7 +112,7 @@
 //! ```
 //!
 //! TODO: explain why the previous macro is invalid, explain what we can detect
-//! and the limitiations.
+//! and the limitations.
 //!
 //! ## Minimal Supported Rust Version (MSRV), syntax support and stability
 //!
