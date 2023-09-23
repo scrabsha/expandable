@@ -129,18 +129,17 @@ mod tests {
     }
 
     repetition_match_test! {
-        #[should_panic(expected = "called `Result::unwrap()` on an `Err` value: \
-            InvalidRepetitionNesting { \
-                metavariable_name: \"a\", \
-                decl_span: (), \
-                usage_span: (), \
-                expected_nesting: [ZeroOrMore], \
-                got_nesting: [OneOrMore] \
-            }\
-        ")]
-        fn nonmatching_stack() {
+        fn nonmatching_stack_1() {
             {
                 ( @( @a:ident )* ) => { @( @a )+ }
+            }
+        }
+    }
+
+    repetition_match_test! {
+        fn nonmatching_stack_2() {
+            {
+                ( @( @( @( @a:ident )? )* )+ ) => { @( @( @( @a )* )? )+ }
             }
         }
     }

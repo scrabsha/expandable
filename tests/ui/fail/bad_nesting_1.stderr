@@ -1,5 +1,5 @@
-error: Metavariable `a` must be repeated with `?` nesting. It is repeated with `*`
- --> tests/ui/fail/bad_nesting_1.rs:4:33
+error: the matcher defines one repetition (`?`) for a but the transcriber uses no repetition
+ --> tests/ui/fail/bad_nesting_1.rs:5:10
   |
-4 |     ( $( $a:ident )? ) => { $( $a )* }
-  |                                 ^
+5 |         $a
+  |          ^
