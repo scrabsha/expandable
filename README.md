@@ -63,11 +63,11 @@ multiple macros are available:
 
 ## Minimal Supported Rust Version (MSRV), syntax support and stability
 
-_`expandable` supports Rust 1.56 and above. Bumping the MSRV is
+_`expandable` supports Rust 1.65 and above. Bumping the MSRV is
 considered a breaking change._
 
 Note that the embedded parser will support syntax that was introduced
-_after_ Rust 1.56.
+_after_ Rust 1.65.
 
 Adding support for newer syntax is _not_ considered a breaking change.
 
