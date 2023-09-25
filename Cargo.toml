@@ -8,6 +8,7 @@ members = [
 name = "expandable"
 version = "0.1.0"
 edition = "2021"
+rust-version = "1.65.0"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
@@ -15,10 +16,15 @@ edition = "2021"
 proc-macro = true
 
 [dependencies]
+# MSRV: 1.65 (checked in CI)
 expandable-impl = { path = "expandable-impl" }
-proc-macro2 = "1.0.66"
+# MSRV: 1.56 (from Cargo.toml, checked in CI)
+proc-macro2 = "1.0"
+# MSRV: 1.56 (README)
 quote = "1.0"
+# MSRV: 1.56 (README)
 syn = { version = "2.0", default-features = false, features = ["parsing"] }
 
 [dev-dependencies]
+# MSRV: 1.45 (README)
 trybuild = "1.0"

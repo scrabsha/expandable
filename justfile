@@ -9,3 +9,7 @@ fmt:
 
 msrv:
     cargo +1.65.0 test --workspace
+
+readme:
+    cargo rustdoc -- --output-format json -Zunstable-options
+    cat target/doc/expandable.json | jq ".index[.root].docs" -r > README.md
