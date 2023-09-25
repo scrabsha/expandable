@@ -96,8 +96,7 @@
 //! transcription does not match the repetition nesting of `$a` defined in the
 //! matcher.
 //!
-//! TODO: find the list of the transcription errors that can happen and make
-//! sure we respect all of them.
+//! This crate aims to detect all the possible invalid transcription.
 //!
 //! ### Invalid produced AST
 //!
@@ -111,8 +110,11 @@
 //! }
 //! ```
 //!
-//! TODO: explain why the previous macro is invalid, explain what we can detect
-//! and the limitations.
+//! (`*` is an invalid item, an invalid expression, an invalid pattern, an
+//! invalid statement and an invalid type).
+//!
+//! `rustc` doesn't (and can't) detect any potentially invalid AST. This is the
+//! _raison d'être_ of this crate.
 //!
 //! ## Minimal Supported Rust Version (MSRV), syntax support and stability
 //!
