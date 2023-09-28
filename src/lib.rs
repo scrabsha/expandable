@@ -1,6 +1,7 @@
 //! <div class="title-block" style="text-align: center;" align="center">
 //! <h1><code>expandable</code></h1>
-//! An attribute-macro based <code>macro_rules!</code> expansion checker.
+//! An opinionated attribute-macro based <code>macro_rules!</code> expansion
+//! checker.
 //! </div>
 //!
 //! <br />
@@ -111,10 +112,49 @@
 //! ```
 //!
 //! (`*` is an invalid item, an invalid expression, an invalid pattern, an
-//! invalid statement and an invalid type).
+//! invalid statement and an invalid type -- there is no context in which it can
+//! be called).
 //!
 //! `rustc` doesn't (and can't) detect any potentially invalid AST. This is the
 //! _raison d'être_ of this crate.
+//!
+//! ## Opinionated?
+//!
+//! In the general case, proving that a macro is well-formed is impossible. This
+//! crates has to make assumptions about the macros it is checking. This section
+//! lists them and gives a short rationale of why they are needed.
+//!
+//! ### No recursive macro definition
+//!
+//! This crate assumes that the macro expansion does not contain any macro
+//! definition. For instance, the following macro definition can't be checked
+//! with `expandable`:
+//!
+//! ```rust
+//! macro_rules! foo {
+//!     () => {
+//!         macro_rules! bar {
+//!             () => { 42 }
+//!         }
+//!     }
+//! }
+//! ```
+//!
+//! This limitation is caused by the fact that it's impossible to tell if a
+//! sequence of tokens is a macro definition or not. For instance, the
+//! `macro_rules` token may be passed by the user when invoking the macro.
+//! Having no guarantee of what's a macro and what is not makes it impossible
+//! to ensure that a metavariable is properly defined.
+//!
+//! ### No macro call (for now)
+//!
+//! This crate assumes that _one expansion_ of a macro works. It does not check
+//! that the recursive expansion of the macro works. It checks that the macro
+//! invocation itself is legal, but don't check that it matches any rule.
+//!
+//! This is caused by the fact that other macros may add more constrains on the
+//! macro invocation. _This requirement may be lifted in the future for macros
+//! that call themselves._
 //!
 //! ## Minimal Supported Rust Version (MSRV), syntax support and stability
 //!
