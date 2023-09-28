@@ -103,3 +103,27 @@ jobs:
 
       - name: Check ui tests formatting
         run: find tests/ -name "*.rs" -exec rustfmt --check {} +
+
+  readme-check:
+    runs-on: ubuntu-latest
+
+    env:
+      CARGO_TERM_COLOR: always
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Install jq
+        run: sudo apt-get install jq
+
+      - name: Install toolchain
+        run: rustup toolchain install nightly
+
+      - name: Restore cache
+        uses: Swatinem/rust-cache@v2
+
+      - name: Generate documentation JSON file
+        run: cargo +nightly rustdoc -- --output-format json -Zunstable-options
+
+      - name: Compare README with crate-level documentation
+        run: cat target/doc/expandable.json | jq ".index[.root].docs" -r | cmp README.md -
