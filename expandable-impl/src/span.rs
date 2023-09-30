@@ -1,4 +1,3 @@
-use std::cell::Cell;
 use std::fmt::{Debug, Formatter};
 
 #[derive(Copy, Clone)]
@@ -11,19 +10,17 @@ impl Debug for DebugSpan {
 }
 
 pub(crate) struct DebugSpanBuilder {
-    counter: Cell<usize>,
+    counter: usize,
 }
 
 impl DebugSpanBuilder {
     pub(crate) fn new() -> DebugSpanBuilder {
-        DebugSpanBuilder {
-            counter: Cell::new(0),
-        }
+        DebugSpanBuilder { counter: 0 }
     }
 
-    pub(crate) fn mk_span(&self) -> DebugSpan {
-        let id = self.counter.get();
-        self.counter.set(id + 1);
+    pub(crate) fn mk_span(&mut self) -> DebugSpan {
+        let id = self.counter;
+        self.counter += 1;
         DebugSpan(id)
     }
 }
