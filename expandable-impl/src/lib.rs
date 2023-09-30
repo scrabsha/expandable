@@ -134,6 +134,7 @@ mod grammar;
 mod list;
 mod matcher;
 mod repetition_stack;
+#[cfg(test)]
 mod span;
 mod states;
 mod substitution;
