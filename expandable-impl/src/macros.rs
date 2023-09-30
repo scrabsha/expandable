@@ -352,7 +352,7 @@ mod tests {
                                 "a",
                             ),
                         ),
-                        span: (),
+                        span: 0,
                     },
                     TokenTree {
                         kind: Terminal(
@@ -360,7 +360,7 @@ mod tests {
                                 "b",
                             ),
                         ),
-                        span: (),
+                        span: 1,
                     },
                     TokenTree {
                         kind: Terminal(
@@ -368,7 +368,7 @@ mod tests {
                                 "c",
                             ),
                         ),
-                        span: (),
+                        span: 2,
                     },
                     TokenTree {
                         kind: Terminal(
@@ -376,7 +376,7 @@ mod tests {
                                 "d",
                             ),
                         ),
-                        span: (),
+                        span: 3,
                     },
                 ]
             "#]],
@@ -394,13 +394,13 @@ mod tests {
                                 "a",
                             ),
                         ),
-                        span: (),
+                        span: 0,
                     },
                     TokenTree {
                         kind: Terminal(
                             Plus,
                         ),
-                        span: (),
+                        span: 1,
                     },
                     TokenTree {
                         kind: Terminal(
@@ -408,13 +408,13 @@ mod tests {
                                 "b",
                             ),
                         ),
-                        span: (),
+                        span: 2,
                     },
                     TokenTree {
                         kind: Terminal(
                             Dollar,
                         ),
-                        span: (),
+                        span: 3,
                     },
                     TokenTree {
                         kind: Parenthesed(
@@ -423,7 +423,7 @@ mod tests {
                                     kind: Terminal(
                                         Dollar,
                                     ),
-                                    span: (),
+                                    span: 5,
                                 },
                                 TokenTree {
                                     kind: Terminal(
@@ -431,13 +431,13 @@ mod tests {
                                             "test",
                                         ),
                                     ),
-                                    span: (),
+                                    span: 6,
                                 },
                                 TokenTree {
                                     kind: Terminal(
                                         Colon,
                                     ),
-                                    span: (),
+                                    span: 7,
                                 },
                                 TokenTree {
                                     kind: Terminal(
@@ -445,23 +445,23 @@ mod tests {
                                             "ident",
                                         ),
                                     ),
-                                    span: (),
+                                    span: 8,
                                 },
                             ],
                         ),
-                        span: (),
+                        span: 4,
                     },
                     TokenTree {
                         kind: Terminal(
                             Plus,
                         ),
-                        span: (),
+                        span: 9,
                     },
                     TokenTree {
                         kind: Terminal(
                             Times,
                         ),
-                        span: (),
+                        span: 10,
                     },
                 ]
             "#]],
@@ -479,13 +479,13 @@ mod tests {
                                 "a",
                             ),
                         ),
-                        span: (),
+                        span: 0,
                     },
                     TokenTree {
                         kind: Terminal(
                             Plus,
                         ),
-                        span: (),
+                        span: 1,
                     },
                     TokenTree {
                         kind: Terminal(
@@ -493,13 +493,13 @@ mod tests {
                                 "b",
                             ),
                         ),
-                        span: (),
+                        span: 2,
                     },
                     TokenTree {
                         kind: Terminal(
                             Dollar,
                         ),
-                        span: (),
+                        span: 3,
                     },
                     TokenTree {
                         kind: Parenthesed(
@@ -508,13 +508,13 @@ mod tests {
                                     kind: Terminal(
                                         Plus,
                                     ),
-                                    span: (),
+                                    span: 5,
                                 },
                                 TokenTree {
                                     kind: Terminal(
                                         Dollar,
                                     ),
-                                    span: (),
+                                    span: 6,
                                 },
                                 TokenTree {
                                     kind: Terminal(
@@ -522,13 +522,13 @@ mod tests {
                                             "c",
                                         ),
                                     ),
-                                    span: (),
+                                    span: 7,
                                 },
                                 TokenTree {
                                     kind: Terminal(
                                         Plus,
                                     ),
-                                    span: (),
+                                    span: 8,
                                 },
                                 TokenTree {
                                     kind: Terminal(
@@ -536,23 +536,23 @@ mod tests {
                                             "a",
                                         ),
                                     ),
-                                    span: (),
+                                    span: 9,
                                 },
                             ],
                         ),
-                        span: (),
+                        span: 4,
                     },
                     TokenTree {
                         kind: Terminal(
                             Plus,
                         ),
-                        span: (),
+                        span: 10,
                     },
                     TokenTree {
                         kind: Terminal(
                             QuestionMark,
                         ),
-                        span: (),
+                        span: 11,
                     },
                 ]
             "#]],

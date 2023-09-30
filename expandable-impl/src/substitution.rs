@@ -204,7 +204,7 @@ mod tests {
                                     "a",
                                 ),
                             ),
-                            span: (),
+                            span: 0,
                         },
                         TokenTree {
                             kind: Terminal(
@@ -212,7 +212,7 @@ mod tests {
                                     "b",
                                 ),
                             ),
-                            span: (),
+                            span: 1,
                         },
                         TokenTree {
                             kind: Terminal(
@@ -220,7 +220,7 @@ mod tests {
                                     "c",
                                 ),
                             ),
-                            span: (),
+                            span: 2,
                         },
                     ],
                 )
@@ -238,7 +238,7 @@ mod tests {
                             kind: Fragment(
                                 "a",
                             ),
-                            span: (),
+                            span: 1,
                         },
                     ],
                 )
@@ -261,16 +261,16 @@ mod tests {
                                                 "test",
                                             ),
                                         ),
-                                        span: (),
+                                        span: 2,
                                     },
                                 ],
                                 separator: None,
                                 quantifier: RepetitionQuantifier {
                                     kind: ZeroOrMore,
-                                    span: (),
+                                    span: 3,
                                 },
                             },
-                            span: (),
+                            span: 3,
                         },
                     ],
                 )
@@ -291,16 +291,16 @@ mod tests {
                                         kind: Fragment(
                                             "a",
                                         ),
-                                        span: (),
+                                        span: 3,
                                     },
                                 ],
                                 separator: None,
                                 quantifier: RepetitionQuantifier {
                                     kind: ZeroOrOne,
-                                    span: (),
+                                    span: 4,
                                 },
                             },
-                            span: (),
+                            span: 4,
                         },
                     ],
                 )
