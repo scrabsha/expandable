@@ -3,307 +3,313 @@
 
 #[cfg(test)]
 macro_rules! quote {
-    (@inner, ( $( $tt:tt )* ) ) => {
-        $crate::TokenTree::Parenthesed(quote! { $( $tt )* })
+    (@inner $sb:expr, ( $( $tt:tt )* ) ) => {
+        $crate::TokenTree::parenthesed($sb.mk_span(), quote! { @with_sb $sb, $( $tt )* })
     };
 
-    (@inner, { $( $tt:tt )* } ) => {
-        $crate::TokenTree::CurlyBraced(quote! { $( $tt )* })
+
+    (@inner $sb:expr, { $( $tt:tt )* } ) => {
+        $crate::TokenTree::curlyBraced($sb.mk_span(), quote! { @with_sb $sb, $( $tt )* })
     };
 
-    (@inner, @) => {
-        $crate::TokenTree::Terminal($crate::Terminal::Dollar)
+    (@inner $sb:expr, @) => {
+        $crate::TokenTree::terminal($sb.mk_span(), $crate::Terminal::Dollar)
     };
 
-    (@inner, :) => {
-        $crate::TokenTree::Terminal($crate::Terminal::Colon)
+    (@inner $sb:expr, :) => {
+        $crate::TokenTree::terminal($sb.mk_span(), $crate::Terminal::Colon)
     };
 
-    (@inner, ?) => {
-        $crate::TokenTree::Terminal($crate::Terminal::QuestionMark)
+    (@inner $sb:expr, ?) => {
+        $crate::TokenTree::terminal($sb.mk_span(), $crate::Terminal::QuestionMark)
     };
 
-    (@inner, +) => {
-        $crate::TokenTree::Terminal($crate::Terminal::Plus)
+    (@inner $sb:expr, +) => {
+        $crate::TokenTree::terminal($sb.mk_span(), $crate::Terminal::Plus)
     };
 
-    (@inner, *) => {
-        $crate::TokenTree::Terminal($crate::Terminal::Times)
+    (@inner $sb:expr, *) => {
+        $crate::TokenTree::terminal($sb.mk_span(), $crate::Terminal::Times)
     };
 
-    (@inner, =>) => {
-        $crate::TokenTree::Terminal($crate::Terminal::FatArrow)
+    (@inner $sb:expr, =>) => {
+        $crate::TokenTree::terminal($sb.mk_span(), $crate::Terminal::FatArrow)
     };
 
-    (@inner, ;) => {
-        $crate::TokenTree::Terminal($crate::Terminal::Semi)
+    (@inner $sb:expr, ;) => {
+        $crate::TokenTree::terminal($sb.mk_span(), $crate::Terminal::Semi)
     };
 
     // Keywords
-    (@inner, as) => {
-        $crate::TokenTree::Terminal($crate::Terminal::As)
+    (@inner $sb:expr, as) => {
+        $crate::TokenTree::terminal($sb.make_span(), $crate::Terminal::As)
     };
 
-    (@inner, break) => {
-        $crate::TokenTree::Terminal($crate::Terminal::Break)
+    (@inner $sb:expr, break) => {
+        $crate::TokenTree::terminal($sb.make_span(), $crate::Terminal::Break)
     };
 
-    (@inner, const) => {
-        $crate::TokenTree::Terminal($crate::Terminal::Const)
+    (@inner $sb:expr, const) => {
+        $crate::TokenTree::terminal($sb.mk_span(), $crate::Terminal::Const)
     };
 
-    (@inner, continue) => {
-        $crate::TokenTree::Terminal($crate::Terminal::Continue)
+    (@inner $sb:expr, continue) => {
+        $crate::TokenTree::terminal($sb.mk_span(), $crate::Terminal::Continue)
     };
 
-    (@inner, crate) => {
-        $crate::TokenTree::Terminal($crate::Terminal::Crate)
+    (@inner $sb:expr, crate) => {
+        $crate::TokenTree::terminal($sb.mk_span(), $crate::Terminal::Crate)
     };
 
-    (@inner, else) => {
-        $crate::TokenTree::Terminal($crate::Terminal::Else)
+    (@inner $sb:expr, else) => {
+        $crate::TokenTree::terminal($sb.mk_span(), $crate::Terminal::Else)
     };
 
-    (@inner, enum) => {
-        $crate::TokenTree::Terminal($crate::Terminal::Enum)
+    (@inner $sb:expr, enum) => {
+        $crate::TokenTree::terminal($sb.mk_span(), $crate::Terminal::Enum)
     };
 
-    (@inner, extern) => {
-        $crate::TokenTree::Terminal($crate::Terminal::Extern)
+    (@inner $sb:expr, extern) => {
+        $crate::TokenTree::terminal($sb.mk_span(), $crate::Terminal::Extern)
     };
 
-    (@inner, false) => {
-        $crate::TokenTree::Terminal($crate::Terminal::False)
+    (@inner $sb:expr, false) => {
+        $crate::TokenTree::terminal($sb.mk_span(), $crate::Terminal::False)
     };
 
-    (@inner, fn) => {
-        $crate::TokenTree::Terminal($crate::Terminal::Fn)
+    (@inner $sb:expr, fn) => {
+        $crate::TokenTree::terminal($sb.mk_span(), $crate::Terminal::Fn)
     };
 
-    (@inner, for) => {
-        $crate::TokenTree::Terminal($crate::Terminal::For)
+    (@inner $sb:expr, for) => {
+        $crate::TokenTree::terminal($sb.mk_span(), $crate::Terminal::For)
     };
 
-    (@inner, if) => {
-        $crate::TokenTree::Terminal($crate::Terminal::If)
+    (@inner $sb:expr, if) => {
+        $crate::TokenTree::terminal($sb.mk_span(), $crate::Terminal::If)
     };
 
-    (@inner, impl) => {
-        $crate::TokenTree::Terminal($crate::Terminal::Impl)
+    (@inner $sb:expr, impl) => {
+        $crate::TokenTree::terminal($sb.mk_span(), $crate::Terminal::Impl)
     };
 
-    (@inner, in) => {
-        $crate::TokenTree::Terminal($crate::Terminal::In)
+    (@inner $sb:expr, in) => {
+        $crate::TokenTree::terminal($sb.mk_span(), $crate::Terminal::In)
     };
 
-    (@inner, let) => {
-        $crate::TokenTree::Terminal($crate::Terminal::Let)
+    (@inner $sb:expr, let) => {
+        $crate::TokenTree::terminal($sb.mk_span(), $crate::Terminal::Let)
     };
 
-    (@inner, loop) => {
-        $crate::TokenTree::Terminal($crate::Terminal::Loop)
+    (@inner $sb:expr, loop) => {
+        $crate::TokenTree::terminal($sb.mk_span(), $crate::Terminal::Loop)
     };
 
-    (@inner, match) => {
-        $crate::TokenTree::Terminal($crate::Terminal::Match)
+    (@inner $sb:expr, match) => {
+        $crate::TokenTree::terminal($sb.mk_span(), $crate::Terminal::Match)
     };
 
-    (@inner, mod) => {
-        $crate::TokenTree::Terminal($crate::Terminal::Mod)
+    (@inner $sb:expr, mod) => {
+        $crate::TokenTree::terminal($sb.mk_span(), $crate::Terminal::Mod)
     };
 
-    (@inner, move) => {
-        $crate::TokenTree::Terminal($crate::Terminal::Move)
+    (@inner $sb:expr, move) => {
+        $crate::TokenTree::terminal($sb.mk_span(), $crate::Terminal::Move)
     };
 
-    (@inner, mut) => {
-        $crate::TokenTree::Terminal($crate::Terminal::Mut)
+    (@inner $sb:expr, mut) => {
+        $crate::TokenTree::terminal($sb.mk_span(), $crate::Terminal::Mut)
     };
 
-    (@inner, pub) => {
-        $crate::TokenTree::Terminal($crate::Terminal::Pub)
+    (@inner $sb:expr, pub) => {
+        $crate::TokenTree::terminal($sb.mk_span(), $crate::Terminal::Pub)
     };
 
-    (@inner, ref) => {
-        $crate::TokenTree::Terminal($crate::Terminal::Ref)
+    (@inner $sb:expr, ref) => {
+        $crate::TokenTree::terminal($sb.mk_span(), $crate::Terminal::Ref)
     };
 
-    (@inner, return) => {
-        $crate::TokenTree::Terminal($crate::Terminal::Return)
+    (@inner $sb:expr, return) => {
+        $crate::TokenTree::terminal($sb.mk_span(), $crate::Terminal::Return)
     };
 
-    (@inner, self) => {
-        $crate::TokenTree::Terminal($crate::Terminal::Self_)
+    (@inner $sb:expr, self) => {
+        $crate::TokenTree::terminal($sb.mk_span(), $crate::Terminal::Self_)
     };
 
-    (@inner, Self) => {
-        $crate::TokenTree::Terminal($crate::Terminal::SelfUpper)
+    (@inner $sb:expr, Self) => {
+        $crate::TokenTree::terminal($sb.mk_span(), $crate::Terminal::SelfUpper)
     };
 
-    (@inner, static) => {
-        $crate::TokenTree::Terminal($crate::Terminal::Static)
+    (@inner $sb:expr, static) => {
+        $crate::TokenTree::terminal($sb.mk_span(), $crate::Terminal::Static)
     };
 
-    (@inner, struct) => {
-        $crate::TokenTree::Terminal($crate::Terminal::Struct)
+    (@inner $sb:expr, struct) => {
+        $crate::TokenTree::terminal($sb.mk_span(), $crate::Terminal::Struct)
     };
 
-    (@inner, super) => {
-        $crate::TokenTree::Terminal($crate::Terminal::Super)
+    (@inner $sb:expr, super) => {
+        $crate::TokenTree::terminal($sb.mk_span(), $crate::Terminal::Super)
     };
 
-    (@inner, trait) => {
-        $crate::TokenTree::Terminal($crate::Terminal::Trait)
+    (@inner $sb:expr, trait) => {
+        $crate::TokenTree::terminal($sb.mk_span(), $crate::Terminal::Trait)
     };
 
-    (@inner, true) => {
-        $crate::TokenTree::Terminal($crate::Terminal::True)
+    (@inner $sb:expr, true) => {
+        $crate::TokenTree::terminal($sb.mk_span(), $crate::Terminal::True)
     };
 
-    (@inner, type) => {
-        $crate::TokenTree::Terminal($crate::Terminal::Type)
+    (@inner $sb:expr, type) => {
+        $crate::TokenTree::terminal($sb.mk_span(), $crate::Terminal::Type)
     };
 
-    (@inner, unsafe) => {
-        $crate::TokenTree::Terminal($crate::Terminal::Unsafe)
+    (@inner $sb:expr, unsafe) => {
+        $crate::TokenTree::terminal($sb.mk_span(), $crate::Terminal::Unsafe)
     };
 
-    (@inner, use) => {
-        $crate::TokenTree::Terminal($crate::Terminal::Use)
+    (@inner $sb:expr, use) => {
+        $crate::TokenTree::terminal($sb.mk_span(), $crate::Terminal::Use)
     };
 
-    (@inner, where) => {
-        $crate::TokenTree::Terminal($crate::Terminal::Where)
+    (@inner $sb:expr, where) => {
+        $crate::TokenTree::terminal($sb.mk_span(), $crate::Terminal::Where)
     };
 
-    (@inner, while) => {
-        $crate::TokenTree::Terminal($crate::Terminal::While)
+    (@inner $sb:expr, while) => {
+        $crate::TokenTree::terminal($sb.mk_span(), $crate::Terminal::While)
     };
 
     // Keywords that are also reserved
-    (@inner, abstract) => {
-        $crate::TokenTree::Terminal($crate::Terminal::Abstract)
+    (@inner $sb:expr, abstract) => {
+        $crate::TokenTree::terminal($sb.mk_span(), $crate::Terminal::Abstract)
     };
 
-    (@inner, alignof) => {
-        $crate::TokenTree::Terminal($crate::Terminal::Alignof)
+    (@inner $sb:expr, alignof) => {
+        $crate::TokenTree::terminal($sb.mk_span(), $crate::Terminal::Alignof)
     };
 
-    (@inner, become) => {
-        $crate::TokenTree::Terminal($crate::Terminal::Become)
+    (@inner $sb:expr, become) => {
+        $crate::TokenTree::terminal($sb.mk_span(), $crate::Terminal::Become)
     };
 
-    (@inner, box) => {
-        $crate::TokenTree::Terminal($crate::Terminal::Box)
+    (@inner $sb:expr, box) => {
+        $crate::TokenTree::terminal($sb.mk_span(), $crate::Terminal::Box)
     };
 
-    (@inner, do) => {
-        $crate::TokenTree::Terminal($crate::Terminal::Do)
+    (@inner $sb:expr, do) => {
+        $crate::TokenTree::terminal($sb.mk_span(), $crate::Terminal::Do)
     };
 
-    (@inner, final) => {
-        $crate::TokenTree::Terminal($crate::Terminal::Final)
+    (@inner $sb:expr, final) => {
+        $crate::TokenTree::terminal($sb.mk_span(), $crate::Terminal::Final)
     };
 
-    (@inner, macro) => {
-        $crate::TokenTree::Terminal($crate::Terminal::Macro)
+    (@inner $sb:expr, macro) => {
+        $crate::TokenTree::terminal($sb.mk_span(), $crate::Terminal::Macro)
     };
 
-    (@inner, offsetof) => {
-        $crate::TokenTree::Terminal($crate::Terminal::Offsetof)
+    (@inner $sb:expr, offsetof) => {
+        $crate::TokenTree::terminal($sb.mk_span(), $crate::Terminal::Offsetof)
     };
 
-    (@inner, override) => {
-        $crate::TokenTree::Terminal($crate::Terminal::Override)
+    (@inner $sb:expr, override) => {
+        $crate::TokenTree::terminal($sb.mk_span(), $crate::Terminal::Override)
     };
 
-    (@inner, priv) => {
-        $crate::TokenTree::Terminal($crate::Terminal::Priv)
+    (@inner $sb:expr, priv) => {
+        $crate::TokenTree::terminal($sb.mk_span(), $crate::Terminal::Priv)
     };
 
-    (@inner, proc) => {
-        $crate::TokenTree::Terminal($crate::Terminal::Proc)
+    (@inner $sb:expr, proc) => {
+        $crate::TokenTree::terminal($sb.mk_span(), $crate::Terminal::Proc)
     };
 
-    (@inner, pure) => {
-        $crate::TokenTree::Terminal($crate::Terminal::Pure)
+    (@inner $sb:expr, pure) => {
+        $crate::TokenTree::terminal($sb.mk_span(), $crate::Terminal::Pure)
     };
 
-    (@inner, sizeof) => {
-        $crate::TokenTree::Terminal($crate::Terminal::Sizeof)
+    (@inner $sb:expr, sizeof) => {
+        $crate::TokenTree::terminal($sb.mk_span(), $crate::Terminal::Sizeof)
     };
 
-    (@inner, typeof) => {
-        $crate::TokenTree::Terminal($crate::Terminal::Typeof)
+    (@inner $sb:expr, typeof) => {
+        $crate::TokenTree::terminal($sb.mk_span(), $crate::Terminal::Typeof)
     };
 
-    (@inner, unsized) => {
-        $crate::TokenTree::Terminal($crate::Terminal::Unsized)
+    (@inner $sb:expr, unsized) => {
+        $crate::TokenTree::terminal($sb.mk_span(), $crate::Terminal::Unsized)
     };
 
-    (@inner, virtual) => {
-        $crate::TokenTree::Terminal($crate::Terminal::Virtual)
+    (@inner $sb:expr, virtual) => {
+        $crate::TokenTree::terminal($sb.mk_span(), $crate::Terminal::Virtual)
     };
 
-    (@inner, yield) => {
-        $crate::TokenTree::Terminal($crate::Terminal::Yield)
+    (@inner $sb:expr, yield) => {
+        $crate::TokenTree::terminal($sb.mk_span(), $crate::Terminal::Yield)
     };
 
-    (@inner, await) => {
-        $crate::TokenTree::Terminal($crate::Terminal::Await)
+    (@inner $sb:expr, await) => {
+        $crate::TokenTree::terminal($sb.mk_span(), $crate::Terminal::Await)
     };
 
-    (@inner, dyn) => {
-        $crate::TokenTree::Terminal($crate::Terminal::Dyn)
+    (@inner $sb:expr, dyn) => {
+        $crate::TokenTree::terminal($sb.mk_span(), $crate::Terminal::Dyn)
     };
 
-    (@inner, abstract) => {
-        $crate::TokenTree::Terminal($crate::Terminal::Abstract)
+    (@inner $sb:expr, abstract) => {
+        $crate::TokenTree::terminal($sb.mk_span(), $crate::Terminal::Abstract)
     };
 
-    (@inner, catch) => {
-        $crate::TokenTree::Terminal($crate::Terminal::Catch)
+    (@inner $sb:expr, catch) => {
+        $crate::TokenTree::terminal($sb.mk_span(), $crate::Terminal::Catch)
     };
 
-    (@inner, final) => {
-        $crate::TokenTree::Terminal($crate::Terminal::Final)
+    (@inner $sb:expr, final) => {
+        $crate::TokenTree::terminal($sb.mk_span(), $crate::Terminal::Final)
     };
 
-    (@inner, macro) => {
-        $crate::TokenTree::Terminal($crate::Terminal::Macro)
+    (@inner $sb:expr, macro) => {
+        $crate::TokenTree::terminal($sb.mk_span(), $crate::Terminal::Macro)
     };
 
-    (@inner, override) => {
-        $crate::TokenTree::Terminal($crate::Terminal::Override)
+    (@inner $sb:expr, override) => {
+        $crate::TokenTree::terminal($sb.mk_span(), $crate::Terminal::Override)
     };
 
-    (@inner, priv) => {
-        $crate::TokenTree::Terminal($crate::Terminal::Priv)
+    (@inner $sb:expr, priv) => {
+        $crate::TokenTree::terminal($sb.mk_span(), $crate::Terminal::Priv)
     };
 
-    (@inner, try) => {
-        $crate::TokenTree::Terminal($crate::Terminal::Try)
+    (@inner $sb:expr, try) => {
+        $crate::TokenTree::terminal($sb.mk_span(), $crate::Terminal::Try)
     };
 
-    (@inner, union) => {
-        $crate::TokenTree::Terminal($crate::Terminal::Union)
+    (@inner $sb:expr, union) => {
+        $crate::TokenTree::terminal($sb.mk_span(), $crate::Terminal::Union)
     };
 
-    (@inner, #) => {
+    (@inner $sb:expr, #) => {
         $crate::TokenDescription::Pound
     };
 
-    (@inner, $id:ident) => {
-        $crate::TokenTree::Terminal($crate::Terminal::Ident(stringify!($id).to_string()))
+    (@inner $sb:expr, $id:ident) => {
+        $crate::TokenTree::terminal($sb.mk_span(), $crate::Terminal::Ident(stringify!($id).to_string()))
     };
 
-    ( $( $tt:tt )* ) => {
+    (@with_sb $sb:expr, $( $tt:tt )* ) => {{
         vec![
             $(
-                quote!(@inner, $tt)
+                quote!(@inner $sb, $tt)
             ),*
         ]
-    };
+    }};
+
+    ( $( $tt:tt )* ) => {{
+        let mut span_builder = $crate::span::DebugSpanBuilder::new();
+        quote! { @with_sb span_builder, $( $tt )* }
+    }};
 }
 
 macro_rules! impl_spannable {

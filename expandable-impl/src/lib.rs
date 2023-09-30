@@ -134,6 +134,7 @@ mod grammar;
 mod list;
 mod matcher;
 mod repetition_stack;
+mod span;
 mod states;
 mod substitution;
 
@@ -238,25 +239,25 @@ pub struct TokenTree<Span> {
 
 #[cfg(test)]
 #[allow(non_snake_case, unused)]
-impl TokenTree<()> {
-    fn Terminal(t: Terminal) -> TokenTree<()> {
+impl<Span> TokenTree<Span> {
+    fn terminal(span: Span, t: Terminal) -> TokenTree<Span> {
         TokenTree {
             kind: TokenTreeKind::Terminal(t),
-            span: (),
+            span,
         }
     }
 
-    fn Parenthesed(i: Vec<TokenTree<()>>) -> TokenTree<()> {
+    fn parenthesed(span: Span, i: Vec<TokenTree<Span>>) -> TokenTree<Span> {
         TokenTree {
             kind: TokenTreeKind::Parenthesed(i),
-            span: (),
+            span,
         }
     }
 
-    fn CurlyBraced(i: Vec<TokenTree<()>>) -> TokenTree<()> {
+    fn curlyBraced(span: Span, i: Vec<TokenTree<Span>>) -> TokenTree<Span> {
         TokenTree {
             kind: TokenTreeKind::CurlyBraced(i),
-            span: (),
+            span,
         }
     }
 }
