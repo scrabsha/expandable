@@ -276,7 +276,7 @@ mod tests {
         ( $test_name:ident { #[$kind:ident]( $( $matcher:tt )* ) => { $( $substitution:tt )* } $(;)? }) => {
             #[test]
             fn $test_name() {
-                let matcher: Vec<crate::TokenTree<()>> = quote! { $( $matcher )* };
+                let matcher: Vec<crate::TokenTree<_>> = quote! { $( $matcher )* };
                 let matcher = crate::matcher::TokenTree::from_generic(matcher).expect("Failed to generate `matcher::TokenTree`");
                 let bindings = crate::matcher::Matcher::from_generic(&matcher).expect("Failed to generate `matcher::Bindings`");
 

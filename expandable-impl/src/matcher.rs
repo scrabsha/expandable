@@ -408,12 +408,12 @@ mod local_tree_to_matcher {
                         bindings: {
                             "a": BindingData {
                                 kind: Ident,
-                                span: (),
+                                span: 2,
                                 repetition_stack: [],
                             },
                             "b": BindingData {
                                 kind: Expr,
-                                span: (),
+                                span: 7,
                                 repetition_stack: [],
                             },
                         },
@@ -432,7 +432,7 @@ mod local_tree_to_matcher {
                         bindings: {
                             "a": BindingData {
                                 kind: Ident,
-                                span: (),
+                                span: 5,
                                 repetition_stack: [],
                             },
                         },
@@ -451,7 +451,7 @@ mod local_tree_to_matcher {
                         bindings: {
                             "a": BindingData {
                                 kind: Ident,
-                                span: (),
+                                span: 4,
                                 repetition_stack: [
                                     ZeroOrMore,
                                 ],
