@@ -254,7 +254,7 @@ macro_rules! quote {
     };
 
     (@inner $sb:expr, await) => {
-        $crate::TokenTree::terminal($sb.mk_span(), $crate::Terminal::Await)
+        quote!(@mk_term $sb, $crate::Terminal::Await)
     };
 
     (@inner $sb:expr, dyn) => {
@@ -294,7 +294,7 @@ macro_rules! quote {
     };
 
     (@inner $sb:expr, #) => {
-        $crate::TokenDescription::Pound
+        quote!(@mk_term $sb, $crate::Terminal::Pound)
     };
 
     (@inner $sb:expr, $id:ident) => {

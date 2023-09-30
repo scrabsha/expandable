@@ -266,6 +266,8 @@ token_description! {
         Terminal::QuestionMark => QuestionMark,
         /// The dollar sign (`$`).
         Terminal::Dollar => Dollar,
+        /// The pound sign (`#`).
+        Terminal::Pound => Pound,
 
         // Keywords
         /// The `as` keyword.

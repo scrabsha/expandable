@@ -306,6 +306,8 @@ pub enum Terminal {
     Semi,
     /// A times (`*`).
     Times,
+    /// A pound (`#`).
+    Pound,
 
     // Currently used keywords
     /// The `as` keyword.
