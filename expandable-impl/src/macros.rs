@@ -307,6 +307,7 @@ macro_rules! quote {
     }};
 
     ( $( $tt:tt )* ) => {{
+        #[allow(unused_variables, unused_mut)]
         let mut span_builder = $crate::span::DebugSpanBuilder::new();
         quote! { @with_sb span_builder, $( $tt )* }
     }};
