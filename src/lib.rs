@@ -181,7 +181,7 @@ mod syn_shim;
 extern crate proc_macro;
 
 use proc_macro::TokenStream as TokenStream1;
-use std::fmt::Display;
+use std::fmt::{Display, Formatter};
 use std::str::FromStr;
 
 use proc_macro2::{Delimiter, Punct, Spacing, Span, TokenStream, TokenTree};
@@ -256,10 +256,13 @@ fn mk_error_msg(error: expandable_impl::Error<Span>) -> syn::Error {
             got_nesting,
             ..
         } => {
-            let expected_nesting = pp_repetition(&expected_nesting);
-            let got_nesting = pp_repetition(&got_nesting);
+            let expected_nesting = pp_repetition_ops(&expected_nesting);
+            let got_nesting = pp_repetition_ops(&got_nesting);
 
-            (format!("the matcher defines {expected_nesting} for {metavariable_name} but the transcriber uses {got_nesting}"), Some(usage_span))
+            (
+                format!("the repetition used for `{metavariable_name}` ({got_nesting}) is different from how it is matched ({expected_nesting})."),
+                Some(usage_span),
+            )
         }
 
         _ => (
@@ -272,37 +275,22 @@ fn mk_error_msg(error: expandable_impl::Error<Span>) -> syn::Error {
     syn::Error::new(span, message)
 }
 
-fn pp_repetition(stack: &[RepetitionQuantifierKind]) -> impl Display + '_ {
-    PpRepetitionStack(stack)
+fn pp_repetition_ops(stack: &[RepetitionQuantifierKind]) -> impl Display + '_ {
+    PpRepetitionOps(stack)
 }
 
-struct PpRepetitionStack<'a>(&'a [RepetitionQuantifierKind]);
+struct PpRepetitionOps<'a>(&'a [RepetitionQuantifierKind]);
 
-impl<'a> Display for PpRepetitionStack<'a> {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let len = self.0.len();
-
-        match len {
-            0 => {
-                write!(f, "no repetition")
-            }
-
-            1 => {
-                write!(f, "one repetition (`")?;
-                write!(f, "{}", quantifier_to_char(self.0[0]))?;
-                write!(f, "`)")
-            }
-
-            len => {
-                write!(f, "{len} repetitions (`")?;
-                self.0
-                    .iter()
-                    .copied()
-                    .map(quantifier_to_char)
-                    .try_for_each(|c| write!(f, "{}", c))?;
-
-                write!(f, "`)")
-            }
+impl<'a> Display for PpRepetitionOps<'a> {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        if self.0.is_empty() {
+            write!(f, "no repetition")
+        } else {
+            write!(f, "`")?;
+            self.0
+                .iter()
+                .try_for_each(|q| write!(f, "{}", quantifier_to_char(*q)))?;
+            write!(f, "`")
         }
     }
 }
