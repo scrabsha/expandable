@@ -1,4 +1,4 @@
-error: the matcher defines one repetition (`?`) for a but the transcriber uses no repetition
+error: the repetition used for `a` (no repetition) is different from how it is matched (`?`).
  --> tests/ui/fail/bad_nesting_1.rs:5:10
   |
 5 |         $a

@@ -1,4 +1,4 @@
-error: the matcher defines 3 repetitions (`?+*`) for a but the transcriber uses one repetition (`*`)
+error: the repetition used for `a` (`*`) is different from how it is matched (`?+*`).
  --> tests/ui/fail/bad_nesting_2.rs:5:13
   |
 5 |         $( $a )*
