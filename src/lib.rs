@@ -156,6 +156,25 @@
 //! macro invocation. _This requirement may be lifted in the future for macros
 //! that call themselves._
 //!
+//! ### The repetition stack must match
+//!
+//! This crate requires a metavariable indication used in a transcriber to have
+//! the same repetition stack as the corresponding metavariable that appears in
+//! the matcher.
+//!
+//! For instance, the following code is rejected by `expandable`:
+//!
+//! ```rust,compile_fail
+//! #[expandable::expr]
+//! macro_rules! fns {
+//!     ($($a:ident)*) => {
+//!         $(
+//!             fn $a() {}
+//!         )+
+//!     }
+//! }
+//! ```
+//!
 //! ## Minimal Supported Rust Version (MSRV), syntax support and stability
 //!
 //! _`expandable` supports Rust 1.65 and above. Bumping the MSRV is
