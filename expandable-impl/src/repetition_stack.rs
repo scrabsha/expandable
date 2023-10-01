@@ -129,8 +129,8 @@ mod tests {
     repetition_match_test! {
         #[should_panic = "called `Result::unwrap()` on an `Err` value: InvalidRepetitionNesting { \
             metavariable_name: \"a\", \
-            decl_span: (), \
-            usage_span: (), \
+            decl_span: 5, \
+            usage_span: 4, \
             expected_nesting: [ZeroOrMore], \
             got_nesting: [OneOrMore] \
         }"]
@@ -144,8 +144,8 @@ mod tests {
     repetition_match_test! {
         #[should_panic = "called `Result::unwrap()` on an `Err` value: InvalidRepetitionNesting { \
             metavariable_name: \"a\", \
-            decl_span: (), \
-            usage_span: (), \
+            decl_span: 9, \
+            usage_span: 8, \
             expected_nesting: [OneOrMore, ZeroOrMore, ZeroOrOne], \
             got_nesting: [OneOrMore, ZeroOrOne, ZeroOrMore] \
         }"]
