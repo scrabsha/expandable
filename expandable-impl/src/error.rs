@@ -70,29 +70,34 @@ pub enum Error<Span> {
         where_: Span,
     },
 
-    /// A variable is being repeated with a repetition stack that does not
-    /// match the matched repetition stack.
+    /// A variable is being repeated with a sequence of operator that does not
+    /// match the one used when the variable was declared.
     ///
     /// # Example
     ///
-    /// ```rust
+    /// ```rust,compile_fail
     /// macro_rules! subtraction {
-    ///     ( $( $a:literal )-* ) => {
-    ///         $( $a )-+
+    ///     ( $( $first:literal $( - $then:literal )* )? ) => {
+    ///         $first $( - $then )*
     ///     };
     /// }
     ///
     /// subtraction!(101 - 42);
     /// ```
     ///
-    /// In this example, the repetition nesting of the matched metavariable `a`
-    /// is `*`, while the nesting of the metavariable indication `a` is `+`.
+    /// In this example, the repetition nesting of the matched metavariable `then`
+    /// is `?*`, while the nesting of the metavariable indication `then` is `*`.
+    ///
+    /// This variant represents both the case where the amount of repetitions
+    /// does not match (which is an error) and the case where the repetition
+    /// operators used do not match (which is allowed, but can lead to confusing
+    /// errors).
     InvalidRepetitionNesting {
         /// The name of the metavariable.
         metavariable_name: String,
         /// Where the metavariable was declared.
         decl_span: Span,
-        /// Where the metavariable was used with an incorrecting nesting.
+        /// Where the metavariable was used with an incorrect nesting.
         usage_span: Span,
         /// The nesting used when the metavariable was declared.
         expected_nesting: Vec<RepetitionQuantifierKind>,
