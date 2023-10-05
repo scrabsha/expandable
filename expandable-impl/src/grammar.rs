@@ -371,6 +371,9 @@ generate_grammar! {
             "expr" => AfterExpr;
             Ident => AfterExpr;
             If => ExprStart, Condition;
+
+            // <expr> ( <expr>, )
+            RParen, FnArgListThen => AfterExpr;
         },
 
         #[accepting]
@@ -380,6 +383,16 @@ generate_grammar! {
             Times => ExprStart;
             RBrace, FnBlockExpr => ItemStart;
             LBrace, Condition => ExprStart, Consequence;
+
+            // <expr> (
+            LParen => ExprStart, FnArgListFirst;
+            // <expr>, <expr>, ...
+            Comma, FnArgListFirst => ExprStart, FnArgListThen;
+            Comma, FnArgListThen => ExprStart, FnArgListThen;
+            // <expr> )
+            RParen, FnArgListFirst => AfterExpr;
+            RParen, FnArgListThen => AfterExpr;
+
             // We don't continue to `AfterExpr` because we want to parse an
             // optional `else` branch.
             RBrace, Consequence => AfterIf;
@@ -394,6 +407,16 @@ generate_grammar! {
             Times => ExprStart;
             RBrace, FnBlockExpr => ItemStart;
             LBrace, Condition => ExprStart, Consequence;
+
+            // <expr> (
+            LParen => ExprStart, FnArgListFirst;
+            // <expr>, <expr>, ...
+            Comma, FnArgListFirst => ExprStart, FnArgListThen;
+            Comma, FnArgListThen => ExprStart, FnArgListThen;
+            // <expr> )
+            RParen, FnArgListFirst => AfterExpr;
+            RParen, FnArgListThen => AfterExpr;
+
             // We don't continue to `AfterIf` because we want to parse an
             // optional `else` branch.
             RBrace, Consequence => AfterIf;
@@ -459,4 +482,6 @@ pub(crate) enum StackSymbol {
     Condition,
     Consequence,
     Alternative,
+    FnArgListFirst,
+    FnArgListThen,
 }
