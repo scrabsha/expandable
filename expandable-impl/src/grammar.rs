@@ -372,6 +372,8 @@ generate_grammar! {
             Ident => AfterExpr;
             If => ExprStart, Condition;
 
+            // <expr> ()
+            RParen, FnArgListFirst => AfterExpr;
             // <expr> ( <expr>, )
             RParen, FnArgListThen => AfterExpr;
         },
