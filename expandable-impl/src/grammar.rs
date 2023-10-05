@@ -30,23 +30,17 @@ impl DynamicState {
         self.stack.is_empty() && self.state.is_accepting()
     }
 
-    pub(crate) fn fresh_stack(&self) -> DynamicState {
-        let symbol = self.stack.last().unwrap();
+    pub(crate) fn fresh_stack(&mut self) -> DynamicState {
+        let symbol = self.stack.pop().unwrap();
         DynamicState {
             state: self.state,
-            stack: smallvec![*symbol],
+            stack: smallvec![symbol],
         }
     }
 
     pub(crate) fn with_old_stack(&self, old_state: &DynamicState) -> DynamicState {
-        let len = old_state.stack.len().saturating_sub(1);
-        let stack = old_state
-            .stack
-            .iter()
-            .copied()
-            .take(len)
-            .chain(self.stack_top())
-            .collect::<SmallVec<[_; 16]>>();
+        assert!(self.stack.is_empty());
+        let stack = old_state.stack.clone();
 
         DynamicState {
             state: self.state,
@@ -219,7 +213,7 @@ macro_rules! generate_grammar {
                             push: *out_sym,
                         })
                     } else { None }
-                }).ok_or_else(|| self.follow())
+                }).ok_or_else(|| self.follow(top))
             }
 
             fn follow(self) -> Vec<TokenDescription> {
