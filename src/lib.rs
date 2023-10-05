@@ -43,7 +43,7 @@
 //!
 //! This emits the following error [^error-message]:
 //! ```none
-//! error: Potentially invalid expansion. Expected an identifier.
+//! error: Potentially invalid expansion. Expected an identifier, if.
 //!  --> tests/ui/fail/js_concat.rs:4:16
 //!   |
 //! 4 |         $left ++ $right
