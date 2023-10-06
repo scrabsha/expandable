@@ -246,6 +246,8 @@ token_description! {
         Terminal::Ident(_) => Ident,
         /// A plus (`+`).
         Terminal::Plus => Plus,
+        /// A minus (`-`).
+        Terminal::Minus => Minus,
         /// A times (`*`).
         Terminal::Times => Times,
         /// A colon (`:`).
@@ -264,6 +266,12 @@ token_description! {
         Terminal::Dollar => Dollar,
         /// The pound sign (`#`).
         Terminal::Pound => Pound,
+        /// The equal sign (`=`).
+        Terminal::Equal => Equal,
+        /// The equal-equal sign (`==`).
+        Terminal::EqualEqual => EqualEqual,
+        /// A literal
+        Terminal::Literal(_) => Literal,
 
         // Keywords
         /// The `as` keyword.

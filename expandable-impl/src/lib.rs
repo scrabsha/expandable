@@ -298,8 +298,16 @@ pub enum Terminal {
     FatArrow,
     /// An identifier (`foo`, `bar`).
     Ident(String),
+    /// A literal (`42`, `"foo"`).
+    ///
+    /// We use textual representation of literals because we don't want to deal
+    /// with the parsing of literals.
+    // TODO: it may be appropriate to actually parse these literals :thinking:.
+    Literal(String),
     /// A plus (`+`).
     Plus,
+    /// A minus (`-`).
+    Minus,
     /// A question mark (`?`).
     QuestionMark,
     /// A semicolon (`;`).
@@ -308,6 +316,10 @@ pub enum Terminal {
     Times,
     /// A pound (`#`).
     Pound,
+    /// An equal (`=`).
+    Equal,
+    /// An equal-equal (`==`).
+    EqualEqual,
 
     // Currently used keywords
     /// The `as` keyword.
