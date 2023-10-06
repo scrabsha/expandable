@@ -216,12 +216,14 @@ macro_rules! generate_grammar {
                 }).ok_or_else(|| self.follow(top))
             }
 
-            fn follow(self) -> Vec<TokenDescription> {
-               Self::TRANSITIONS[self as usize].iter().filter_map(|(descr, _, _, _)| {
-                    if matches!(descr, TokenDescription::Fragment(_)) {
-                        None
-                    } else {
+            fn follow(self, top: Option<StackSymbol>) -> Vec<TokenDescription> {
+                Self::TRANSITIONS[self as usize].iter().filter_map(|(descr, in_sym, _, _)| {
+                    // We try to be smårt here and only suggest tokens that we
+                    // can actually accept.
+                    if !matches!(descr, TokenDescription::Fragment(_)) && (in_sym.is_none() || in_sym == &top) {
                         Some(*descr)
+                    } else {
+                        None
                     }
                 }).collect()
             }
