@@ -43,11 +43,7 @@
 //!
 //! This emits the following error [^error-message]:
 //! ```none
-//! error: Potentially invalid expansion. Expected an identifier, if.
-//!  --> tests/ui/fail/js_concat.rs:4:16
-//!   |
-//! 4 |         $left ++ $right
-//!   |                ^
+#![doc = include_str!("../tests/ui/fail/js_concat.stderr")]
 //! ```
 //!
 //! ## Expansion context
