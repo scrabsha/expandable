@@ -611,4 +611,76 @@ mod tests {
             }
         }
     }
+
+    check_macro_test! {
+        fn_call_1 {
+            #[expr]
+            {
+                () => { a(b) };
+            }
+        }
+    }
+
+    check_macro_test! {
+        fn_call_2 {
+            #[expr]
+            {
+                () => { a(b, c) };
+            }
+        }
+    }
+
+    check_macro_test! {
+        fn_call_3 {
+            #[expr]
+            {
+                () => { a(b, c, d) };
+            }
+        }
+    }
+
+    check_macro_test! {
+        fn_call_4 {
+            #[expr]
+            {
+                () => {
+                    a(
+                        b,
+                        c,
+                        d,
+                    )
+                };
+            }
+        }
+    }
+
+    check_macro_test! {
+        fn_call_5 {
+            #[expr]
+            {
+                () => {
+                    a(
+                        b + c,
+                        if d { e },
+                        if f { g } else { h }
+                    )
+                };
+            }
+        }
+    }
+
+    check_macro_test! {
+        fn_call_6 {
+            #[expr]
+            {
+                () => {
+                    a(
+                        b + c,
+                        if d { e },
+                        if f { g } else { h },
+                    )
+                };
+            }
+        }
+    }
 }

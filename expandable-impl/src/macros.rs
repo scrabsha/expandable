@@ -43,6 +43,10 @@ macro_rules! quote {
         quote!(@mk_term $sb, $crate::Terminal::Semi)
     };
 
+    (@inner $sb:expr, ,) => {
+        quote!(@mk_term $sb, $crate::Terminal::Comma)
+    };
+
     // Keywords
     (@inner $sb:expr, as) => {
         quote!(@mk_term $sb, $crate::Terminal::As)
