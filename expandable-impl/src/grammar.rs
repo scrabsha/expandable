@@ -378,6 +378,7 @@ generate_grammar! {
             "ident" => AfterExpr;
             "expr" => AfterExpr;
             Ident => AfterExpr;
+            Literal => AfterExpr;
             If => ExprStart, Condition;
 
             // <expr> ()
