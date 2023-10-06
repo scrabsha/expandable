@@ -1,3 +1,7 @@
+// Architectural invariant: this module contains a development-only span type
+// aiming to ease debugging. This module is cfg-ed out when the crate is used
+// as a dependency.
+
 use std::fmt::{Debug, Formatter};
 
 #[derive(Copy, Clone)]

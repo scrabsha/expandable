@@ -144,12 +144,12 @@ where
         initial_state: DynamicState,
     ) -> Result<DynamicStateSet, Error<Span>> {
         // Parse open delimiter
-        let state = initial_state
+        let mut after_open_delimiter = initial_state
             .clone()
             .accept(open)
             .map_err(|expected| Error::InvalidProducedAst { span, expected })?;
 
-        let inner_state = state.fresh_stack();
+        let inner_state = after_open_delimiter.fresh_stack();
         let states = self.parse_stream(DynamicStateSet::singleton(inner_state), inner)?;
 
         // Parse close delimiter
@@ -158,7 +158,7 @@ where
             .map(|state| {
                 state
                     .accept(close)
-                    .map(|state| state.with_old_stack(&initial_state))
+                    .map(|state| state.with_old_stack(&after_open_delimiter))
                     .map_err(|expected| Error::InvalidProducedAst { span, expected })
             })
             .collect::<Result<DynamicStateSet, _>>()?;
