@@ -150,7 +150,7 @@ where
             .map_err(|expected| Error::InvalidProducedAst { span, expected })?;
 
         let inner_state = after_open_delimiter.fresh_stack();
-        let states = self.parse_stream(DynamicStateSet::singleton(inner_state.clone()), inner)?;
+        let states = self.parse_stream(DynamicStateSet::singleton(inner_state), inner)?;
 
         // Parse close delimiter
         let states = states
