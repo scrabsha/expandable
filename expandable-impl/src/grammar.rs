@@ -447,17 +447,18 @@ generate_grammar! {
         },
 
         AfterFnName {
-            LParen => FnParamStart, FnParamList
+            LParen => FnArgStart, FnParam;
         },
 
         AfterFnParams {
+            Arrow => TypeStart, AfterFnParams;
             LBrace => ExprStart, FnBlockExpr;
         },
 
-        FnParamStart {
+        FnArgStart {
             "ident" => AfterFnParamName;
             Ident => AfterFnParamName;
-            RParen, FnParamList => AfterFnParams
+            RParen, FnParam => AfterFnParams
         },
 
         AfterFnParamName {
@@ -470,7 +471,9 @@ generate_grammar! {
         },
 
         AfterType {
-            Comma, FnParamList => FnParamStart, FnParamList;
+            Comma, FnParam => FnArgStart, FnParam;
+            RParen, FnParam => AfterFnParams;
+            LBrace, AfterFnParams => ExprStart, FnBlockExpr;
         },
     }
 }
@@ -487,11 +490,12 @@ impl State {
 // We probably want more, more descriptive, names for these.
 #[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
 pub(crate) enum StackSymbol {
-    FnParamList,
     FnBlockExpr,
     Condition,
     Consequence,
     Alternative,
     FnArgListFirst,
     FnArgListThen,
+    FnParam,
+    AfterFnParams,
 }
