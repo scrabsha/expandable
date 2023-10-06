@@ -390,7 +390,9 @@ generate_grammar! {
         // Transitions added here must be added in `AfterIf` as well.
         AfterExpr {
             Plus => ExprStart;
+            Minus => ExprStart;
             Times => ExprStart;
+            EqualEqual => ExprStart;
             RBrace, FnBlockExpr => ItemStart;
             LBrace, Condition => ExprStart, Consequence;
 
