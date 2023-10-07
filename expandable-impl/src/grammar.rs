@@ -246,6 +246,8 @@ token_description! {
         Terminal::Ident(_) => Ident,
         /// A plus (`+`).
         Terminal::Plus => Plus,
+        /// A minus (`-`).
+        Terminal::Minus => Minus,
         /// A times (`*`).
         Terminal::Times => Times,
         /// A colon (`:`).
@@ -264,6 +266,12 @@ token_description! {
         Terminal::Dollar => Dollar,
         /// The pound sign (`#`).
         Terminal::Pound => Pound,
+        /// The equal sign (`=`).
+        Terminal::Equal => Equal,
+        /// The equal-equal sign (`==`).
+        Terminal::EqualEqual => EqualEqual,
+        /// A literal
+        Terminal::Literal(_) => Literal,
 
         // Keywords
         /// The `as` keyword.
@@ -370,6 +378,7 @@ generate_grammar! {
             "ident" => AfterExpr;
             "expr" => AfterExpr;
             Ident => AfterExpr;
+            Literal => AfterExpr;
             If => ExprStart, Condition;
 
             // <expr> ()
@@ -382,7 +391,9 @@ generate_grammar! {
         // Transitions added here must be added in `AfterIf` as well.
         AfterExpr {
             Plus => ExprStart;
+            Minus => ExprStart;
             Times => ExprStart;
+            EqualEqual => ExprStart;
             RBrace, FnBlockExpr => ItemStart;
             LBrace, Condition => ExprStart, Consequence;
 
@@ -407,6 +418,8 @@ generate_grammar! {
             Else => AfterElse;
             Plus => ExprStart;
             Times => ExprStart;
+            Minus => ExprStart;
+            EqualEqual => ExprStart;
             RBrace, FnBlockExpr => ItemStart;
             LBrace, Condition => ExprStart, Consequence;
 
@@ -439,17 +452,18 @@ generate_grammar! {
         },
 
         AfterFnName {
-            LParen => FnParamStart, FnParamList
+            LParen => FnArgStart, FnParam;
         },
 
         AfterFnParams {
+            Arrow => TypeStart, AfterFnParams;
             LBrace => ExprStart, FnBlockExpr;
         },
 
-        FnParamStart {
+        FnArgStart {
             "ident" => AfterFnParamName;
             Ident => AfterFnParamName;
-            RParen, FnParamList => AfterFnParams
+            RParen, FnParam => AfterFnParams
         },
 
         AfterFnParamName {
@@ -462,7 +476,9 @@ generate_grammar! {
         },
 
         AfterType {
-            Comma, FnParamList => FnParamStart, FnParamList;
+            Comma, FnParam => FnArgStart, FnParam;
+            RParen, FnParam => AfterFnParams;
+            LBrace, AfterFnParams => ExprStart, FnBlockExpr;
         },
     }
 }
@@ -479,11 +495,12 @@ impl State {
 // We probably want more, more descriptive, names for these.
 #[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
 pub(crate) enum StackSymbol {
-    FnParamList,
     FnBlockExpr,
     Condition,
     Consequence,
     Alternative,
     FnArgListFirst,
     FnArgListThen,
+    FnParam,
+    AfterFnParams,
 }

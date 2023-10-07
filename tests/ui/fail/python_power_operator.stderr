@@ -1,4 +1,4 @@
-error: Potentially invalid expansion. Expected an identifier, if.
+error: Potentially invalid expansion. Expected an identifier, a literal, `if`.
  --> tests/ui/fail/python_power_operator.rs:5:14
   |
 5 |         $e * *$e

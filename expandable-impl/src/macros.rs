@@ -31,6 +31,22 @@ macro_rules! quote {
         quote!(@mk_term $sb, $crate::Terminal::Plus)
     };
 
+    (@inner $sb:expr, -) => {
+        quote!(@mk_term $sb, $crate::Terminal::Minus)
+    };
+
+    (@inner $sb:expr, =) => {
+        quote!(@mk_term $sb, $crate::Terminal::Equal)
+    };
+
+    (@inner $sb:expr, ==) => {
+        quote!(@mk_term $sb, $crate::Terminal::DoubleEqual)
+    };
+
+    (@inner $sb:expr, $lit:literal) => {
+        quote!(@mk_term $sb, $crate::Terminal::Literal($lit.to_string()))
+    };
+
     (@inner $sb:expr, *) => {
         quote!(@mk_term $sb, $crate::Terminal::Times)
     };

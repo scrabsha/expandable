@@ -43,11 +43,7 @@
 //!
 //! This emits the following error [^error-message]:
 //! ```none
-//! error: Potentially invalid expansion. Expected an identifier, if.
-//!  --> tests/ui/fail/js_concat.rs:4:16
-//!   |
-//! 4 |         $left ++ $right
-//!   |                ^
+#![doc = include_str!("../tests/ui/fail/js_concat.stderr")]
 //! ```
 //!
 //! ## Expansion context
@@ -409,7 +405,7 @@ const TERMS_AND_STRS: &[(Terminal, &str)] = &[
     (Terminal::While, "while"),
 ];
 
-fn describe(descr: &TokenDescription) -> &'static str {
+fn describe(descr: &TokenDescription) -> String {
     match descr {
         TokenDescription::LParen => "a `(`",
         TokenDescription::RParen => "a `)`",
@@ -420,6 +416,7 @@ fn describe(descr: &TokenDescription) -> &'static str {
         TokenDescription::Invalid => unreachable!(),
         TokenDescription::Ident => "an identifier",
         TokenDescription::Plus => "`+`",
+        TokenDescription::Minus => "`-`",
         TokenDescription::Times => "`*`",
         TokenDescription::Comma => "`,`",
         TokenDescription::Colon => "`:`",
@@ -428,12 +425,24 @@ fn describe(descr: &TokenDescription) -> &'static str {
         TokenDescription::FatArrow => "`=>`",
         TokenDescription::QuestionMark => "`?`",
         TokenDescription::Dollar => "`$`",
+        TokenDescription::Equal => "`=`",
+        TokenDescription::EqualEqual => "`==`",
+        TokenDescription::Literal => "a literal",
 
-        other => DESCRS_AND_STRS
-            .iter()
-            .find_map(|(k, v)| if k == other { Some(v) } else { None })
-            .unwrap_or_else(|| todo!("Unknown token description: {:?}", other)),
+        other => {
+            return DESCRS_AND_STRS
+                .iter()
+                .find_map(|(k, v)| {
+                    if k == other {
+                        Some(format!("`{v}`"))
+                    } else {
+                        None
+                    }
+                })
+                .unwrap_or_else(|| todo!("Unknown token description: {:?}", other))
+        }
     }
+    .to_string()
 }
 
 fn parse_macro_stream(stream: TokenStream) -> Vec<expandable_impl::TokenTree<Span>> {
@@ -484,10 +493,20 @@ fn parse_macro_stream(stream: TokenStream) -> Vec<expandable_impl::TokenTree<Spa
                         tail = tail_;
                         Terminal::FatArrow
                     }
+
+                    s if s.starts_with("==") => {
+                        let (last, tail_) = tail.split_first().unwrap();
+                        span = span.join(last.span()).unwrap_or_else(|| p.span());
+                        tail = tail_;
+                        Terminal::EqualEqual
+                    }
+
+                    s if s.starts_with('=') => Terminal::EqualEqual,
                     s if s.starts_with(':') => Terminal::Colon,
                     s if s.starts_with(',') => Terminal::Comma,
                     s if s.starts_with('$') => Terminal::Dollar,
                     s if s.starts_with('+') => Terminal::Plus,
+                    s if s.starts_with('-') => Terminal::Minus,
                     s if s.starts_with('?') => Terminal::QuestionMark,
                     s if s.starts_with(';') => Terminal::Semi,
                     s if s.starts_with('*') => Terminal::Times,
@@ -496,7 +515,9 @@ fn parse_macro_stream(stream: TokenStream) -> Vec<expandable_impl::TokenTree<Spa
                 })
             }
 
-            TokenTree::Literal(_) => todo!(),
+            TokenTree::Literal(lit) => {
+                expandable_impl::TokenTreeKind::Terminal(Terminal::Literal(lit.to_string()))
+            }
         };
 
         let tree = expandable_impl::TokenTree { kind, span };

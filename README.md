@@ -43,10 +43,10 @@ macro_rules! js_concat {
 
 This emits the following error [^error-message]:
 ```none
-error: Potentially invalid expansion. Expected an identifier, if.
- --> tests/ui/fail/js_concat.rs:4:16
+error: Potentially invalid expansion. Expected an identifier, a literal, `if`.
+ --> tests/ui/fail/js_concat.rs:5:16
   |
-4 |         $left ++ $right
+5 |         $left ++ $right
   |                ^
 ```
 
