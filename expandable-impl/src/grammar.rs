@@ -418,6 +418,8 @@ generate_grammar! {
             Else => AfterElse;
             Plus => ExprStart;
             Times => ExprStart;
+            Minus => ExprStart;
+            EqualEqual => ExprStart;
             RBrace, FnBlockExpr => ItemStart;
             LBrace, Condition => ExprStart, Consequence;
 
