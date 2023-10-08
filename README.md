@@ -6,7 +6,6 @@ checker.
 
 <br />
 <br />
-
 <p style="text-align:center" align="center">
 <img src="https://cdn.githubraw.com/scrabsha/expendable/main/assets/top_image.png"
      width=70%
@@ -28,9 +27,10 @@ macro_rules! js_concat {
 ```
 
 However, any call to the `js_concat` macro is invalid, as the `++` operator
-does not exist in Rust. Luckily for us, this crate provides the
-[`expandable::expr`] macro, that checks that the macro expands to a valid
-expression. Let's use it on `js_concat`:
+does not exist in Rust.
+Luckily for us, this crate provides the [`expandable::expr`] macro, that
+checks that the macro expands to a valid expression. Let's use it on
+`js_concat`:
 
 ```rust,compile_fail
 #[expandable::expr]
@@ -49,6 +49,10 @@ error: Potentially invalid expansion. Expected an identifier, a literal, `if`.
 5 |         $left ++ $right
   |                ^
 ```
+
+[^error-message]: The Rust grammar is not fully implemented at the moment,
+leading to incomplete "expected xxx" list this will be fixed before the
+first non-alpha release of this crate.
 
 ## Expansion context
 
@@ -191,6 +195,3 @@ without notice.
 Any change that may trigger errors on previously accepted code is considered
 a breaking change.
 
-[^error-message]: The Rust grammar is not fully implemented at the moment,
-    leading to incomplete "expected xxx" list this will be fixed before the
-    first non-alpha release of this crate.
