@@ -12,4 +12,4 @@ macro_rules! js_concat {
 ```
 
 However, any call to the `js_concat` macro is invalid, as the `++` operator
-does not exist in Rust. 
+does not exist in Rust.
