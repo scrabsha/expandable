@@ -13,14 +13,14 @@ impl Debug for DebugSpan {
     }
 }
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, Default, PartialEq)]
 pub struct DebugSpanBuilder {
     counter: usize,
 }
 
 impl DebugSpanBuilder {
     pub fn new() -> DebugSpanBuilder {
-        DebugSpanBuilder { counter: 0 }
+        DebugSpanBuilder::default()
     }
 
     pub fn mk_span(&mut self) -> DebugSpan {
