@@ -5,7 +5,7 @@
 use std::fmt::{Debug, Formatter};
 
 #[derive(Copy, Clone)]
-pub(crate) struct DebugSpan(pub(crate) usize);
+pub struct DebugSpan(pub(crate) usize);
 
 impl Debug for DebugSpan {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
@@ -13,16 +13,17 @@ impl Debug for DebugSpan {
     }
 }
 
-pub(crate) struct DebugSpanBuilder {
+#[derive(Clone, Debug, PartialEq)]
+pub struct DebugSpanBuilder {
     counter: usize,
 }
 
 impl DebugSpanBuilder {
-    pub(crate) fn new() -> DebugSpanBuilder {
+    pub fn new() -> DebugSpanBuilder {
         DebugSpanBuilder { counter: 0 }
     }
 
-    pub(crate) fn mk_span(&mut self) -> DebugSpan {
+    pub fn mk_span(&mut self) -> DebugSpan {
         let id = self.counter;
         self.counter += 1;
         DebugSpan(id)
