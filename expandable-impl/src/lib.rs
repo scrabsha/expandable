@@ -25,98 +25,54 @@
 
 //! <div class="title-block" style="text-align: center;" align="center">
 //! <h1><code>expandable-impl</code></h1>
-//! A runtime-agnostic <code>macro_rules!</code> expansion checker.
+//! An opinionated, runtime-agnostic <code>macro_rules!</code> expansion checker.
 //! </div>
 //!
-//! ## Why?
+//! <br />
+//! <br />
+#![doc = include_str!("../../doc/00-top-image.md")]
 //!
-//! Let's consider the following Rust code:
+#![doc = include_str!("../../doc/01-textbook-example.md")]
+//! Luckily for us, this crate provides the [`check_macro`] function, that
+//! (drumroll) checks that a macro is valid. It takes as argument the context
+//! in which the macro will be called and the content of the macro definition.
+//! Let's use it on `js_concat`:
 //!
-//! ```rust
-//! macro_rules! js_concat {
-//!     ($left:expr, $right:expr) => {
-//!         $left ++ $right
-//!     };
-//! }
+//! ```
+//! use expandable_impl::{InvocationContext, quote};
+//!
+//! let err = expandable_impl::check_macro(
+//!     InvocationContext::Item,
+//!     quote! {
+//!         (@left:expr, @right:expr) => {
+//!            @left ++ @right
+//!         };
+//!     },
+//! ).unwrap_err();
+//!
+//! assert!(matches!(err, expandable_impl::Error::InvalidProducedAst { .. }));
 //! ```
 //!
-//! This macro is obviously not correct, as the `++` operator does not exist in
-//! Rust. Any call to the `js_concat` macro will result in a compilation error.
-//! However, the snippet above compiles.
+//! ## Expansion context
 //!
-//! Let's now consider the following equally incorrect Rust code:
+//! Macros can expand to different things depending on where they are called.
+//! As a result, `expandable-impl` must know what the macro expands to. This is
+//! represented by the [`InvocationContext`] enum.
 //!
-//! ```rust,compile_fail,E0277
-//! fn add(a: u8, b: char) {
-//!     a + b;
-//! }
-//! ```
+//! ## Runtime-agnostic?
 //!
-//! This code is incorrect because `char` cannot be added to `u8`
-//! [^error-message]. Rustc rightfully refuses to compile this snippet and emits
-//! a cute error message we all love and cherish.
+//! This crate does not depend on any "compiler-specific" data structure. It
+//! may be embedded anywhere. [`expandable`] is a crate that provides the
+//! features defined in this crate as a set of `proc_macro`. Feel free to
+//! embed this crate in your analysis tool!
 //!
-//! Interestingly, macros and functions share a lot of things in common:
-//! - They take _things_ an input and return _things_ as well,
-//! - We have some information about the kind of _things_ that they take is
-//! input[^things].
+//! [`expandable`]: https://crates.io/crates/expandable
 //!
-//! So that's a bit unfair: why would functions have so much checks when macros
-//! don't?
+#![doc = include_str!("../../doc/02-what-can-it-detect.md")]
 //!
-//! <video controls >
-//!     <!-- Yes, this is me using github as a CDN -->
-//!     <source src="https://github.com/scrabsha/expendable/raw/main/assets/objection.mp4" type="video/mp4" />
-//! </video>
+#![doc = include_str!("../../doc/03-opinionated.md")]
 //!
-//! That's the purpose of this crate.
-//!
-//! ## What?
-//!
-//! This crate provides a _reasonably simple_[^simple] algorithm aiming to
-//! guarantee that any call to a specific macro that match one of its rule will
-//! produce a parseable output. Beside the macro definition itself, the only
-//! required additional information is the context in which the macro will be
-//! called[^weakness].
-//!
-//! It also handles poorly recursive macros. For now, it treats any macro
-//! invocation occurring in macro expansion as an obscure chunk of code. It
-//! does not check that this macro invocation will match any of its rule and
-//! does not try to guess if its expansion is valid in the context it is called.
-//! This restriction may be lifted in the future.
-//!
-//! ## Case study
-//!
-//!
-//!
-//! ## Usage
-//!
-//! The entry point of this crate is the [`check_macro`] function. The library
-//! user gives to this function the content of the macro to be checked (as a
-//! sequence of [`TokenTree`], as well as the context the macro should be called
-//! in (as an [`InvocationContext`]). The crate machinery will then check the
-//! macro content, and return any error it encounters.
-//!
-//! ## Spanning
-//!
-//! In order to stay as reusable as possible, all the data structures
-//! representing AST nodes have a generic `Span` parameter. This allows library
-//! users to use the span type provided by their use case without any trouble.
-//! The only requirement is that the `Span` must be `Copy`. There may be more
-//! restrictions in the future.
-//!
-//! [^error-message]: I'm just paraphrasing the `rustc` output here. Nothing too
-//!     controversial here.
-//!
-//! [^things]: Rust functions also specify information about the _things_ that they
-//!     return. That's actually the only weakness of this crate 😭.
-//!
-//! [^simple]: It is definitely simpler than most industrial static analyzer.
-//!
-//! [^weakness]: That is, whether if the macro will be called in an expression context,
-//!     a pattern context, or an item context. This restriction may be slightly
-//!     lifted in the future: each macro arm should be able to override this
-//!     context.
+#![doc = include_str!("../../doc/99-msrv.md")]
 
 pub use error::{Error, MacroRuleNode};
 
