@@ -219,7 +219,7 @@ pub(crate) trait Spannable<Span> {
 /// This type allows the end-user to represent the tokens that is passed in the
 /// macro invocation. It is not _exactly_ the same as [`proc_macro::TokenTree`],
 /// as the tokens are grouped differently [^1]. Writing a
-/// [`proc_macro::TokenTree`] -> [`TokenTree`] should not be too hard, but is
+/// "[`proc_macro::TokenTree`] to [`TokenTree`]" should not be too hard, but is
 /// not the scope of this crate.
 ///
 /// [^1]: For instance, `+=` is represented as a single token in declarative

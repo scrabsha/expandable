@@ -501,7 +501,7 @@ fn parse_macro_stream(stream: TokenStream) -> Vec<expandable_impl::TokenTree<Spa
                         Terminal::EqualEqual
                     }
 
-                    s if s.starts_with('=') => Terminal::EqualEqual,
+                    s if s.starts_with('=') => Terminal::Equal,
                     s if s.starts_with(':') => Terminal::Colon,
                     s if s.starts_with(',') => Terminal::Comma,
                     s if s.starts_with('$') => Terminal::Dollar,
