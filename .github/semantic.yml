@@ -1,0 +1,11 @@
+# We squash commits on merge, so we don't need to be too restrictive.
+titleOnly: true
+# Shamelessly stolen from git cliff
+types:
+  - feat        # User-observable enhancement
+  - fix         # User-observable bug fix
+  - doc         # Documentation change
+  - perf        # A code change that improves performance
+  - refactor    # Internal change, not observable by the users
+  - style
+  - test
