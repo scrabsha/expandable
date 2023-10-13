@@ -320,6 +320,30 @@ pub enum Terminal {
     Equal,
     /// An equal-equal (`==`).
     EqualEqual,
+    /// A percent (`%`).
+    Percent,
+    /// A slash (`/`).
+    Slash,
+    /// A caret (`^`).
+    Caret,
+    /// A pipe (`|`).
+    Pipe,
+    /// An ampersand (`&`).
+    Ampersand,
+    /// A double left chevron (`<<`).
+    DoubleLeftChevron,
+    /// A double right chevron (`>>`).
+    DoubleRightChevron,
+    /// A left chevron (`<`).
+    LeftChevron,
+    /// A right chevron (`>`).
+    RightChevron,
+    /// A bang followed by an equal (`!=`).
+    BangEqual,
+    /// A left chevron followed by an equal (`<=`).
+    LessEqual,
+    /// A right chevron followed by an equal (`>=`).
+    GreaterEqual,
 
     // Currently used keywords
     /// The `as` keyword.
