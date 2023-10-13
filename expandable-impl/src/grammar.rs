@@ -414,10 +414,31 @@ generate_grammar! {
         #[accepting]
         // Transitions added here must be added in `AfterIf` as well.
         AfterExpr {
+            // Arithmetic expressions
+            // https://spec.ferrocene.dev/expressions.html#arithmetic-expressions
             Plus => ExprStart;
             Minus => ExprStart;
             Times => ExprStart;
+            Slash => ExprStart;
+            Percent => ExprStart;
+
+            // Bit expressions
+            // https://spec.ferrocene.dev/expressions.html#bit-expressions
+            Ampersand => ExprStart;
+            Pipe => ExprStart;
+            Caret => ExprStart;
+            DoubleLeftChevron => ExprStart;
+            DoubleRightChevron => ExprStart;
+
+            // Comparison expressions
+            // https://spec.ferrocene.dev/expressions.html#comparison-expressions
             EqualEqual => ExprStart;
+            LeftChevron => ExprStart;
+            GreaterEqual => ExprStart;
+            RightChevron => ExprStart;
+            LessEqual => ExprStart;
+            BangEqual => ExprStart;
+
             RBrace, FnBlockExpr => ItemStart;
             LBrace, Condition => ExprStart, Consequence;
 
