@@ -250,6 +250,28 @@ token_description! {
         Terminal::Minus => Minus,
         /// A times (`*`).
         Terminal::Times => Times,
+        /// A slash (`/`).
+        Terminal::Slash => Slash,
+        /// A percent sign (`%`).
+        Terminal::Percent => Percent,
+        /// An ampersand (`&`).
+        Terminal::Ampersand => Ampersand,
+        /// A pipe (`|`).
+        Terminal::Pipe => Pipe,
+        /// A caret (`^`).
+        Terminal::Caret => Caret,
+        /// A double left chevron (`<<`).
+        Terminal::DoubleLeftChevron => DoubleLeftChevron,
+        /// A double right chevron (`>>`).
+        Terminal::DoubleRightChevron => DoubleRightChevron,
+        /// A left chevron (`<`).
+        Terminal::LeftChevron => LeftChevron,
+        /// A right chevron (`>`).
+        Terminal::RightChevron => RightChevron,
+        /// A left chevron followed by an equal sign (`<=`).
+        Terminal::LessEqual => LessEqual,
+        /// A right chevron followed by an equal sign (`>=`).
+        Terminal::GreaterEqual => GreaterEqual,
         /// A colon (`:`).
         Terminal::Colon => Colon,
         /// A comma (`,`).
@@ -270,6 +292,8 @@ token_description! {
         Terminal::Equal => Equal,
         /// The equal-equal sign (`==`).
         Terminal::EqualEqual => EqualEqual,
+        /// A bang sign followed by an equal sign (`!=`).
+        Terminal::BangEqual => BangEqual,
         /// A literal
         Terminal::Literal(_) => Literal,
 
