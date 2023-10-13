@@ -415,9 +415,26 @@ fn describe(descr: &TokenDescription) -> String {
         TokenDescription::RBrace => "a `}`",
         TokenDescription::Invalid => unreachable!(),
         TokenDescription::Ident => "an identifier",
+
         TokenDescription::Plus => "`+`",
         TokenDescription::Minus => "`-`",
         TokenDescription::Times => "`*`",
+        TokenDescription::Slash => "`/`",
+        TokenDescription::Percent => "`%`",
+
+        TokenDescription::Ampersand => "`&`",
+        TokenDescription::Pipe => "`|`",
+        TokenDescription::Caret => "`^`",
+        TokenDescription::DoubleLeftChevron => "`<<`",
+        TokenDescription::DoubleRightChevron => "`>>`",
+
+        TokenDescription::EqualEqual => "`==`",
+        TokenDescription::LeftChevron => "`<`",
+        TokenDescription::GreaterEqual => "`>=`",
+        TokenDescription::RightChevron => "`>`",
+        TokenDescription::LessEqual => "`<=`",
+        TokenDescription::BangEqual => "`!=`",
+
         TokenDescription::Comma => "`,`",
         TokenDescription::Colon => "`:`",
         TokenDescription::Semi => "`;`",
@@ -426,7 +443,6 @@ fn describe(descr: &TokenDescription) -> String {
         TokenDescription::QuestionMark => "`?`",
         TokenDescription::Dollar => "`$`",
         TokenDescription::Equal => "`=`",
-        TokenDescription::EqualEqual => "`==`",
         TokenDescription::Literal => "a literal",
 
         other => {
@@ -501,7 +517,51 @@ fn parse_macro_stream(stream: TokenStream) -> Vec<expandable_impl::TokenTree<Spa
                         Terminal::EqualEqual
                     }
 
+                    s if s.starts_with("!=") => {
+                        let (last, tail_) = tail.split_first().unwrap();
+                        span = span.join(last.span()).unwrap_or_else(|| p.span());
+                        tail = tail_;
+                        Terminal::BangEqual
+                    }
+
+                    s if s.starts_with("<=") => {
+                        let (last, tail_) = tail.split_first().unwrap();
+                        span = span.join(last.span()).unwrap_or_else(|| p.span());
+                        tail = tail_;
+                        Terminal::LessEqual
+                    }
+
+                    s if s.starts_with(">=") => {
+                        let (last, tail_) = tail.split_first().unwrap();
+                        span = span.join(last.span()).unwrap_or_else(|| p.span());
+                        tail = tail_;
+                        Terminal::GreaterEqual
+                    }
+
+                    s if s.starts_with("<<") => {
+                        let (last, tail_) = tail.split_first().unwrap();
+                        span = span.join(last.span()).unwrap_or_else(|| p.span());
+                        tail = tail_;
+                        Terminal::DoubleLeftChevron
+                    }
+
+                    s if s.starts_with(">>") => {
+                        let (last, tail_) = tail.split_first().unwrap();
+                        span = span.join(last.span()).unwrap_or_else(|| p.span());
+                        tail = tail_;
+                        Terminal::DoubleRightChevron
+                    }
+
+                    s if s.starts_with('%') => Terminal::Percent,
+                    s if s.starts_with('/') => Terminal::Slash,
+                    s if s.starts_with('&') => Terminal::Ampersand,
+                    s if s.starts_with('|') => Terminal::Pipe,
+                    s if s.starts_with('^') => Terminal::Caret,
+
                     s if s.starts_with('=') => Terminal::Equal,
+                    s if s.starts_with('<') => Terminal::LeftChevron,
+                    s if s.starts_with('>') => Terminal::RightChevron,
+
                     s if s.starts_with(':') => Terminal::Colon,
                     s if s.starts_with(',') => Terminal::Comma,
                     s if s.starts_with('$') => Terminal::Dollar,
