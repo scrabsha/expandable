@@ -250,6 +250,28 @@ token_description! {
         Terminal::Minus => Minus,
         /// A times (`*`).
         Terminal::Times => Times,
+        /// A slash (`/`).
+        Terminal::Slash => Slash,
+        /// A percent sign (`%`).
+        Terminal::Percent => Percent,
+        /// An ampersand (`&`).
+        Terminal::Ampersand => Ampersand,
+        /// A pipe (`|`).
+        Terminal::Pipe => Pipe,
+        /// A caret (`^`).
+        Terminal::Caret => Caret,
+        /// A double left chevron (`<<`).
+        Terminal::DoubleLeftChevron => DoubleLeftChevron,
+        /// A double right chevron (`>>`).
+        Terminal::DoubleRightChevron => DoubleRightChevron,
+        /// A left chevron (`<`).
+        Terminal::LeftChevron => LeftChevron,
+        /// A right chevron (`>`).
+        Terminal::RightChevron => RightChevron,
+        /// A left chevron followed by an equal sign (`<=`).
+        Terminal::LessEqual => LessEqual,
+        /// A right chevron followed by an equal sign (`>=`).
+        Terminal::GreaterEqual => GreaterEqual,
         /// A colon (`:`).
         Terminal::Colon => Colon,
         /// A comma (`,`).
@@ -270,6 +292,8 @@ token_description! {
         Terminal::Equal => Equal,
         /// The equal-equal sign (`==`).
         Terminal::EqualEqual => EqualEqual,
+        /// A bang sign followed by an equal sign (`!=`).
+        Terminal::BangEqual => BangEqual,
         /// A literal
         Terminal::Literal(_) => Literal,
 
@@ -390,10 +414,31 @@ generate_grammar! {
         #[accepting]
         // Transitions added here must be added in `AfterIf` as well.
         AfterExpr {
+            // Arithmetic expressions
+            // https://spec.ferrocene.dev/expressions.html#arithmetic-expressions
             Plus => ExprStart;
             Minus => ExprStart;
             Times => ExprStart;
+            Slash => ExprStart;
+            Percent => ExprStart;
+
+            // Bit expressions
+            // https://spec.ferrocene.dev/expressions.html#bit-expressions
+            Ampersand => ExprStart;
+            Pipe => ExprStart;
+            Caret => ExprStart;
+            DoubleLeftChevron => ExprStart;
+            DoubleRightChevron => ExprStart;
+
+            // Comparison expressions
+            // https://spec.ferrocene.dev/expressions.html#comparison-expressions
             EqualEqual => ExprStart;
+            LeftChevron => ExprStart;
+            GreaterEqual => ExprStart;
+            RightChevron => ExprStart;
+            LessEqual => ExprStart;
+            BangEqual => ExprStart;
+
             RBrace, FnBlockExpr => ItemStart;
             LBrace, Condition => ExprStart, Consequence;
 
