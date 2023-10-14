@@ -458,26 +458,26 @@ generate_grammar! {
             // https://spec.ferrocene.dev/expressions.html#arithmetic-expressions
             Plus => ExprStart;
             Minus => ExprStart;
-            Times => ExprStart;
+            Star => ExprStart;
             Slash => ExprStart;
             Percent => ExprStart;
 
             // Bit expressions
             // https://spec.ferrocene.dev/expressions.html#bit-expressions
-            Ampersand => ExprStart;
-            Pipe => ExprStart;
+            And => ExprStart;
+            Or => ExprStart;
             Caret => ExprStart;
-            DoubleLeftChevron => ExprStart;
-            DoubleRightChevron => ExprStart;
+            Shl => ExprStart;
+            Shr => ExprStart;
 
             // Comparison expressions
             // https://spec.ferrocene.dev/expressions.html#comparison-expressions
-            EqualEqual => ExprStart;
-            LeftChevron => ExprStart;
-            GreaterEqual => ExprStart;
-            RightChevron => ExprStart;
-            LessEqual => ExprStart;
-            BangEqual => ExprStart;
+            EqualsEquals => ExprStart;
+            GreaterThan => ExprStart;
+            GreaterThanEquals => ExprStart;
+            LessThan => ExprStart;
+            LessThanEquals => ExprStart;
+            NotEquals => ExprStart;
 
             RBrace, FnBlockExpr => ItemStart;
             LBrace, Condition => ExprStart, Consequence;
@@ -502,9 +502,9 @@ generate_grammar! {
         AfterIf {
             Else => AfterElse;
             Plus => ExprStart;
-            Times => ExprStart;
+            Star => ExprStart;
             Minus => ExprStart;
-            EqualEqual => ExprStart;
+            EqualsEquals => ExprStart;
             RBrace, FnBlockExpr => ItemStart;
             LBrace, Condition => ExprStart, Consequence;
 
@@ -541,7 +541,7 @@ generate_grammar! {
         },
 
         AfterFnParams {
-            Arrow => TypeStart, AfterFnParams;
+            RightArrow => TypeStart, AfterFnParams;
             LBrace => ExprStart, FnBlockExpr;
         },
 
