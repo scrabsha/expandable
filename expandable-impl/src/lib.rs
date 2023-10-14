@@ -153,9 +153,9 @@ where
         expansion::check_arm(ctx.to_state(), matcher, &substitution)?;
 
         if let Some(semi) = iter.next() {
-            let TokenTreeKind::Terminal(Terminal::Semi) = semi.kind else {
+            let TokenTreeKind::Terminal(Terminal::Semicolon) = semi.kind else {
                 return Err(Error::ParsingFailed {
-                    what: vec![MacroRuleNode::Terminal(Terminal::Semi)],
+                    what: vec![MacroRuleNode::Terminal(Terminal::Semicolon)],
                     where_: semi.span,
                 });
             };
@@ -243,66 +243,10 @@ impl_spannable!(TokenTreeKind<Span> => TokenTree);
 #[non_exhaustive]
 #[derive(Clone, Debug, Eq, Hash, PartialEq)]
 pub enum Terminal {
-    /// An arrow (`->`).
-    Arrow,
-    /// A colon (',').
-    Colon,
-    /// A comma (`,`).
-    Comma,
-    /// A dollar (`@`).
-    Dollar,
-    /// A fat arrow (`=>`).
-    FatArrow,
     /// An identifier (`foo`, `bar`).
     Ident(String),
-    /// A literal (`42`, `"foo"`).
-    ///
-    /// We use textual representation of literals because we don't want to deal
-    /// with the parsing of literals.
-    // TODO: it may be appropriate to actually parse these literals :thinking:.
-    Literal(String),
-    /// A plus (`+`).
-    Plus,
-    /// A minus (`-`).
-    Minus,
-    /// A question mark (`?`).
-    QuestionMark,
-    /// A semicolon (`;`).
-    Semi,
-    /// A times (`*`).
-    Times,
-    /// A pound (`#`).
-    Pound,
-    /// An equal (`=`).
-    Equal,
-    /// An equal-equal (`==`).
-    EqualEqual,
-    /// A percent (`%`).
-    Percent,
-    /// A slash (`/`).
-    Slash,
-    /// A caret (`^`).
-    Caret,
-    /// A pipe (`|`).
-    Pipe,
-    /// An ampersand (`&`).
-    Ampersand,
-    /// A double left chevron (`<<`).
-    DoubleLeftChevron,
-    /// A double right chevron (`>>`).
-    DoubleRightChevron,
-    /// A left chevron (`<`).
-    LeftChevron,
-    /// A right chevron (`>`).
-    RightChevron,
-    /// A bang followed by an equal (`!=`).
-    BangEqual,
-    /// A left chevron followed by an equal (`<=`).
-    LessEqual,
-    /// A right chevron followed by an equal (`>=`).
-    GreaterEqual,
 
-    // Currently used keywords
+    // Keywords
     /// The `as` keyword.
     As,
     /// The `async` keyword.
@@ -381,8 +325,6 @@ pub enum Terminal {
     Where,
     /// The `while` keyword.
     While,
-
-    // Keywords reserved for future use
     /// The `abstract` keyword.
     Abstract,
     /// The `become` keyword.
@@ -409,6 +351,106 @@ pub enum Terminal {
     Virtual,
     /// The `yield` keyword.
     Yield,
+
+    // Literals
+    /// A literal (`42`, `"foo"`).
+    ///
+    /// We use textual representation of literals because we don't want to deal
+    /// with the parsing of literals.
+    // TODO: it may be appropriate to actually parse these literals :thinking:.
+    Literal(String),
+
+    // Punctuates
+    /// A plus (`+`).
+    Plus,
+    /// A minus (`-`).
+    Minus,
+    /// A star (`*`).
+    Star,
+    /// A slash (`/`).
+    Slash,
+    /// A percent (`%`).
+    Percent,
+    /// A caret (`^`).
+    Caret,
+    /// A not (`!`).
+    Not,
+    /// An and (`&`).
+    And,
+    /// An or (`|`).
+    Or,
+    /// Lazy boolean and (`&&`).
+    AndAnd,
+    /// Lazy boolean or (`||`).
+    OrOr,
+    /// A shift left (`<<`).
+    Shl,
+    /// A shift right (`>>`).
+    Shr,
+    /// A plus-equals (`+=`).
+    PlusEquals,
+    /// A minus-equals (`-=`).
+    MinusEquals,
+    /// A star-equals (`*=`).
+    StarEquals,
+    /// A slash-equals (`/=`).
+    SlashEquals,
+    /// A percent-equals (`%=`).
+    PercentEquals,
+    /// A caret-equal (`^=`).
+    CaretEquals,
+    /// An and-equals (`&=`).
+    AndEquals,
+    /// An or-equals (`|=`).
+    OrEquals,
+    /// A shift-left-equals (`<<=`).
+    ShlEquals,
+    /// A shift-right-equals (`>>=`).
+    ShrEquals,
+    /// An equal (`=`).
+    Equals,
+    /// An equals equals (`==`).
+    EqualsEquals,
+    /// A not-equal (`!=`).
+    NotEquals,
+    /// A greater than (`>`).
+    GreaterThan,
+    /// A less than (`<`).
+    LessThan,
+    /// A greater than equals (`>=`).
+    GreaterThanEquals,
+    /// A less than equals (`<=`).
+    LessThanEquals,
+    /// An at (`@`).
+    At,
+    /// An underscore (`_`).
+    Underscore,
+    /// A dot (`.`).
+    Dot,
+    /// A dot dot (`..`).
+    DotDot,
+    /// A dot dot dot (`...`).
+    DotDotDot,
+    /// A dot dot equals (`..=`).
+    DotDotEquals,
+    /// A comma (`,`).
+    Comma,
+    /// A semicolon (`;`).
+    Semicolon,
+    /// A colon (`:`).
+    Colon,
+    /// A colon colon (`::`).
+    ColonColon,
+    /// A right arrow (`->`).
+    RightArrow,
+    /// A fat arrow (`=>`).
+    FatArrow,
+    /// A pound (`#`).
+    Pound,
+    /// A dollar sign (`$`).
+    Dollar,
+    /// A question mark (`?`).
+    QuestionMark,
 }
 
 impl_spannable!(Terminal => TokenTree);
