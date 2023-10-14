@@ -4,69 +4,21 @@
 /// Creates a sequence of [`TokenTree`]s from a sequence of tokens. Useful for
 /// testing.
 ///
-/// This macro can't parse the `$` token. It uses `@` instead.
+/// This macro can't parse the `$` token. It uses `#` instead.
 ///
 /// [`TokenTree`]: crate::TokenTree
 #[macro_export]
 macro_rules! quote {
+    (@mk_term $sb:expr, $term:expr) => {
+        $crate::TokenTree::terminal($sb.mk_span(), $term)
+    };
+
     (@inner $sb:expr, ( $( $tt:tt )* ) ) => {
         $crate::TokenTree::parenthesed($sb.mk_span(), $crate::quote! { @with_sb $sb, $( $tt )* })
     };
 
     (@inner $sb:expr, { $( $tt:tt )* } ) => {
         $crate::TokenTree::curlyBraced($sb.mk_span(), $crate::quote! { @with_sb $sb, $( $tt )* })
-    };
-
-    (@mk_term $sb:expr, $term:expr) => {
-        $crate::TokenTree::terminal($sb.mk_span(), $term)
-    };
-
-    (@inner $sb:expr, @) => {
-        $crate::quote!(@mk_term $sb, $crate::Terminal::Dollar)
-    };
-
-    (@inner $sb:expr, :) => {
-        $crate::quote!(@mk_term $sb, $crate::Terminal::Colon)
-    };
-
-    (@inner $sb:expr, ?) => {
-        $crate::quote!(@mk_term $sb, $crate::Terminal::QuestionMark)
-    };
-
-    (@inner $sb:expr, +) => {
-        $crate::quote!(@mk_term $sb, $crate::Terminal::Plus)
-    };
-
-    (@inner $sb:expr, -) => {
-        $crate::quote!(@mk_term $sb, $crate::Terminal::Minus)
-    };
-
-    (@inner $sb:expr, =) => {
-        $crate::quote!(@mk_term $sb, $crate::Terminal::Equal)
-    };
-
-    (@inner $sb:expr, ==) => {
-        $crate::quote!(@mk_term $sb, $crate::Terminal::DoubleEqual)
-    };
-
-    (@inner $sb:expr, $lit:literal) => {
-        $crate::quote!(@mk_term $sb, $crate::Terminal::Literal($lit.to_string()))
-    };
-
-    (@inner $sb:expr, *) => {
-        $crate::quote!(@mk_term $sb, $crate::Terminal::Times)
-    };
-
-    (@inner $sb:expr, =>) => {
-        $crate::quote!(@mk_term $sb, $crate::Terminal::FatArrow)
-    };
-
-    (@inner $sb:expr, ;) => {
-        $crate::quote!(@mk_term $sb, $crate::Terminal::Semi)
-    };
-
-    (@inner $sb:expr, ,) => {
-        $crate::quote!(@mk_term $sb, $crate::Terminal::Comma)
     };
 
     // Keywords
@@ -319,12 +271,206 @@ macro_rules! quote {
         $crate::quote!(@mk_term $sb, $crate::Terminal::Union)
     };
 
-    (@inner $sb:expr, #) => {
-        $crate::quote!(@mk_term $sb, $crate::Terminal::Pound)
-    };
-
     (@inner $sb:expr, $id:ident) => {
         $crate::quote!(@mk_term $sb, $crate::Terminal::Ident(stringify!($id).to_string()))
+    };
+
+    // Punctuates
+    (@inner $sb:expr, +) => {
+        $crate::quote!(@mk_term $sb, $crate::Terminal::Plus)
+    };
+
+    (@inner $sb:expr, -) => {
+        $crate::quote!(@mk_term $sb, $crate::Terminal::Minus)
+    };
+
+    (@inner $sb:expr, *) => {
+        $crate::quote!(@mk_term $sb, $crate::Terminal::Star)
+    };
+
+    (@inner $sb:expr, /) => {
+        $crate::quote!(@mk_term $sb, $crate::Terminal::Slash)
+    };
+
+    (@inner $sb:expr, %) => {
+        $crate::quote!(@mk_term $sb, $crate::Terminal::Percent)
+    };
+
+    (@inner $sb:expr, ^) => {
+        $crate::quote!(@mk_term $sb, $crate::Terminal::Caret)
+    };
+
+    (@inner $sb:expr, &) => {
+        $crate::quote!(@mk_term $sb, $crate::Terminal::And)
+    };
+
+    (@inner $sb:expr, |) => {
+        $crate::quote!(@mk_term $sb, $crate::Terminal::Or)
+    };
+
+    (@inner $sb:expr, &&) => {
+        $crate::quote!(@mk_term $sb, $crate::Terminal::AndAnd)
+    };
+
+    (@inner $sb:expr, ||) => {
+        $crate::quote!(@mk_term $sb, $crate::Terminal::OrOr)
+    };
+
+    (@inner $sb:expr, <<) => {
+        $crate::quote!(@mk_term $sb, $crate::Terminal::Shl)
+    };
+
+    (@inner $sb:expr, >>) => {
+        $crate::quote!(@mk_term $sb, $crate::Terminal::Shr)
+    };
+
+    (@inner $sb:expr, +=) => {
+        $crate::quote!(@mk_term $sb, $crate::Terminal::PlusEq)
+    };
+
+    (@inner $sb:expr, -=) => {
+       $crate::quote!(@mk_term $sb, $crate::Terminal::MinusEq)
+    };
+
+    (@inner $sb:expr, *=) => {
+        $crate::quote!(@mk_term $sb, $crate::Terminal::StarEq)
+    };
+
+    (@inner $sb:expr, /=) => {
+        $crate::quote!(@mk_term $sb, $crate::Terminal::SlashEq)
+    };
+
+    (@inner $sb:expr, %=) => {
+        $crate::quote!(@mk_term $sb, $crate::Terminal::PercentEq)
+    };
+
+    (@inner $sb:expr, ^=) => {
+        $crate::quote!(@mk_term $sb, $crate::Terminal::CaretEq)
+    };
+
+    (@inner $sb:expr, &=) => {
+        $crate::quote!(@mk_term $sb, $crate::Terminal::AndEq)
+    };
+
+    (@inner $sb:expr, |=) => {
+        $crate::quote!(@mk_term $sb, $crate::Terminal::OrEq)
+    };
+
+    (@inner $sb:expr, <<=) => {
+        $crate::quote!(@mk_term $sb, $crate::Terminal::ShlEquals)
+    };
+
+    (@inner $sb:expr, >>=) => {
+        $crate::quote!(@mk_term $sb, $crate::Terminal::ShrEquals)
+    };
+
+    (@inner $sb:expr, =) => {
+        $crate::quote!(@mk_term $sb, $crate::Terminal::Equals)
+    };
+
+    (@inner $sb:expr, ==) => {
+        $crate::quote!(@mk_term $sb, $crate::Terminal::EqualsEquals)
+    };
+
+    (@inner $sb:expr, !=) => {
+        $crate::quote!(@mk_term $sb, $crate::Terminal::NotEquals)
+    };
+
+    (@inner $sb:expr, >) => {
+        $crate::quote!(@mk_term $sb, $crate::Terminal::GreaterThan)
+    };
+
+    (@inner $sb:expr, <) => {
+        $crate::quote!(@mk_term $sb, $crate::Terminal::LessThan)
+    };
+
+    (@inner $sb:expr, >=) => {
+        $crate::quote!(@mk_term $sb, $crate::Terminal::GreaterThanEquals)
+    };
+
+    (@inner $sb:expr, <=) => {
+        $crate::quote!(@mk_term $sb, $crate::Terminal::LessThanEquals)
+    };
+
+    (@inner $sb:expr, @) => {
+        $crate::quote!(@mk_term $sb, $crate::Terminal::At)
+    };
+
+    (@inner $sb:expr, _) => {
+        $crate::quote!(@mk_term $sb, $crate::Terminal::Underscore)
+    };
+
+    (@inner $sb:expr, .) => {
+        $crate::quote!(@mk_term $sb, $crate::Terminal::Dot)
+    };
+
+    (@inner $sb:expr, ..) => {
+        $crate::quote!(@mk_term $sb, $crate::Terminal::DotDot)
+    };
+
+    (@inner $sb:expr, ...) => {
+        $crate::quote!(@mk_term $sb, $crate::Terminal::DotDotDot)
+    };
+
+    (@inner $sb:expr, ..=) => {
+        $crate::quote!(@mk_term $sb, $crate::Terminal::DotDotEquals)
+    };
+
+    (@inner $sb:expr, ,) => {
+        $crate::quote!(@mk_term $sb, $crate::Terminal::Comma)
+    };
+
+    (@inner $sb:expr, ; ) => {
+        $crate::quote!(@mk_term $sb, $crate::Terminal::Semicolon)
+    };
+
+    (@inner $sb:expr, : ) => {
+        $crate::quote!(@mk_term $sb, $crate::Terminal::Colon)
+    };
+
+    (@inner $sb:expr, ::) => {
+        $crate::quote!(@mk_term $sb, $crate::Terminal::ColonColon)
+    };
+
+    (@inner $sb:expr, ->) => {
+        $crate::quote!(@mk_term $sb, $crate::Terminal::RightArrow)
+    };
+
+    (@inner $sb:expr, =>) => {
+        $crate::quote!(@mk_term $sb, $crate::Terminal::FatArrow)
+    };
+
+    // Warning: this is equivalent to the `$` sign.
+    (@inner $sb:expr, #) => {
+        $crate::quote!(@mk_term $sb, $crate::Terminal::Dollar)
+    };
+
+    (@inner $sb:expr, ?) => {
+        $crate::quote!(@mk_term $sb, $crate::Terminal::QuestionMark)
+    };
+
+    (@inner $sb:expr, $tt:tt) => {
+        compile_error!(concat!("Unexpected token: ", stringify!($tt)))
+    };
+
+    (@with_sb $sb:expr, ) => {
+        vec![]
+    };
+
+    (@with_sb $sb:expr, $( $tt:tt )* ) => {{
+        vec![
+            $(
+                $crate::quote!(@inner $sb, $tt)
+            ),*
+        ]
+    }};
+
+    (@inner $sb:expr, $tt:tt) => {
+        compile_error!(concat!("Unexpected token: ", stringify!($tt)))
+    };
+
+    (@with_sb $sb:expr, ) => {
+        vec![]
     };
 
     (@with_sb $sb:expr, $( $tt:tt )* ) => {{
