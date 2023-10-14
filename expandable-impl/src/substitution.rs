@@ -235,7 +235,7 @@ mod tests {
 
     conversion_test! {
         with_fragment {
-            { @a },
+            { #a },
             expect_test::expect![[r#"
                 Ok(
                     [
@@ -253,7 +253,7 @@ mod tests {
 
     conversion_test! {
         with_repetition {
-            { @( test )* },
+            { #( test )* },
             expect_test::expect![[r#"
                 Ok(
                     [
@@ -286,7 +286,7 @@ mod tests {
 
     conversion_test! {
         with_repetition_and_fragment {
-            { @( @a )? },
+            { #( #a )? },
             expect_test::expect![[r#"
                 Ok(
                     [

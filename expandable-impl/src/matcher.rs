@@ -401,7 +401,7 @@ mod local_tree_to_matcher {
 
     matcher_conv_test! {
         multiple_bindings {
-            { @a: ident + @b: expr },
+            { #a: ident + #b: expr },
             expect_test::expect![[r#"
                 Ok(
                     Matcher {
@@ -425,7 +425,7 @@ mod local_tree_to_matcher {
 
     matcher_conv_test! {
         nesting {
-            { (((@a: ident)))},
+            { (((#a: ident)))},
             expect_test::expect![[r#"
                 Ok(
                     Matcher {
@@ -444,7 +444,7 @@ mod local_tree_to_matcher {
 
     matcher_conv_test! {
         handles_repetitions {
-            { @( @a:ident )* },
+            { #( #a:ident )* },
             expect_test::expect![[r#"
                 Ok(
                     Matcher {

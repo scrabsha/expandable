@@ -560,7 +560,7 @@ mod tests {
 
     test_quote! {
         handles_matcher_syntax {
-            { a + b @( @test:ident )+* },
+            { a + b #( #test:ident )+* },
             expect_test::expect![[r#"
                 [
                     TokenTree {
@@ -634,7 +634,7 @@ mod tests {
                     },
                     TokenTree {
                         kind: Terminal(
-                            Times,
+                            Star,
                         ),
                         span: 10,
                     },
@@ -645,7 +645,7 @@ mod tests {
 
     test_quote! {
         can_parse_substition_syntax {
-            { a + b @( + @c + a )+? },
+            { a + b #( + #c + a )+? },
             expect_test::expect![[r#"
                 [
                     TokenTree {
