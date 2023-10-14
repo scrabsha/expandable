@@ -92,8 +92,8 @@ where
         tree: &TokenTree<Span>,
     ) -> Result<DynamicStateSet, Error<Span>> {
         match &tree.kind {
-            TokenTreeKind::Terminal(t) => state
-                .accept(t)
+            TokenTreeKind::Terminal(_, descr) => state
+                .accept(*descr)
                 .map_err(|expected| Error::InvalidProducedAst {
                     span: tree.span,
                     expected,

@@ -16,14 +16,16 @@ impl DynamicState {
         self,
         fragment: FragmentKind,
     ) -> Result<DynamicState, Vec<TokenDescription>> {
-        self.trans(TokenDescription::Fragment(fragment))
+        self.accept(TokenDescription::Fragment(fragment))
     }
 
-    pub(crate) fn accept<Descr>(self, descr: Descr) -> Result<DynamicState, Vec<TokenDescription>>
-    where
-        Descr: Into<TokenDescription>,
-    {
-        self.trans(descr.into())
+    pub(crate) fn accept(
+        self,
+        descr: TokenDescription,
+    ) -> Result<DynamicState, Vec<TokenDescription>> {
+        self.state
+            .trans(descr, self.stack_top())
+            .map(|transition| self.with(transition))
     }
 
     pub(crate) fn is_accepting(&self) -> bool {
@@ -46,12 +48,6 @@ impl DynamicState {
             state: self.state,
             stack,
         }
-    }
-
-    fn trans(self, descr: TokenDescription) -> Result<DynamicState, Vec<TokenDescription>> {
-        self.state
-            .trans(descr, self.stack_top())
-            .map(|transition| self.with(transition))
     }
 
     fn stack_top(&self) -> Option<StackSymbol> {

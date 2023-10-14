@@ -61,7 +61,7 @@ where
     Span: Copy,
 {
     match &elem.kind {
-        TokenTreeKind::Terminal(_) => Vec::new(),
+        TokenTreeKind::Terminal(_, _) => Vec::new(),
         TokenTreeKind::Parenthesed(inner) | TokenTreeKind::CurlyBraced(inner) => inner
             .iter()
             .flat_map(|elem| collect_usages(elem, stack))
