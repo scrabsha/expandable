@@ -74,13 +74,11 @@
 //!
 #![doc = include_str!("../../doc/99-msrv.md")]
 
-pub use error::{Error, MacroRuleNode};
-
-pub use grammar::TokenDescription;
-
 use std::{marker::Copy, str::FromStr};
 
+pub use error::{Error, MacroRuleNode};
 use grammar::State;
+pub use grammar::TokenDescription;
 
 #[macro_use]
 mod macros;

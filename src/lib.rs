@@ -50,23 +50,22 @@
 #![doc = include_str!("../doc/99-msrv.md")]
 //!
 
-mod syn_shim;
-
 extern crate proc_macro;
 
 use proc_macro::TokenStream as TokenStream1;
 use std::fmt::{Display, Formatter};
 use std::str::FromStr;
 
-use proc_macro2::{Delimiter, Punct, Spacing, Span, TokenStream, TokenTree};
+use proc_macro2::{Delimiter, Spacing, Span, TokenStream, TokenTree};
 use syn::{
     parse::{Parse, ParseStream},
     Ident,
 };
 
+use expandable_impl::{RepetitionQuantifierKind, Terminal, TokenDescription};
 use syn_shim::ItemMacroRules;
 
-use expandable_impl::{RepetitionQuantifierKind, Terminal, TokenDescription};
+mod syn_shim;
 
 macro_rules! attribute_macro {
     ($name:ident => $variant:ident) => {
