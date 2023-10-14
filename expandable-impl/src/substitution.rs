@@ -3,19 +3,19 @@
 
 use crate::{
     error::{Error, MacroRuleNode},
-    RepetitionQuantifier, RepetitionQuantifierKind, Spannable, Terminal,
+    RepetitionQuantifier, RepetitionQuantifierKind, Spannable, Terminal, TokenDescription,
     TokenTree as GenericTokenTree, TokenTreeKind as GenericTokenTreeKind,
 };
 
-#[derive(Clone, Debug, Eq, Hash, PartialEq)]
+#[derive(Clone, Debug, PartialEq)]
 pub(crate) struct TokenTree<Span> {
     pub(crate) kind: TokenTreeKind<Span>,
     pub(crate) span: Span,
 }
 
-#[derive(Clone, Debug, Eq, Hash, PartialEq)]
+#[derive(Clone, Debug, PartialEq)]
 pub(crate) enum TokenTreeKind<Span> {
-    Terminal(Terminal),
+    Terminal(Terminal, TokenDescription),
     Parenthesed(Vec<TokenTree<Span>>),
     CurlyBraced(Vec<TokenTree<Span>>),
     Fragment(String),
@@ -67,7 +67,8 @@ where
                 }
 
                 GenericTokenTreeKind::Terminal(t) => {
-                    TokenTreeKind::Terminal(t).with_span(token.span)
+                    let descr = TokenDescription::from(&t);
+                    TokenTreeKind::Terminal(t, descr).with_span(token.span)
                 }
 
                 GenericTokenTreeKind::Parenthesed(inner) => {
@@ -117,8 +118,9 @@ where
             }
 
             GenericTokenTreeKind::Terminal(t) => {
+                let descr = TokenDescription::from(&t);
                 let t = TokenTree {
-                    kind: TokenTreeKind::Terminal(t),
+                    kind: TokenTreeKind::Terminal(t, descr),
                     span: token.span,
                 };
 
