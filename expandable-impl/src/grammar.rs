@@ -240,58 +240,6 @@ token_description! {
     pub enum TokenDescription {
         /// An identifier. Does not include keywords.
         Terminal::Ident(_) => Ident,
-        /// A plus (`+`).
-        Terminal::Plus => Plus,
-        /// A minus (`-`).
-        Terminal::Minus => Minus,
-        /// A times (`*`).
-        Terminal::Times => Times,
-        /// A slash (`/`).
-        Terminal::Slash => Slash,
-        /// A percent sign (`%`).
-        Terminal::Percent => Percent,
-        /// An ampersand (`&`).
-        Terminal::Ampersand => Ampersand,
-        /// A pipe (`|`).
-        Terminal::Pipe => Pipe,
-        /// A caret (`^`).
-        Terminal::Caret => Caret,
-        /// A double left chevron (`<<`).
-        Terminal::DoubleLeftChevron => DoubleLeftChevron,
-        /// A double right chevron (`>>`).
-        Terminal::DoubleRightChevron => DoubleRightChevron,
-        /// A left chevron (`<`).
-        Terminal::LeftChevron => LeftChevron,
-        /// A right chevron (`>`).
-        Terminal::RightChevron => RightChevron,
-        /// A left chevron followed by an equal sign (`<=`).
-        Terminal::LessEqual => LessEqual,
-        /// A right chevron followed by an equal sign (`>=`).
-        Terminal::GreaterEqual => GreaterEqual,
-        /// A colon (`:`).
-        Terminal::Colon => Colon,
-        /// A comma (`,`).
-        Terminal::Comma => Comma,
-        /// An arrow (`->`).
-        Terminal::Arrow => Arrow,
-        /// A fat arrow (`=>`).
-        Terminal::FatArrow => FatArrow,
-        /// A semicolon (`;`).
-        Terminal::Semi => Semi,
-        /// A question mark (`?`).
-        Terminal::QuestionMark => QuestionMark,
-        /// The dollar sign (`$`).
-        Terminal::Dollar => Dollar,
-        /// The pound sign (`#`).
-        Terminal::Pound => Pound,
-        /// The equal sign (`=`).
-        Terminal::Equal => Equal,
-        /// The equal-equal sign (`==`).
-        Terminal::EqualEqual => EqualEqual,
-        /// A bang sign followed by an equal sign (`!=`).
-        Terminal::BangEqual => BangEqual,
-        /// A literal
-        Terminal::Literal(_) => Literal,
 
         // Keywords
         /// The `as` keyword.
@@ -388,6 +336,102 @@ token_description! {
         | Terminal::Typeof
         | Terminal::Unsized
         | Terminal::Virtual => UnusedKeyword,
+
+        // Literals
+        /// A literal
+        Terminal::Literal(_) => Literal,
+
+        // Punctuates
+        /// A plus (`+`).
+        Terminal::Plus => Plus,
+        /// A minus (`-`).
+        Terminal::Minus => Minus,
+        /// A star (`*`).
+        Terminal::Star => Star,
+        /// A slash (`/`).
+        Terminal::Slash => Slash,
+        /// A percent sign (`%`).
+        Terminal::Percent => Percent,
+        /// A caret (`^`).
+        Terminal::Caret => Caret,
+        /// A not (`!`).
+        Terminal::Not => Not,
+        /// An ampersand (`&`).
+        Terminal::And => And,
+        /// An or (`|`).
+        Terminal::Or => Or,
+        /// A lazy boolean and (`&&`).
+        Terminal::AndAnd => AndAnd,
+        /// A lazy boolean or (`||`).
+        Terminal::OrOr => OrOr,
+        /// A shift left (`<<`).
+        Terminal::Shl => Shl,
+        /// A shift right (`>>`).
+        Terminal::Shr => Shr,
+        /// A plus-equals (`+=`).
+        Terminal::PlusEquals => PlusEquals,
+        /// A minus-equals (`-=`).
+        Terminal::MinusEquals => MinusEquals,
+        /// A star-equals (`*=`).
+        Terminal::StarEquals => StarEquals,
+        /// A slash-equals (`/=`).
+        Terminal::SlashEquals => SlashEquals,
+        /// A percent-equals (`%=`).
+        Terminal::PercentEquals => PercentEquals,
+        /// A caret-equals (`^=`).
+        Terminal::CaretEquals => CaretEquals,
+        /// An and-equals (`&=`).
+        Terminal::AndEquals => AndEquals,
+        /// An or-equals (`|=`).
+        Terminal::OrEquals => OrEquals,
+        /// A shift-left-equals (`<<=`).
+        Terminal::ShlEquals => ShlEquals,
+        /// A shift-right-equals (`>>=`).
+        Terminal::ShrEquals => ShrEquals,
+        /// An equals (`=`).
+        Terminal::Equals => Equals,
+        /// An equals equals (`==`).
+        Terminal::EqualsEquals => EqualsEquals,
+        /// A not equals (`!=`).
+        Terminal::NotEquals => NotEquals,
+        /// A greater than (`>`).
+        Terminal::GreaterThan => GreaterThan,
+        /// A left chevron (`<`).
+        Terminal::LessThan => LessThan,
+        /// A greater than equals (`>=`).
+        Terminal::GreaterThanEquals => GreaterThanEquals,
+        /// A less than equals (`<=`).
+        Terminal::LessThanEquals => LessThanEquals,
+        /// An at (`@`).
+        Terminal::At => At,
+        /// An underscore (`_`).
+        Terminal::Underscore => Underscore,
+        /// A dot (`.`).
+        Terminal::Dot => Dot,
+        /// A dot dot (`..`).
+        Terminal::DotDot => DotDot,
+        /// A dot dot dot (`...`).
+        Terminal::DotDotDot => DotDotDot,
+        /// A dot dot equals (`..=`).
+        Terminal::DotDotEquals => DotDotEquals,
+        /// A comma (`,`).
+        Terminal::Comma => Comma,
+        /// A semicolon (`;`).
+        Terminal::Semicolon => Semicolon,
+        /// A colon (`:`).
+        Terminal::Colon => Colon,
+        /// A colon colon (`::`).
+        Terminal::ColonColon => ColonColon,
+        /// An arrow (`->`).
+        Terminal::RightArrow => RightArrow,
+        /// A fat arrow (`=>`).
+        Terminal::FatArrow => FatArrow,
+        /// The pound sign (`#`).
+        Terminal::Pound => Pound,
+        /// The dollar sign (`$`).
+        Terminal::Dollar => Dollar,
+        /// A question mark (`?`).
+        Terminal::QuestionMark => QuestionMark,
     }
 }
 
