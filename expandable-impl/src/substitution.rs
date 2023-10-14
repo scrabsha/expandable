@@ -205,6 +205,7 @@ mod tests {
                                 Ident(
                                     "a",
                                 ),
+                                Ident,
                             ),
                             span: 0,
                         },
@@ -213,6 +214,7 @@ mod tests {
                                 Ident(
                                     "b",
                                 ),
+                                Ident,
                             ),
                             span: 1,
                         },
@@ -221,6 +223,7 @@ mod tests {
                                 Ident(
                                     "c",
                                 ),
+                                Ident,
                             ),
                             span: 2,
                         },
@@ -262,6 +265,7 @@ mod tests {
                                             Ident(
                                                 "test",
                                             ),
+                                            Ident,
                                         ),
                                         span: 2,
                                     },
