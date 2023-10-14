@@ -205,7 +205,7 @@ where
                 RepetitionQuantifierKind::ZeroOrOne.with_span(token.span),
             ),
 
-            GenericTokenTreeKind::Terminal(Terminal::Times) => (
+            GenericTokenTreeKind::Terminal(Terminal::Star) => (
                 None,
                 RepetitionQuantifierKind::ZeroOrMore.with_span(token.span),
             ),
@@ -228,7 +228,7 @@ where
                     GenericTokenTreeKind::Terminal(Terminal::QuestionMark) => {
                         RepetitionQuantifierKind::ZeroOrOne
                     }
-                    GenericTokenTreeKind::Terminal(Terminal::Times) => {
+                    GenericTokenTreeKind::Terminal(Terminal::Star) => {
                         RepetitionQuantifierKind::ZeroOrMore
                     }
                     GenericTokenTreeKind::Terminal(Terminal::Plus) => {

@@ -107,7 +107,7 @@ where
                 (None, quantifier)
             }
 
-            GenericTokenTreeKind::Terminal(Terminal::Times) => {
+            GenericTokenTreeKind::Terminal(Terminal::Star) => {
                 let quantifier = RepetitionQuantifierKind::ZeroOrMore.with_span(token.span);
                 (None, quantifier)
             }
@@ -135,7 +135,7 @@ where
                         RepetitionQuantifierKind::ZeroOrOne.with_span(token.span)
                     }
 
-                    GenericTokenTreeKind::Terminal(Terminal::Times) => {
+                    GenericTokenTreeKind::Terminal(Terminal::Star) => {
                         RepetitionQuantifierKind::ZeroOrMore.with_span(token.span)
                     }
 
