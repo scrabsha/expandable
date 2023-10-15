@@ -501,10 +501,31 @@ generate_grammar! {
         // Must be a superset of `AfterExpr`.
         AfterIf {
             Else => AfterElse;
+            // Arithmetic expressions
+            // https://spec.ferrocene.dev/expressions.html#arithmetic-expressions
             Plus => ExprStart;
-            Star => ExprStart;
             Minus => ExprStart;
+            Star => ExprStart;
+            Slash => ExprStart;
+            Percent => ExprStart;
+
+            // Bit expressions
+            // https://spec.ferrocene.dev/expressions.html#bit-expressions
+            And => ExprStart;
+            Or => ExprStart;
+            Caret => ExprStart;
+            Shl => ExprStart;
+            Shr => ExprStart;
+
+            // Comparison expressions
+            // https://spec.ferrocene.dev/expressions.html#comparison-expressions
             EqualsEquals => ExprStart;
+            GreaterThan => ExprStart;
+            GreaterThanEquals => ExprStart;
+            LessThan => ExprStart;
+            LessThanEquals => ExprStart;
+            NotEquals => ExprStart;
+
             RBrace, FnBlockExpr => ItemStart;
             LBrace, Condition => ExprStart, Consequence;
 
@@ -517,8 +538,17 @@ generate_grammar! {
             RParen, FnArgListFirst => AfterExpr;
             RParen, FnArgListThen => AfterExpr;
 
+            // We don't continue to `AfterExpr` because we want to parse an
+            // optional `else` branch.
+            RBrace, Consequence => AfterIf;
+            RBrace, Alternative => AfterExpr;
+
             // We don't continue to `AfterIf` because we want to parse an
             // optional `else` branch.
+            // This corresponds to the following:
+            //
+            // if <expr> { if <expr> { <expr> } } ...
+            //                                  ^
             RBrace, Consequence => AfterIf;
         },
 
