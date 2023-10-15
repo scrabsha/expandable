@@ -113,7 +113,7 @@ mod tests {
     repetition_match_test! {
         fn no_repetition_test() {
             {
-                (@a:ident) => {@a}
+                (#a:ident) => {#a}
             }
         }
     }
@@ -121,7 +121,7 @@ mod tests {
     repetition_match_test! {
         fn with_multiple_repetitions() {
             {
-                ( @( @( @( @a:ident )? )+ )* ) => ( @( @( @( @a )? )+ )* )
+                ( #( #( #( #a:ident )? )+ )* ) => ( #( #( #( #a )? )+ )* )
             }
         }
     }
@@ -136,7 +136,7 @@ mod tests {
         }"]
         fn nonmatching_stack_1() {
             {
-                ( @( @a:ident )* ) => { @( @a )+ }
+                ( #( #a:ident )* ) => { #( #a )+ }
             }
         }
     }
@@ -151,7 +151,7 @@ mod tests {
         }"]
         fn nonmatching_stack_2() {
             {
-                ( @( @( @( @a:ident )? )* )+ ) => { @( @( @( @a )* )? )+ }
+                ( #( #( #( #a:ident )? )* )+ ) => { #( #( #( #a )* )? )+ }
             }
         }
     }

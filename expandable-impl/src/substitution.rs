@@ -107,7 +107,7 @@ where
                 (None, quantifier)
             }
 
-            GenericTokenTreeKind::Terminal(Terminal::Times) => {
+            GenericTokenTreeKind::Terminal(Terminal::Star) => {
                 let quantifier = RepetitionQuantifierKind::ZeroOrMore.with_span(token.span);
                 (None, quantifier)
             }
@@ -135,7 +135,7 @@ where
                         RepetitionQuantifierKind::ZeroOrOne.with_span(token.span)
                     }
 
-                    GenericTokenTreeKind::Terminal(Terminal::Times) => {
+                    GenericTokenTreeKind::Terminal(Terminal::Star) => {
                         RepetitionQuantifierKind::ZeroOrMore.with_span(token.span)
                     }
 
@@ -235,7 +235,7 @@ mod tests {
 
     conversion_test! {
         with_fragment {
-            { @a },
+            { #a },
             expect_test::expect![[r#"
                 Ok(
                     [
@@ -253,7 +253,7 @@ mod tests {
 
     conversion_test! {
         with_repetition {
-            { @( test )* },
+            { #( test )* },
             expect_test::expect![[r#"
                 Ok(
                     [
@@ -286,7 +286,7 @@ mod tests {
 
     conversion_test! {
         with_repetition_and_fragment {
-            { @( @a )? },
+            { #( #a )? },
             expect_test::expect![[r#"
                 Ok(
                     [

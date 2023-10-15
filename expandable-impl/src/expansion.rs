@@ -301,28 +301,28 @@ mod tests {
     assert_valid_arm! {
         maths {
             #[expr]
-            () => { a * b + c}
+            () => { a * b + c }
         }
     }
 
     assert_valid_arm! {
         with_fragment {
             #[expr]
-            ( @a:ident ) => { @a }
+            ( #a:ident ) => { #a }
         }
     }
 
     assert_valid_arm! {
         with_repetition_question {
             #[expr]
-            () => { a @( * b)? }
+            () => { a #( * b )? }
         }
     }
 
     assert_valid_arm! {
         with_repetition_plus {
             #[expr]
-            ( @a:ident ) => { a @( * )b+ c }
+            ( #a:ident ) => { a #( * )b+ c }
         }
     }
 
@@ -336,7 +336,7 @@ mod tests {
     assert_valid_arm! {
         function_with_custom_name {
             #[item]
-            (@name:ident) => { fn @name() { a } }
+            (#name:ident) => { fn #name() { a } }
         }
     }
 
@@ -344,9 +344,9 @@ mod tests {
         custom_function {
             #[item]
             (
-                fn @name:ident() { @body:expr }
+                fn #name:ident() { #body:expr }
             ) => {
-                fn @name() { @body }
+                fn #name() { #body }
             }
         }
     }

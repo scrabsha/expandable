@@ -50,23 +50,22 @@
 #![doc = include_str!("../doc/99-msrv.md")]
 //!
 
-mod syn_shim;
-
 extern crate proc_macro;
 
 use proc_macro::TokenStream as TokenStream1;
 use std::fmt::{Display, Formatter};
 use std::str::FromStr;
 
-use proc_macro2::{Delimiter, Punct, Spacing, Span, TokenStream, TokenTree};
+use proc_macro2::{Delimiter, Spacing, Span, TokenStream, TokenTree};
 use syn::{
     parse::{Parse, ParseStream},
     Ident,
 };
 
+use expandable_impl::{RepetitionQuantifierKind, Terminal, TokenDescription};
 use syn_shim::ItemMacroRules;
 
-use expandable_impl::{RepetitionQuantifierKind, Terminal, TokenDescription};
+mod syn_shim;
 
 macro_rules! attribute_macro {
     ($name:ident => $variant:ident) => {
@@ -272,37 +271,56 @@ fn describe(descr: &TokenDescription) -> String {
         TokenDescription::RBracket => "a `]`",
         TokenDescription::LBrace => "a `{`",
         TokenDescription::RBrace => "a `}`",
-        TokenDescription::Invalid => unreachable!(),
         TokenDescription::Ident => "an identifier",
+        TokenDescription::Literal => "a literal",
 
         TokenDescription::Plus => "`+`",
         TokenDescription::Minus => "`-`",
-        TokenDescription::Times => "`*`",
+        TokenDescription::Star => "`*`",
         TokenDescription::Slash => "`/`",
         TokenDescription::Percent => "`%`",
-
-        TokenDescription::Ampersand => "`&`",
-        TokenDescription::Pipe => "`|`",
         TokenDescription::Caret => "`^`",
-        TokenDescription::DoubleLeftChevron => "`<<`",
-        TokenDescription::DoubleRightChevron => "`>>`",
-
-        TokenDescription::EqualEqual => "`==`",
-        TokenDescription::LeftChevron => "`<`",
-        TokenDescription::GreaterEqual => "`>=`",
-        TokenDescription::RightChevron => "`>`",
-        TokenDescription::LessEqual => "`<=`",
-        TokenDescription::BangEqual => "`!=`",
-
+        TokenDescription::Not => "`!`",
+        TokenDescription::And => "`&`",
+        TokenDescription::Or => "`|`",
+        TokenDescription::AndAnd => "`&&`",
+        TokenDescription::OrOr => "`||`",
+        TokenDescription::Shl => "`<<`",
+        TokenDescription::Shr => "`>>`",
+        TokenDescription::PlusEquals => "`+=`",
+        TokenDescription::MinusEquals => "`-=`",
+        TokenDescription::StarEquals => "`*=`",
+        TokenDescription::SlashEquals => "`/=`",
+        TokenDescription::PercentEquals => "`%=`",
+        TokenDescription::CaretEquals => "`^=`",
+        TokenDescription::AndEquals => "`&=`",
+        TokenDescription::OrEquals => "`|=`",
+        TokenDescription::ShlEquals => "`<<=`",
+        TokenDescription::ShrEquals => "`>>=`",
+        TokenDescription::Equals => "`=`",
+        TokenDescription::EqualsEquals => "`==`",
+        TokenDescription::NotEquals => "`!=`",
+        TokenDescription::GreaterThan => "`>`",
+        TokenDescription::LessThan => "`<`",
+        TokenDescription::GreaterThanEquals => "`>=`",
+        TokenDescription::LessThanEquals => "`<=`",
+        TokenDescription::At => "`@`",
+        TokenDescription::Underscore => "`_`",
+        TokenDescription::Dot => "`.`",
+        TokenDescription::DotDot => "`..`",
+        TokenDescription::DotDotDot => "`...`",
+        TokenDescription::DotDotEquals => "`..=`",
         TokenDescription::Comma => "`,`",
+        TokenDescription::Semicolon => "`;`",
         TokenDescription::Colon => "`:`",
-        TokenDescription::Semi => "`;`",
-        TokenDescription::Arrow => "`->`",
+        TokenDescription::ColonColon => "`::`",
+        TokenDescription::RightArrow => "`->`",
         TokenDescription::FatArrow => "`=>`",
-        TokenDescription::QuestionMark => "`?`",
+        TokenDescription::Pound => "`#`",
         TokenDescription::Dollar => "`$`",
-        TokenDescription::Equal => "`=`",
-        TokenDescription::Literal => "a literal",
+        TokenDescription::QuestionMark => "`?`",
+
+        TokenDescription::Invalid => unreachable!(),
 
         other => {
             return DESCRS_AND_STRS
@@ -353,86 +371,12 @@ fn parse_macro_stream(stream: TokenStream) -> Vec<expandable_impl::TokenTree<Spa
                 expandable_impl::TokenTreeKind::Terminal(terminal)
             }
 
-            TokenTree::Punct(p) => {
-                expandable_impl::TokenTreeKind::Terminal(match contiguous_punct(p, tail).as_str() {
-                    // FIXME: the following calls to `join` always returns `None`
-                    // on stable because it relies on the`proc_macro_span` feature.
-                    s if s.starts_with("->") => {
-                        let (last, tail_) = tail.split_first().unwrap();
-                        span = span.join(last.span()).unwrap_or_else(|| p.span());
-                        tail = tail_;
-                        Terminal::Arrow
-                    }
-                    s if s.starts_with("=>") => {
-                        let (last, tail_) = tail.split_first().unwrap();
-                        span = span.join(last.span()).unwrap_or_else(|| p.span());
-                        tail = tail_;
-                        Terminal::FatArrow
-                    }
-
-                    s if s.starts_with("==") => {
-                        let (last, tail_) = tail.split_first().unwrap();
-                        span = span.join(last.span()).unwrap_or_else(|| p.span());
-                        tail = tail_;
-                        Terminal::EqualEqual
-                    }
-
-                    s if s.starts_with("!=") => {
-                        let (last, tail_) = tail.split_first().unwrap();
-                        span = span.join(last.span()).unwrap_or_else(|| p.span());
-                        tail = tail_;
-                        Terminal::BangEqual
-                    }
-
-                    s if s.starts_with("<=") => {
-                        let (last, tail_) = tail.split_first().unwrap();
-                        span = span.join(last.span()).unwrap_or_else(|| p.span());
-                        tail = tail_;
-                        Terminal::LessEqual
-                    }
-
-                    s if s.starts_with(">=") => {
-                        let (last, tail_) = tail.split_first().unwrap();
-                        span = span.join(last.span()).unwrap_or_else(|| p.span());
-                        tail = tail_;
-                        Terminal::GreaterEqual
-                    }
-
-                    s if s.starts_with("<<") => {
-                        let (last, tail_) = tail.split_first().unwrap();
-                        span = span.join(last.span()).unwrap_or_else(|| p.span());
-                        tail = tail_;
-                        Terminal::DoubleLeftChevron
-                    }
-
-                    s if s.starts_with(">>") => {
-                        let (last, tail_) = tail.split_first().unwrap();
-                        span = span.join(last.span()).unwrap_or_else(|| p.span());
-                        tail = tail_;
-                        Terminal::DoubleRightChevron
-                    }
-
-                    s if s.starts_with('%') => Terminal::Percent,
-                    s if s.starts_with('/') => Terminal::Slash,
-                    s if s.starts_with('&') => Terminal::Ampersand,
-                    s if s.starts_with('|') => Terminal::Pipe,
-                    s if s.starts_with('^') => Terminal::Caret,
-
-                    s if s.starts_with('=') => Terminal::Equal,
-                    s if s.starts_with('<') => Terminal::LeftChevron,
-                    s if s.starts_with('>') => Terminal::RightChevron,
-
-                    s if s.starts_with(':') => Terminal::Colon,
-                    s if s.starts_with(',') => Terminal::Comma,
-                    s if s.starts_with('$') => Terminal::Dollar,
-                    s if s.starts_with('+') => Terminal::Plus,
-                    s if s.starts_with('-') => Terminal::Minus,
-                    s if s.starts_with('?') => Terminal::QuestionMark,
-                    s if s.starts_with(';') => Terminal::Semi,
-                    s if s.starts_with('*') => Terminal::Times,
-
-                    s => todo!("Unknown start of token: {s}"),
-                })
+            TokenTree::Punct(_) => {
+                let (span_, terminal, tail_) =
+                    parse_punctuation(iter).expect("Failed to parse a checked punctuation");
+                span = span_;
+                tail = tail_;
+                expandable_impl::TokenTreeKind::Terminal(terminal)
             }
 
             TokenTree::Literal(lit) => {
@@ -445,24 +389,120 @@ fn parse_macro_stream(stream: TokenStream) -> Vec<expandable_impl::TokenTree<Spa
         iter = tail;
     }
 
-    fn contiguous_punct(first: &Punct, tail: &[TokenTree]) -> String {
-        let mut last_is_joint = true;
+    output
+}
 
-        std::iter::once(first)
-            .chain(tail.iter().map_while(|tree| match tree {
-                TokenTree::Punct(p) => Some(p),
-                _ => None,
-            }))
-            .take_while(|p| {
-                let tmp = last_is_joint;
-                last_is_joint = p.spacing() == Spacing::Joint;
-                tmp
-            })
-            .map(Punct::as_char)
-            .collect()
+fn parse_punctuation(mut input: &[TokenTree]) -> Option<(Span, Terminal, &[TokenTree])> {
+    let mut current = None;
+    while let Some((TokenTree::Punct(p), tail)) = input.split_first() {
+        let matched = match p.as_char() {
+            '+' => Terminal::Plus,
+            '-' => Terminal::Minus,
+            '*' => Terminal::Star,
+            '/' => Terminal::Slash,
+            '%' => Terminal::Percent,
+            '^' => Terminal::Caret,
+            '!' => Terminal::Not,
+            '&' => Terminal::And,
+            '|' => Terminal::Or,
+            '=' => Terminal::Equals,
+            '>' => Terminal::GreaterThan,
+            '<' => Terminal::LessThan,
+            '@' => Terminal::At,
+            '_' => Terminal::Underscore,
+            '.' => Terminal::Dot,
+            ',' => Terminal::Comma,
+            ';' => Terminal::Semicolon,
+            ':' => Terminal::Colon,
+            '#' => Terminal::Pound,
+            '$' => Terminal::Dollar,
+            '?' => Terminal::QuestionMark,
+
+            _ => break,
+        };
+
+        let expand = |span: Span| span.join(p.span()).unwrap_or(span);
+
+        current = match (&current, matched) {
+            (None, matched) => Some((p.span(), matched)),
+            (Some((span, Terminal::And)), Terminal::And) => Some((expand(*span), Terminal::AndAnd)),
+            (Some((span, Terminal::Or)), Terminal::Or) => Some((expand(*span), Terminal::OrOr)),
+            (Some((span, Terminal::LessThan)), Terminal::LessThan) => {
+                Some((expand(*span), Terminal::Shl))
+            }
+            (Some((span, Terminal::GreaterThan)), Terminal::GreaterThan) => {
+                Some((expand(*span), Terminal::Shr))
+            }
+            (Some((span, Terminal::Plus)), Terminal::Equals) => {
+                Some((expand(*span), Terminal::PlusEquals))
+            }
+            (Some((span, Terminal::Minus)), Terminal::Equals) => {
+                Some((expand(*span), Terminal::MinusEquals))
+            }
+            (Some((span, Terminal::Star)), Terminal::Equals) => {
+                Some((expand(*span), Terminal::StarEquals))
+            }
+            (Some((span, Terminal::Slash)), Terminal::Equals) => {
+                Some((expand(*span), Terminal::SlashEquals))
+            }
+            (Some((span, Terminal::Percent)), Terminal::Equals) => {
+                Some((expand(*span), Terminal::PercentEquals))
+            }
+            (Some((span, Terminal::Caret)), Terminal::Equals) => {
+                Some((expand(*span), Terminal::CaretEquals))
+            }
+            (Some((span, Terminal::And)), Terminal::Equals) => {
+                Some((expand(*span), Terminal::AndEquals))
+            }
+            (Some((span, Terminal::Or)), Terminal::Equals) => {
+                Some((expand(*span), Terminal::OrEquals))
+            }
+            (Some((span, Terminal::Shl)), Terminal::Equals) => {
+                Some((expand(*span), Terminal::ShlEquals))
+            }
+            (Some((span, Terminal::Shr)), Terminal::Equals) => {
+                Some((expand(*span), Terminal::ShrEquals))
+            }
+            (Some((span, Terminal::Equals)), Terminal::Equals) => {
+                Some((expand(*span), Terminal::EqualsEquals))
+            }
+            (Some((span, Terminal::Not)), Terminal::Equals) => {
+                Some((expand(*span), Terminal::NotEquals))
+            }
+            (Some((span, Terminal::GreaterThan)), Terminal::Equals) => {
+                Some((expand(*span), Terminal::GreaterThanEquals))
+            }
+            (Some((span, Terminal::LessThan)), Terminal::Equals) => {
+                Some((expand(*span), Terminal::LessThanEquals))
+            }
+            (Some((span, Terminal::Dot)), Terminal::Dot) => Some((expand(*span), Terminal::DotDot)),
+            (Some((span, Terminal::DotDot)), Terminal::Dot) => {
+                Some((expand(*span), Terminal::DotDotDot))
+            }
+            (Some((span, Terminal::DotDot)), Terminal::Equals) => {
+                Some((expand(*span), Terminal::DotDotEquals))
+            }
+            (Some((span, Terminal::Colon)), Terminal::Colon) => {
+                Some((expand(*span), Terminal::ColonColon))
+            }
+            (Some((span, Terminal::Minus)), Terminal::GreaterThan) => {
+                Some((expand(*span), Terminal::RightArrow))
+            }
+            (Some((span, Terminal::Equals)), Terminal::GreaterThan) => {
+                Some((expand(*span), Terminal::FatArrow))
+            }
+
+            _ => break,
+        };
+
+        input = tail;
+
+        if p.spacing() == Spacing::Alone {
+            break;
+        }
     }
 
-    output
+    current.map(|(span, terminal)| (span, terminal, input))
 }
 
 struct InvocationContext(expandable_impl::InvocationContext);
