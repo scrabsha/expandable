@@ -9,7 +9,7 @@
 /// [`TokenTree`]: crate::TokenTree
 #[macro_export]
 macro_rules! quote {
-    (@mk_term $sb:expr, $term:expr) => {
+    (@mk_term $sb:expr, $term:expr $(,)?) => {
         $crate::TokenTree::terminal($sb.mk_span(), $term)
     };
 
@@ -24,6 +24,10 @@ macro_rules! quote {
     // Keywords
     (@inner $sb:expr, as) => {
         $crate::quote!(@mk_term $sb, $crate::Terminal::As)
+    };
+
+    (@inner $sb:expr, async) => {
+        $crate::quote!(@mk_term $sb, $crate::Terminal::Async)
     };
 
     (@inner $sb:expr, break) => {
@@ -119,7 +123,7 @@ macro_rules! quote {
     };
 
     (@inner $sb:expr, Self) => {
-        $crate::quote!(@mk_term $sb, $crate::Terminal::SelfType)
+        $crate::quote!(@mk_term $sb, $crate::Terminal::SelfUpper)
     };
 
     (@inner $sb:expr, static) => {
@@ -167,10 +171,6 @@ macro_rules! quote {
         $crate::quote!(@mk_term $sb, $crate::Terminal::Abstract)
     };
 
-    (@inner $sb:expr, alignof) => {
-        $crate::quote!(@mk_term $sb, $crate::Terminal::Alignof)
-    };
-
     (@inner $sb:expr, become) => {
         $crate::quote!(@mk_term $sb, $crate::Terminal::Become)
     };
@@ -205,10 +205,6 @@ macro_rules! quote {
 
     (@inner $sb:expr, proc) => {
         $crate::quote!(@mk_term $sb, $crate::Terminal::Proc)
-    };
-
-    (@inner $sb:expr, pure) => {
-        $crate::quote!(@mk_term $sb, $crate::Terminal::Pure)
     };
 
     (@inner $sb:expr, sizeof) => {
@@ -300,6 +296,10 @@ macro_rules! quote {
         $crate::quote!(@mk_term $sb, $crate::Terminal::Caret)
     };
 
+    (@inner $sb:expr, !) => {
+        $crate::quote!(@mk_term $sb, $crate::Terminal::Not)
+    };
+
     (@inner $sb:expr, &) => {
         $crate::quote!(@mk_term $sb, $crate::Terminal::And)
     };
@@ -325,35 +325,35 @@ macro_rules! quote {
     };
 
     (@inner $sb:expr, +=) => {
-        $crate::quote!(@mk_term $sb, $crate::Terminal::PlusEq)
+        $crate::quote!(@mk_term $sb, $crate::Terminal::PlusEquals)
     };
 
     (@inner $sb:expr, -=) => {
-       $crate::quote!(@mk_term $sb, $crate::Terminal::MinusEq)
+       $crate::quote!(@mk_term $sb, $crate::Terminal::MinusEquals)
     };
 
     (@inner $sb:expr, *=) => {
-        $crate::quote!(@mk_term $sb, $crate::Terminal::StarEq)
+        $crate::quote!(@mk_term $sb, $crate::Terminal::StarEquals)
     };
 
     (@inner $sb:expr, /=) => {
-        $crate::quote!(@mk_term $sb, $crate::Terminal::SlashEq)
+        $crate::quote!(@mk_term $sb, $crate::Terminal::SlashEquals)
     };
 
     (@inner $sb:expr, %=) => {
-        $crate::quote!(@mk_term $sb, $crate::Terminal::PercentEq)
+        $crate::quote!(@mk_term $sb, $crate::Terminal::PercentEquals)
     };
 
     (@inner $sb:expr, ^=) => {
-        $crate::quote!(@mk_term $sb, $crate::Terminal::CaretEq)
+        $crate::quote!(@mk_term $sb, $crate::Terminal::CaretEquals)
     };
 
     (@inner $sb:expr, &=) => {
-        $crate::quote!(@mk_term $sb, $crate::Terminal::AndEq)
+        $crate::quote!(@mk_term $sb, $crate::Terminal::AndEquals)
     };
 
     (@inner $sb:expr, |=) => {
-        $crate::quote!(@mk_term $sb, $crate::Terminal::OrEq)
+        $crate::quote!(@mk_term $sb, $crate::Terminal::OrEquals)
     };
 
     (@inner $sb:expr, <<=) => {
@@ -447,6 +447,15 @@ macro_rules! quote {
 
     (@inner $sb:expr, ?) => {
         $crate::quote!(@mk_term $sb, $crate::Terminal::QuestionMark)
+    };
+
+    // Keep this rule at the end of the list, so that it does not match `true`
+    // and `false`, which are keywords.
+    (@inner $sb:expr, $lit:literal) => {
+        $crate::quote!(
+            @mk_term $sb,
+            $crate::Terminal::Literal(stringify!($lit).to_string()),
+        )
     };
 
     (@inner $sb:expr, $tt:tt) => {
