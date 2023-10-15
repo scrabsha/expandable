@@ -742,4 +742,597 @@ mod tests {
             "#]],
         }
     }
+
+    test_quote! {
+        all_tokens {
+            {
+                horse
+                as async await break const continue crate do else enum extern false fn for if impl
+                in let loop match mod move mut pub ref return self Self static struct super trait
+                true type unsafe use where while abstract become box do final macro override
+                priv typeof unsized virtual yield
+                42
+                + - * / % ^ ! & | && || << >> += -= *= /= %= ^= &= |= <<= >>= = == != > < >= <= @ _
+                . .. ... ..= , ; : :: => # /* $ */ ?
+            },
+            expect_test::expect![[r#"
+                [
+                    TokenTree {
+                        kind: Terminal(
+                            Ident(
+                                "horse",
+                            ),
+                        ),
+                        span: 0,
+                    },
+                    TokenTree {
+                        kind: Terminal(
+                            As,
+                        ),
+                        span: 1,
+                    },
+                    TokenTree {
+                        kind: Terminal(
+                            Async,
+                        ),
+                        span: 2,
+                    },
+                    TokenTree {
+                        kind: Terminal(
+                            Await,
+                        ),
+                        span: 3,
+                    },
+                    TokenTree {
+                        kind: Terminal(
+                            Break,
+                        ),
+                        span: 4,
+                    },
+                    TokenTree {
+                        kind: Terminal(
+                            Const,
+                        ),
+                        span: 5,
+                    },
+                    TokenTree {
+                        kind: Terminal(
+                            Continue,
+                        ),
+                        span: 6,
+                    },
+                    TokenTree {
+                        kind: Terminal(
+                            Crate,
+                        ),
+                        span: 7,
+                    },
+                    TokenTree {
+                        kind: Terminal(
+                            Do,
+                        ),
+                        span: 8,
+                    },
+                    TokenTree {
+                        kind: Terminal(
+                            Else,
+                        ),
+                        span: 9,
+                    },
+                    TokenTree {
+                        kind: Terminal(
+                            Enum,
+                        ),
+                        span: 10,
+                    },
+                    TokenTree {
+                        kind: Terminal(
+                            Extern,
+                        ),
+                        span: 11,
+                    },
+                    TokenTree {
+                        kind: Terminal(
+                            False,
+                        ),
+                        span: 12,
+                    },
+                    TokenTree {
+                        kind: Terminal(
+                            Fn,
+                        ),
+                        span: 13,
+                    },
+                    TokenTree {
+                        kind: Terminal(
+                            For,
+                        ),
+                        span: 14,
+                    },
+                    TokenTree {
+                        kind: Terminal(
+                            If,
+                        ),
+                        span: 15,
+                    },
+                    TokenTree {
+                        kind: Terminal(
+                            Impl,
+                        ),
+                        span: 16,
+                    },
+                    TokenTree {
+                        kind: Terminal(
+                            In,
+                        ),
+                        span: 17,
+                    },
+                    TokenTree {
+                        kind: Terminal(
+                            Let,
+                        ),
+                        span: 18,
+                    },
+                    TokenTree {
+                        kind: Terminal(
+                            Loop,
+                        ),
+                        span: 19,
+                    },
+                    TokenTree {
+                        kind: Terminal(
+                            Match,
+                        ),
+                        span: 20,
+                    },
+                    TokenTree {
+                        kind: Terminal(
+                            Mod,
+                        ),
+                        span: 21,
+                    },
+                    TokenTree {
+                        kind: Terminal(
+                            Move,
+                        ),
+                        span: 22,
+                    },
+                    TokenTree {
+                        kind: Terminal(
+                            Mut,
+                        ),
+                        span: 23,
+                    },
+                    TokenTree {
+                        kind: Terminal(
+                            Pub,
+                        ),
+                        span: 24,
+                    },
+                    TokenTree {
+                        kind: Terminal(
+                            Ref,
+                        ),
+                        span: 25,
+                    },
+                    TokenTree {
+                        kind: Terminal(
+                            Return,
+                        ),
+                        span: 26,
+                    },
+                    TokenTree {
+                        kind: Terminal(
+                            Self_,
+                        ),
+                        span: 27,
+                    },
+                    TokenTree {
+                        kind: Terminal(
+                            SelfUpper,
+                        ),
+                        span: 28,
+                    },
+                    TokenTree {
+                        kind: Terminal(
+                            Static,
+                        ),
+                        span: 29,
+                    },
+                    TokenTree {
+                        kind: Terminal(
+                            Struct,
+                        ),
+                        span: 30,
+                    },
+                    TokenTree {
+                        kind: Terminal(
+                            Super,
+                        ),
+                        span: 31,
+                    },
+                    TokenTree {
+                        kind: Terminal(
+                            Trait,
+                        ),
+                        span: 32,
+                    },
+                    TokenTree {
+                        kind: Terminal(
+                            True,
+                        ),
+                        span: 33,
+                    },
+                    TokenTree {
+                        kind: Terminal(
+                            Type,
+                        ),
+                        span: 34,
+                    },
+                    TokenTree {
+                        kind: Terminal(
+                            Unsafe,
+                        ),
+                        span: 35,
+                    },
+                    TokenTree {
+                        kind: Terminal(
+                            Use,
+                        ),
+                        span: 36,
+                    },
+                    TokenTree {
+                        kind: Terminal(
+                            Where,
+                        ),
+                        span: 37,
+                    },
+                    TokenTree {
+                        kind: Terminal(
+                            While,
+                        ),
+                        span: 38,
+                    },
+                    TokenTree {
+                        kind: Terminal(
+                            Abstract,
+                        ),
+                        span: 39,
+                    },
+                    TokenTree {
+                        kind: Terminal(
+                            Become,
+                        ),
+                        span: 40,
+                    },
+                    TokenTree {
+                        kind: Terminal(
+                            Box,
+                        ),
+                        span: 41,
+                    },
+                    TokenTree {
+                        kind: Terminal(
+                            Do,
+                        ),
+                        span: 42,
+                    },
+                    TokenTree {
+                        kind: Terminal(
+                            Final,
+                        ),
+                        span: 43,
+                    },
+                    TokenTree {
+                        kind: Terminal(
+                            Macro,
+                        ),
+                        span: 44,
+                    },
+                    TokenTree {
+                        kind: Terminal(
+                            Override,
+                        ),
+                        span: 45,
+                    },
+                    TokenTree {
+                        kind: Terminal(
+                            Priv,
+                        ),
+                        span: 46,
+                    },
+                    TokenTree {
+                        kind: Terminal(
+                            Typeof,
+                        ),
+                        span: 47,
+                    },
+                    TokenTree {
+                        kind: Terminal(
+                            Unsized,
+                        ),
+                        span: 48,
+                    },
+                    TokenTree {
+                        kind: Terminal(
+                            Virtual,
+                        ),
+                        span: 49,
+                    },
+                    TokenTree {
+                        kind: Terminal(
+                            Yield,
+                        ),
+                        span: 50,
+                    },
+                    TokenTree {
+                        kind: Terminal(
+                            Literal(
+                                "42",
+                            ),
+                        ),
+                        span: 51,
+                    },
+                    TokenTree {
+                        kind: Terminal(
+                            Plus,
+                        ),
+                        span: 52,
+                    },
+                    TokenTree {
+                        kind: Terminal(
+                            Minus,
+                        ),
+                        span: 53,
+                    },
+                    TokenTree {
+                        kind: Terminal(
+                            Star,
+                        ),
+                        span: 54,
+                    },
+                    TokenTree {
+                        kind: Terminal(
+                            Slash,
+                        ),
+                        span: 55,
+                    },
+                    TokenTree {
+                        kind: Terminal(
+                            Percent,
+                        ),
+                        span: 56,
+                    },
+                    TokenTree {
+                        kind: Terminal(
+                            Caret,
+                        ),
+                        span: 57,
+                    },
+                    TokenTree {
+                        kind: Terminal(
+                            Not,
+                        ),
+                        span: 58,
+                    },
+                    TokenTree {
+                        kind: Terminal(
+                            And,
+                        ),
+                        span: 59,
+                    },
+                    TokenTree {
+                        kind: Terminal(
+                            Or,
+                        ),
+                        span: 60,
+                    },
+                    TokenTree {
+                        kind: Terminal(
+                            AndAnd,
+                        ),
+                        span: 61,
+                    },
+                    TokenTree {
+                        kind: Terminal(
+                            OrOr,
+                        ),
+                        span: 62,
+                    },
+                    TokenTree {
+                        kind: Terminal(
+                            Shl,
+                        ),
+                        span: 63,
+                    },
+                    TokenTree {
+                        kind: Terminal(
+                            Shr,
+                        ),
+                        span: 64,
+                    },
+                    TokenTree {
+                        kind: Terminal(
+                            PlusEquals,
+                        ),
+                        span: 65,
+                    },
+                    TokenTree {
+                        kind: Terminal(
+                            MinusEquals,
+                        ),
+                        span: 66,
+                    },
+                    TokenTree {
+                        kind: Terminal(
+                            StarEquals,
+                        ),
+                        span: 67,
+                    },
+                    TokenTree {
+                        kind: Terminal(
+                            SlashEquals,
+                        ),
+                        span: 68,
+                    },
+                    TokenTree {
+                        kind: Terminal(
+                            PercentEquals,
+                        ),
+                        span: 69,
+                    },
+                    TokenTree {
+                        kind: Terminal(
+                            CaretEquals,
+                        ),
+                        span: 70,
+                    },
+                    TokenTree {
+                        kind: Terminal(
+                            AndEquals,
+                        ),
+                        span: 71,
+                    },
+                    TokenTree {
+                        kind: Terminal(
+                            OrEquals,
+                        ),
+                        span: 72,
+                    },
+                    TokenTree {
+                        kind: Terminal(
+                            ShlEquals,
+                        ),
+                        span: 73,
+                    },
+                    TokenTree {
+                        kind: Terminal(
+                            ShrEquals,
+                        ),
+                        span: 74,
+                    },
+                    TokenTree {
+                        kind: Terminal(
+                            Equals,
+                        ),
+                        span: 75,
+                    },
+                    TokenTree {
+                        kind: Terminal(
+                            EqualsEquals,
+                        ),
+                        span: 76,
+                    },
+                    TokenTree {
+                        kind: Terminal(
+                            NotEquals,
+                        ),
+                        span: 77,
+                    },
+                    TokenTree {
+                        kind: Terminal(
+                            GreaterThan,
+                        ),
+                        span: 78,
+                    },
+                    TokenTree {
+                        kind: Terminal(
+                            LessThan,
+                        ),
+                        span: 79,
+                    },
+                    TokenTree {
+                        kind: Terminal(
+                            GreaterThanEquals,
+                        ),
+                        span: 80,
+                    },
+                    TokenTree {
+                        kind: Terminal(
+                            LessThanEquals,
+                        ),
+                        span: 81,
+                    },
+                    TokenTree {
+                        kind: Terminal(
+                            At,
+                        ),
+                        span: 82,
+                    },
+                    TokenTree {
+                        kind: Terminal(
+                            Underscore,
+                        ),
+                        span: 83,
+                    },
+                    TokenTree {
+                        kind: Terminal(
+                            Dot,
+                        ),
+                        span: 84,
+                    },
+                    TokenTree {
+                        kind: Terminal(
+                            DotDot,
+                        ),
+                        span: 85,
+                    },
+                    TokenTree {
+                        kind: Terminal(
+                            DotDotDot,
+                        ),
+                        span: 86,
+                    },
+                    TokenTree {
+                        kind: Terminal(
+                            DotDotEquals,
+                        ),
+                        span: 87,
+                    },
+                    TokenTree {
+                        kind: Terminal(
+                            Comma,
+                        ),
+                        span: 88,
+                    },
+                    TokenTree {
+                        kind: Terminal(
+                            Semicolon,
+                        ),
+                        span: 89,
+                    },
+                    TokenTree {
+                        kind: Terminal(
+                            Colon,
+                        ),
+                        span: 90,
+                    },
+                    TokenTree {
+                        kind: Terminal(
+                            ColonColon,
+                        ),
+                        span: 91,
+                    },
+                    TokenTree {
+                        kind: Terminal(
+                            FatArrow,
+                        ),
+                        span: 92,
+                    },
+                    TokenTree {
+                        kind: Terminal(
+                            Dollar,
+                        ),
+                        span: 93,
+                    },
+                    TokenTree {
+                        kind: Terminal(
+                            QuestionMark,
+                        ),
+                        span: 94,
+                    },
+                ]
+            "#]],
+        }
+    }
 }
