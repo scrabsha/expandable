@@ -589,3 +589,24 @@ pub(crate) enum StackSymbol {
     FnParam,
     AfterFnParams,
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn transitions_after_if_is_a_superset_of_after_expr() {
+        State::TRANSITIONS[State::AfterExpr as usize]
+            .iter()
+            .for_each(|(descr, in_sym, _, _)| {
+                assert!(
+                    State::TRANSITIONS[State::AfterIf as usize]
+                        .iter()
+                        .any(|(descr_, in_sym_, _, _)| descr == descr_ && in_sym == in_sym_),
+                    "missing transition for {:?} {:?}. Please add it to `AfterIf` transition set.",
+                    descr,
+                    in_sym
+                );
+            });
+    }
+}
