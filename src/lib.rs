@@ -26,7 +26,7 @@
 //! ```none
 #![doc = include_str!("../tests/ui/fail/js_concat.stderr")]
 //! ```
-//!
+//! 
 //! [^error-message]: The Rust grammar is not fully implemented at the moment,
 //!     leading to incomplete "expected xxx" list this will be fixed before the
 //!     first non-alpha release of this crate.
