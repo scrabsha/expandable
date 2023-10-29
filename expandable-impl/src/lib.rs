@@ -215,9 +215,16 @@ impl<Span> TokenTree<Span> {
         }
     }
 
-    pub fn curlyBraced(span: Span, i: Vec<TokenTree<Span>>) -> TokenTree<Span> {
+    pub fn curly_braced(span: Span, i: Vec<TokenTree<Span>>) -> TokenTree<Span> {
         TokenTree {
             kind: TokenTreeKind::CurlyBraced(i),
+            span,
+        }
+    }
+
+    pub fn bracketed(span: Span, i: Vec<TokenTree<Span>>) -> TokenTree<Span> {
+        TokenTree {
+            kind: TokenTreeKind::Bracketed(i),
             span,
         }
     }
@@ -232,6 +239,8 @@ pub enum TokenTreeKind<Span> {
     Parenthesed(Vec<TokenTree<Span>>),
     /// A sequence of [`TokenTree`] that is delimited by curly brackets.
     CurlyBraced(Vec<TokenTree<Span>>),
+    /// A sequence of [`TokenTree`] that is delimited by brackets.
+    Bracketed(Vec<TokenTree<Span>>),
 }
 
 impl_spannable!(TokenTreeKind<Span> => TokenTree);

@@ -116,6 +116,14 @@ where
                 state,
             ),
 
+            TokenTreeKind::Bracketed(inner) => self.check_delimited_stream(
+                TokenDescription::LBracket,
+                inner,
+                TokenDescription::RBracket,
+                tree.span,
+                state,
+            ),
+
             TokenTreeKind::Fragment(f) => {
                 // This is safe because we ensured at the previous step that
                 // a fragment with that name indeed exists.

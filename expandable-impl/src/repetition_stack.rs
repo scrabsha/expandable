@@ -64,7 +64,9 @@ where
 {
     match &elem.kind {
         TokenTreeKind::Terminal(_, _) => Vec::new(),
-        TokenTreeKind::Parenthesed(inner) | TokenTreeKind::CurlyBraced(inner) => inner
+        TokenTreeKind::Parenthesed(inner)
+        | TokenTreeKind::CurlyBraced(inner)
+        | TokenTreeKind::Bracketed(inner) => inner
             .iter()
             .flat_map(|elem| collect_usages(elem, stack))
             .collect(),

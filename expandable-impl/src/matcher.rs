@@ -58,6 +58,7 @@ pub(crate) enum TokenTreeKind<Span> {
     Terminal(Terminal),
     Parenthesed(Vec<TokenTree<Span>>),
     CurlyBraced(Vec<TokenTree<Span>>),
+    Bracketed(Vec<TokenTree<Span>>),
     Binding {
         name: String,
         kind: FragmentKind,
@@ -103,7 +104,8 @@ where
                         }
 
                         GenericTokenTreeKind::Terminal(_)
-                        | GenericTokenTreeKind::CurlyBraced(_) => {
+                        | GenericTokenTreeKind::CurlyBraced(_)
+                        | GenericTokenTreeKind::Bracketed(_) => {
                             return Err(Error::ParsingFailed {
                                 what: vec![
                                     MacroRuleNode::Repetition,
@@ -127,6 +129,10 @@ where
                 GenericTokenTreeKind::CurlyBraced(inner) => {
                     TokenTreeKind::CurlyBraced(TokenTree::from_generic(inner)?)
                         .with_span(token.span)
+                }
+
+                GenericTokenTreeKind::Bracketed(inner) => {
+                    TokenTreeKind::Bracketed(TokenTree::from_generic(inner)?).with_span(token.span)
                 }
             };
 
@@ -247,7 +253,9 @@ where
                 (Some(Box::new(sep)), quantifier)
             }
 
-            GenericTokenTreeKind::Parenthesed(_) | GenericTokenTreeKind::CurlyBraced(_) => {
+            GenericTokenTreeKind::Parenthesed(_)
+            | GenericTokenTreeKind::CurlyBraced(_)
+            | GenericTokenTreeKind::Bracketed(_) => {
                 return Err(Error::ParsingFailed {
                     what: vec![
                         MacroRuleNode::RepetitionSeparator,
@@ -340,7 +348,9 @@ where
                     inner.iter().for_each(|tt| visit(bindings, &stack, tt));
                 }
 
-                TokenTreeKind::Parenthesed(inner) | TokenTreeKind::CurlyBraced(inner) => {
+                TokenTreeKind::Parenthesed(inner)
+                | TokenTreeKind::CurlyBraced(inner)
+                | TokenTreeKind::Bracketed(inner) => {
                     inner.iter().for_each(|tt| visit(bindings, stack, tt));
                 }
             }
