@@ -195,3 +195,8 @@ without notice.
 Any change that may trigger errors on previously accepted code is considered
 a breaking change.
 
+## License
+
+Licensed under the [MIT license].
+
+[MIT license]: https://github.com/scrabsha/expandable/blob/main/LICENSE
