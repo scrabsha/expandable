@@ -730,4 +730,40 @@ mod tests {
             }
         }
     }
+
+    check_macro_test! {
+        array_0 {
+            #[expr]
+            {
+                () => { [] };
+            }
+        }
+    }
+
+    check_macro_test! {
+        array_1 {
+            #[expr]
+            {
+                () => { [a] };
+            }
+        }
+    }
+
+    check_macro_test! {
+        array_2 {
+            #[expr]
+            {
+                () => { [a, b] };
+            }
+        }
+    }
+
+    check_macro_test! {
+        array_3 {
+            #[expr]
+            {
+                () => { [a, b,] };
+            }
+        }
+    }
 }
