@@ -33,8 +33,8 @@ impl DynamicStateSet {
 }
 
 impl IntoIterator for DynamicStateSet {
-    type Item = DynamicState;
     type IntoIter = IntoIter;
+    type Item = DynamicState;
 
     fn into_iter(self) -> IntoIter {
         IntoIter(self.0.into_iter())

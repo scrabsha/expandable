@@ -42,7 +42,6 @@
 //!
 //! [`expandable::expr`]: macro@expr
 //! [`expandable::item`]: macro@item
-//!
 #![doc = include_str!("../doc/02-what-can-it-detect.md")]
 //!
 #![doc = include_str!("../doc/03-opinionated.md")]
@@ -52,17 +51,18 @@
 
 extern crate proc_macro;
 
-use proc_macro::TokenStream as TokenStream1;
-use std::fmt::{Display, Formatter};
-use std::str::FromStr;
+use std::{
+    fmt::{Display, Formatter},
+    str::FromStr,
+};
 
+use expandable_impl::{RepetitionQuantifierKind, Terminal, TokenDescription};
+use proc_macro::TokenStream as TokenStream1;
 use proc_macro2::{Delimiter, Spacing, Span, TokenStream, TokenTree};
 use syn::{
     parse::{Parse, ParseStream},
     Ident,
 };
-
-use expandable_impl::{RepetitionQuantifierKind, Terminal, TokenDescription};
 use syn_shim::ItemMacroRules;
 
 mod syn_shim;
@@ -133,7 +133,10 @@ fn mk_error_msg(error: expandable_impl::Error<Span>) -> syn::Error {
             let got_nesting = pp_repetition_ops(&got_nesting);
 
             (
-                format!("the repetition used for `{metavariable_name}` ({got_nesting}) is different from how it is matched ({expected_nesting})."),
+                format!(
+                    "the repetition used for `{metavariable_name}` ({got_nesting}) is different \
+                     from how it is matched ({expected_nesting})."
+                ),
                 Some(usage_span),
             )
         }
@@ -332,7 +335,7 @@ fn describe(descr: &TokenDescription) -> String {
                         None
                     }
                 })
-                .unwrap_or_else(|| todo!("Unknown token description: {:?}", other))
+                .unwrap_or_else(|| todo!("Unknown token description: {:?}", other));
         }
     }
     .to_string()

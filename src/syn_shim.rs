@@ -1,8 +1,7 @@
 // Architecture invariant: this module contains the definition of various AST
 // nodes that are used to represent the parsed Rust code.
 
-use proc_macro2::extra::DelimSpan;
-use proc_macro2::{Delimiter, Ident, TokenStream};
+use proc_macro2::{extra::DelimSpan, Delimiter, Ident, TokenStream};
 use syn::{
     bracketed,
     parse::{discouraged::AnyDelimiter, Parse, ParseStream},
@@ -82,7 +81,7 @@ fn parse_delimited(input: ParseStream) -> syn::Result<(MacroDelimiter, TokenStre
             return Err(syn::Error::new(
                 span.join(),
                 "`expandable` does not support « None delimiters »",
-            ))
+            ));
         }
     };
 

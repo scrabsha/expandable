@@ -85,8 +85,9 @@ pub enum Error<Span> {
     /// subtraction!(101 - 42);
     /// ```
     ///
-    /// In this example, the repetition nesting of the matched metavariable `then`
-    /// is `?*`, while the nesting of the metavariable indication `then` is `*`.
+    /// In this example, the repetition nesting of the matched metavariable
+    /// `then` is `?*`, while the nesting of the metavariable indication
+    /// `then` is `*`.
     ///
     /// This variant represents both the case where the amount of repetitions
     /// does not match (which is an error) and the case where the repetition
