@@ -5,10 +5,12 @@
 // TODO: vocabulary - we must use repetition _nesting_ instead of repetition
 // _stack_.
 
-use crate::list::LameLinkedList;
-use crate::matcher::{BindingData, Matcher};
-use crate::substitution::{TokenTree, TokenTreeKind};
-use crate::{Error, RepetitionQuantifierKind};
+use crate::{
+    list::LameLinkedList,
+    matcher::{BindingData, Matcher},
+    substitution::{TokenTree, TokenTreeKind},
+    Error, RepetitionQuantifierKind,
+};
 
 pub(crate) fn check<Span>(
     matcher: &Matcher<Span>,
@@ -45,7 +47,7 @@ where
                 return Err(Error::UnboundMetavariable {
                     name: name.to_string(),
                     where_: usage_span,
-                })
+                });
             }
         }
     }

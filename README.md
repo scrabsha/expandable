@@ -49,7 +49,7 @@ error: Potentially invalid expansion. Expected an identifier, a literal, `if`.
 5 |         $left ++ $right
   |                ^
 ```
-
+ 
 [^error-message]: The Rust grammar is not fully implemented at the moment,
     leading to incomplete "expected xxx" list this will be fixed before the
     first non-alpha release of this crate.
@@ -65,7 +65,6 @@ multiple macros are available:
 
 [`expandable::expr`]: macro@expr
 [`expandable::item`]: macro@item
-
 ## What can it detect?
 
 This section briefly describes what the macros can detect and what they

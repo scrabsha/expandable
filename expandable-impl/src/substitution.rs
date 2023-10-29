@@ -61,7 +61,7 @@ where
                             return Err(Error::ParsingFailed {
                                 what: vec![MacroRuleNode::Repetition, MacroRuleNode::FragmentName],
                                 where_: token.span,
-                            })
+                            });
                         }
                     }
                 }
@@ -149,7 +149,7 @@ where
                         return Err(Error::ParsingFailed {
                             what: vec![MacroRuleNode::RepetitionQuantifier],
                             where_: token.span,
-                        })
+                        });
                     }
                 };
 
@@ -159,7 +159,7 @@ where
                 return Err(Error::ParsingFailed {
                     what: vec![MacroRuleNode::RepetitionQuantifier],
                     where_: token.span,
-                })
+                });
             }
         };
 

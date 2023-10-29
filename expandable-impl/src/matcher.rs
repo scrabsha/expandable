@@ -6,9 +6,9 @@ use std::{
     fmt::{self, Debug},
 };
 
-use crate::list::LameLinkedList;
 use crate::{
     error::{Error, MacroRuleNode},
+    list::LameLinkedList,
     FragmentKind, RepetitionQuantifier, RepetitionQuantifierKind, Spannable, Terminal,
     TokenTree as GenericTokenTree, TokenTreeKind as GenericTokenTreeKind,
 };
@@ -110,7 +110,7 @@ where
                                     MacroRuleNode::MetaVariableMatch,
                                 ],
                                 where_: after_dollar.span,
-                            })
+                            });
                         }
                     }?
                 }
@@ -239,7 +239,7 @@ where
                         return Err(Error::ParsingFailed {
                             what: vec![MacroRuleNode::RepetitionQuantifier],
                             where_: token.span,
-                        })
+                        });
                     }
                 }
                 .with_span(token.span);
@@ -254,7 +254,7 @@ where
                         MacroRuleNode::RepetitionQuantifier,
                     ],
                     where_: token.span,
-                })
+                });
             }
         };
 

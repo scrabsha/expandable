@@ -25,8 +25,8 @@
 
 //! <div class="title-block" style="text-align: center;" align="center">
 //! <h1><code>expandable-impl</code></h1>
-//! An opinionated, runtime-agnostic <code>macro_rules!</code> expansion checker.
-//! </div>
+//! An opinionated, runtime-agnostic <code>macro_rules!</code> expansion
+//! checker. </div>
 //!
 //! <br />
 //! <br />
@@ -39,7 +39,7 @@
 //! Let's use it on `js_concat`:
 //!
 //! ```
-//! use expandable_impl::{InvocationContext, quote};
+//! use expandable_impl::{quote, InvocationContext};
 //!
 //! let err = expandable_impl::check_macro(
 //!     InvocationContext::Item,
@@ -48,9 +48,13 @@
 //!            @left ++ @right
 //!         };
 //!     },
-//! ).unwrap_err();
+//! )
+//! .unwrap_err();
 //!
-//! assert!(matches!(err, expandable_impl::Error::InvalidProducedAst { .. }));
+//! assert!(matches!(
+//!     err,
+//!     expandable_impl::Error::InvalidProducedAst { .. }
+//! ));
 //! ```
 //!
 //! ## Expansion context
@@ -67,7 +71,6 @@
 //! embed this crate in your analysis tool!
 //!
 //! [`expandable`]: https://crates.io/crates/expandable
-//!
 #![doc = include_str!("../../doc/02-what-can-it-detect.md")]
 //!
 #![doc = include_str!("../../doc/03-opinionated.md")]

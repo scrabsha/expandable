@@ -95,11 +95,14 @@ jobs:
       - name: Install toolchain
         run: rustup toolchain install nightly
 
+      - name: Install nightly rustfmt
+        run: rustup component add rustfmt --toolchain nightly-x86_64-unknown-linux-gnu
+
       - name: Restore cache
         uses: Swatinem/rust-cache@v2
 
       - name: Check crate source formatting
-        run: cargo fmt --all -- --check
+        run: cargo +nightly fmt --all -- --check
 
       - name: Check ui tests formatting
         run: find tests/ -name "*.rs" -exec rustfmt --check {} +
