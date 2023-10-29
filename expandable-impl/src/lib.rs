@@ -75,7 +75,9 @@
 //!
 #![doc = include_str!("../../doc/03-opinionated.md")]
 //!
-#![doc = include_str!("../../doc/99-msrv.md")]
+#![doc = include_str!("../../doc/98-msrv.md")]
+//!
+#![doc = include_str!("../../doc/99-license.md")]
 
 use std::{marker::Copy, str::FromStr};
 
