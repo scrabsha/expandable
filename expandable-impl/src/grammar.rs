@@ -445,10 +445,18 @@ generate_grammar! {
             Literal => AfterExpr;
             If => ExprStart, Condition;
 
+            // Array expression
+            // https://spec.ferrocene.dev/expressions.html#array-expressions
+            LBracket => ExprStart, ArrayExprFirst;
+
             // <expr> ()
             RParen, FnArgListFirst => AfterExpr;
             // <expr> ( <expr>, )
             RParen, FnArgListThen => AfterExpr;
+            // []
+            RBracket, ArrayExprFirst => AfterExpr;
+            // [ <expr>, ]
+            RBracket, ArrayExprThen => AfterExpr;
         },
 
         #[accepting]
@@ -479,6 +487,10 @@ generate_grammar! {
             LessThanEquals => ExprStart;
             NotEquals => ExprStart;
 
+            // [ <expr> ]
+            RBracket, ArrayExprFirst => AfterExpr;
+            RBracket, ArrayExprThen => AfterExpr;
+
             RBrace, FnBlockExpr => ItemStart;
             LBrace, Condition => ExprStart, Consequence;
 
@@ -487,6 +499,8 @@ generate_grammar! {
             // <expr>, <expr>, ...
             Comma, FnArgListFirst => ExprStart, FnArgListThen;
             Comma, FnArgListThen => ExprStart, FnArgListThen;
+            Comma, ArrayExprFirst => ExprStart, ArrayExprThen;
+            Comma, ArrayExprThen => ExprStart, ArrayExprThen;
             // <expr> )
             RParen, FnArgListFirst => AfterExpr;
             RParen, FnArgListThen => AfterExpr;
@@ -526,6 +540,10 @@ generate_grammar! {
             LessThanEquals => ExprStart;
             NotEquals => ExprStart;
 
+            // [ <expr> ]
+            RBracket, ArrayExprFirst => AfterExpr;
+            RBracket, ArrayExprThen => AfterExpr;
+
             RBrace, FnBlockExpr => ItemStart;
             LBrace, Condition => ExprStart, Consequence;
 
@@ -534,6 +552,8 @@ generate_grammar! {
             // <expr>, <expr>, ...
             Comma, FnArgListFirst => ExprStart, FnArgListThen;
             Comma, FnArgListThen => ExprStart, FnArgListThen;
+            Comma, ArrayExprFirst => ExprStart, ArrayExprThen;
+            Comma, ArrayExprThen => ExprStart, ArrayExprThen;
             // <expr> )
             RParen, FnArgListFirst => AfterExpr;
             RParen, FnArgListThen => AfterExpr;
@@ -618,6 +638,8 @@ pub(crate) enum StackSymbol {
     FnArgListThen,
     FnParam,
     AfterFnParams,
+    ArrayExprFirst,
+    ArrayExprThen,
 }
 
 #[cfg(test)]
