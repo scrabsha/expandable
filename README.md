@@ -65,7 +65,6 @@ multiple macros are available:
 
 [`expandable::expr`]: macro@expr
 [`expandable::item`]: macro@item
-
 ## What can it detect?
 
 This section briefly describes what the macros can detect and what they
