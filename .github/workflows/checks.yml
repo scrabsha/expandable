@@ -105,7 +105,7 @@ jobs:
         run: cargo +nightly fmt --all -- --check
 
       - name: Check ui tests formatting
-        run: find tests/ -name "*.rs" -exec rustfmt --check {} +
+        run: find tests/ -name "*.rs" -exec rustfmt +nightly --check {} +
 
   readme-check:
     runs-on: ubuntu-latest
