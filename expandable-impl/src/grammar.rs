@@ -491,6 +491,10 @@ generate_grammar! {
             RBracket, ArrayExprFirst => AfterExpr;
             RBracket, ArrayExprThen => AfterExpr;
 
+            // [ <expr> ; <expr> ]
+            Semicolon, ArrayExprFirst => ExprStart, ArrayExprSize;
+            RBracket, ArrayExprSize => AfterExpr;
+
             RBrace, FnBlockExpr => ItemStart;
             LBrace, Condition => ExprStart, Consequence;
 
@@ -543,6 +547,10 @@ generate_grammar! {
             // [ <expr> ]
             RBracket, ArrayExprFirst => AfterExpr;
             RBracket, ArrayExprThen => AfterExpr;
+
+            // [ <expr> ; <expr> ]
+            Semicolon, ArrayExprFirst => ExprStart, ArrayExprSize;
+            RBracket, ArrayExprSize => AfterExpr;
 
             RBrace, FnBlockExpr => ItemStart;
             LBrace, Condition => ExprStart, Consequence;
@@ -640,6 +648,7 @@ pub(crate) enum StackSymbol {
     AfterFnParams,
     ArrayExprFirst,
     ArrayExprThen,
+    ArrayExprSize,
 }
 
 #[cfg(test)]
