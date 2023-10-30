@@ -8,19 +8,11 @@ macro_rules! if_ {
     };
 
     () => {
-        if a {
-            a
-        } else {
-            a
-        }
+        if a { a } else { a }
     };
 
     ($a:ident) => {
-        if $a {
-            $a
-        } else {
-            $a
-        }
+        if $a { $a } else { $a }
     };
 }
 
