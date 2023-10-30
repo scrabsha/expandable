@@ -759,10 +759,30 @@ mod tests {
     }
 
     check_macro_test! {
-        array_3 {
+        array_2_ {
             #[expr]
             {
                 () => { [a, b,] };
+            }
+        }
+    }
+
+    check_macro_test! {
+        array_with_fragments {
+            #[expr]
+            {
+                (#a:expr, #b:expr, #c:ident, #d:ident) => { [#a, #b, #c, #d] };
+            }
+        }
+    }
+
+    check_macro_test! {
+        array_repeat {
+            #[expr]
+            {
+                ( #a:expr, #b:expr ) => {
+                    [#a; #b]
+                };
             }
         }
     }
