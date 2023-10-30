@@ -18,7 +18,11 @@ macro_rules! quote {
     };
 
     (@inner $sb:expr, { $( $tt:tt )* } ) => {
-        $crate::TokenTree::curlyBraced($sb.mk_span(), $crate::quote! { @with_sb $sb, $( $tt )* })
+        $crate::TokenTree::curly_braced($sb.mk_span(), $crate::quote! { @with_sb $sb, $( $tt )* })
+    };
+
+    (@inner $sb:expr, [ $( $tt:tt )* ] ) => {
+        $crate::TokenTree::bracketed($sb.mk_span(), $crate::quote! { @with_sb $sb, $( $tt )* })
     };
 
     // Keywords

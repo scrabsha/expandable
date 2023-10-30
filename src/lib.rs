@@ -356,7 +356,7 @@ fn parse_macro_stream(stream: TokenStream) -> Vec<expandable_impl::TokenTree<Spa
                 match g.delimiter() {
                     Delimiter::Parenthesis => expandable_impl::TokenTreeKind::Parenthesed(inner),
                     Delimiter::Brace => expandable_impl::TokenTreeKind::CurlyBraced(inner),
-                    Delimiter::Bracket => todo!("Need some work in the impl crate"),
+                    Delimiter::Bracket => expandable_impl::TokenTreeKind::Bracketed(inner),
                     Delimiter::None => todo!("How did we get here?"),
                 }
             }

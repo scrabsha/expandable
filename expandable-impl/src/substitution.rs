@@ -18,6 +18,7 @@ pub(crate) enum TokenTreeKind<Span> {
     Terminal(Terminal, TokenDescription),
     Parenthesed(Vec<TokenTree<Span>>),
     CurlyBraced(Vec<TokenTree<Span>>),
+    Bracketed(Vec<TokenTree<Span>>),
     Fragment(String),
     Repetition {
         inner: Vec<TokenTree<Span>>,
@@ -57,7 +58,8 @@ where
                         }
 
                         GenericTokenTreeKind::CurlyBraced(_)
-                        | GenericTokenTreeKind::Terminal(_) => {
+                        | GenericTokenTreeKind::Terminal(_)
+                        | GenericTokenTreeKind::Bracketed(_) => {
                             return Err(Error::ParsingFailed {
                                 what: vec![MacroRuleNode::Repetition, MacroRuleNode::FragmentName],
                                 where_: token.span,
@@ -79,6 +81,10 @@ where
                 GenericTokenTreeKind::CurlyBraced(inner) => {
                     TokenTreeKind::CurlyBraced(TokenTree::from_generic(inner)?)
                         .with_span(token.span)
+                }
+
+                GenericTokenTreeKind::Bracketed(inner) => {
+                    TokenTreeKind::Bracketed(TokenTree::from_generic(inner)?).with_span(token.span)
                 }
             };
 
@@ -145,7 +151,8 @@ where
 
                     GenericTokenTreeKind::Terminal(_)
                     | GenericTokenTreeKind::Parenthesed(_)
-                    | GenericTokenTreeKind::CurlyBraced(_) => {
+                    | GenericTokenTreeKind::CurlyBraced(_)
+                    | GenericTokenTreeKind::Bracketed(_) => {
                         return Err(Error::ParsingFailed {
                             what: vec![MacroRuleNode::RepetitionQuantifier],
                             where_: token.span,
@@ -155,7 +162,9 @@ where
 
                 (Some(t), del)
             }
-            GenericTokenTreeKind::Parenthesed(_) | GenericTokenTreeKind::CurlyBraced(_) => {
+            GenericTokenTreeKind::Parenthesed(_)
+            | GenericTokenTreeKind::CurlyBraced(_)
+            | GenericTokenTreeKind::Bracketed(_) => {
                 return Err(Error::ParsingFailed {
                     what: vec![MacroRuleNode::RepetitionQuantifier],
                     where_: token.span,
