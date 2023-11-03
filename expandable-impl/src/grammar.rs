@@ -552,7 +552,30 @@ generate_grammar! {
 
         // <expr> .
         ExprDot {
+            // <expr> . await
             Await => AfterExpr;
+            // <expr> . <ident>
+            "ident" => FieldOrMethod;
+            Ident => FieldOrMethod;
+
+            // <expr> . decimal
+            // TODO: this is badness 10_000: this means that we accept things
+            // like `"foo"."bar"`, which is obviously not valid Rust.
+            //
+            // TODO: when the `literal` fragment is recognized, we may want to
+            // accept a $literal here as well.
+            Literal => AfterExpr;
+        },
+
+        // <expr> . <ident>
+        #[accepting]
+        FieldOrMethod(AfterExpr) {
+            // TODO: handle turbofish calls:
+            // <expr> . <ident> :: < ... > (
+
+            // Method call
+            // <expr> . <ident> (
+            LParen => ExprStart, FnArgListFirst;
         },
 
         AfterElse {
