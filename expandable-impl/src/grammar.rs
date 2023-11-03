@@ -156,12 +156,19 @@ macro_rules! generate_grammar {
         false
     };
 
+    (@inherit $state:ident) => {
+        Some(State::$state)
+    };
+    (@inherit) => {
+        None
+    };
+
     (
         $( #[$meta:meta] )*
         $vis:vis enum $name:ident {
             $(
                 $( #[$accepting:ident] )?
-                $in_state:ident {
+                $in_state:ident $( ( $inherit:ident ) )? {
                     $(
                         $descr:tt $(, $in_symbol:tt )? => $out_state:tt $(, $out_symbol:tt )?
                     );* $(;)?
@@ -178,19 +185,25 @@ macro_rules! generate_grammar {
 
         impl $name {
             const TRANSITIONS: &'static[
-                &'static [(TokenDescription, Option<StackSymbol>, State, Option<StackSymbol>)]
+                (
+                    &'static [(TokenDescription, Option<StackSymbol>, State, Option<StackSymbol>)],
+                    Option<State>,
+                )
             ] = &[
                 $(
-                    &[
-                        $(
-                            (
-                                generate_grammar!(@descr $descr),
-                                generate_grammar!(@symbol $( $in_symbol )?),
-                                generate_grammar!(@state $out_state),
-                                generate_grammar!(@symbol $( $out_symbol )?),
-                            )
-                        ),*
-                    ]
+                    (
+                        &[
+                            $(
+                                (
+                                    generate_grammar!(@descr $descr),
+                                    generate_grammar!(@symbol $( $in_symbol )?),
+                                    generate_grammar!(@state $out_state),
+                                    generate_grammar!(@symbol $( $out_symbol )?),
+                                )
+                            ),*
+                        ],
+                        generate_grammar!(@inherit $( $inherit )?),
+                    )
                 ),*
             ];
 
@@ -201,19 +214,33 @@ macro_rules! generate_grammar {
             ];
 
             pub(crate) fn trans(self, descr: TokenDescription, top: Option<StackSymbol>) -> Result<Transition, Vec<TokenDescription>> {
-                Self::TRANSITIONS[self as usize].iter().find_map(|(descr_, in_sym, out_state, out_sym)| {
-                    if descr_ == &descr && (in_sym.is_none() || in_sym == &top) {
-                        Some(Transition {
-                            state: *out_state,
-                            pop: in_sym.is_some(),
-                            push: *out_sym,
-                        })
-                    } else { None }
-                }).ok_or_else(|| self.follow(top))
+                let mut state = Some(self);
+                let mut errs = Vec::new();
+
+                while let Some(state_) = state {
+                    let out_state = Self::TRANSITIONS[state_ as usize].0.iter().find_map(|(descr_, in_sym, out_state, out_sym)| {
+                        if descr_ == &descr && (in_sym.is_none() || in_sym == &top) {
+                            Some(Transition {
+                                state: *out_state,
+                                pop: in_sym.is_some(),
+                                push: *out_sym,
+                            })
+                        } else { None }
+                    });
+
+                    match out_state {
+                        Some(out_state) => return Ok(out_state),
+                        None => errs.extend(state_.follow(top)),
+                    }
+
+                    state = Self::TRANSITIONS[state_ as usize].1;
+                }
+
+                Err(errs)
             }
 
             fn follow(self, top: Option<StackSymbol>) -> Vec<TokenDescription> {
-                Self::TRANSITIONS[self as usize].iter().filter_map(|(descr, in_sym, _, _)| {
+                Self::TRANSITIONS[self as usize].0.iter().filter_map(|(descr, in_sym, _, _)| {
                     // We try to be smårt here and only suggest tokens that we
                     // can actually accept.
                     if !matches!(descr, TokenDescription::Fragment(_)) && (in_sym.is_none() || in_sym == &top) {
@@ -516,68 +543,8 @@ generate_grammar! {
         },
 
         #[accepting]
-        // Must be a superset of `AfterExpr`.
-        AfterIf {
+        AfterIf(AfterExpr) {
             Else => AfterElse;
-            // Arithmetic expressions
-            // https://spec.ferrocene.dev/expressions.html#arithmetic-expressions
-            Plus => ExprStart;
-            Minus => ExprStart;
-            Star => ExprStart;
-            Slash => ExprStart;
-            Percent => ExprStart;
-
-            // Bit expressions
-            // https://spec.ferrocene.dev/expressions.html#bit-expressions
-            And => ExprStart;
-            Or => ExprStart;
-            Caret => ExprStart;
-            Shl => ExprStart;
-            Shr => ExprStart;
-
-            // Comparison expressions
-            // https://spec.ferrocene.dev/expressions.html#comparison-expressions
-            EqualsEquals => ExprStart;
-            GreaterThan => ExprStart;
-            GreaterThanEquals => ExprStart;
-            LessThan => ExprStart;
-            LessThanEquals => ExprStart;
-            NotEquals => ExprStart;
-
-            // [ <expr> ]
-            RBracket, ArrayExprFirst => AfterExpr;
-            RBracket, ArrayExprThen => AfterExpr;
-
-            // [ <expr> ; <expr> ]
-            Semicolon, ArrayExprFirst => ExprStart, ArrayExprSize;
-            RBracket, ArrayExprSize => AfterExpr;
-
-            RBrace, FnBlockExpr => ItemStart;
-            LBrace, Condition => ExprStart, Consequence;
-
-            // <expr> (
-            LParen => ExprStart, FnArgListFirst;
-            // <expr>, <expr>, ...
-            Comma, FnArgListFirst => ExprStart, FnArgListThen;
-            Comma, FnArgListThen => ExprStart, FnArgListThen;
-            Comma, ArrayExprFirst => ExprStart, ArrayExprThen;
-            Comma, ArrayExprThen => ExprStart, ArrayExprThen;
-            // <expr> )
-            RParen, FnArgListFirst => AfterExpr;
-            RParen, FnArgListThen => AfterExpr;
-
-            // We don't continue to `AfterExpr` because we want to parse an
-            // optional `else` branch.
-            RBrace, Consequence => AfterIf;
-            RBrace, Alternative => AfterExpr;
-
-            // We don't continue to `AfterIf` because we want to parse an
-            // optional `else` branch.
-            // This corresponds to the following:
-            //
-            // if <expr> { if <expr> { <expr> } } ...
-            //                                  ^
-            RBrace, Consequence => AfterIf;
         },
 
         AfterElse {
@@ -649,25 +616,4 @@ pub(crate) enum StackSymbol {
     ArrayExprFirst,
     ArrayExprThen,
     ArrayExprSize,
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn transitions_after_if_is_a_superset_of_after_expr() {
-        State::TRANSITIONS[State::AfterExpr as usize]
-            .iter()
-            .for_each(|(descr, in_sym, _, _)| {
-                assert!(
-                    State::TRANSITIONS[State::AfterIf as usize]
-                        .iter()
-                        .any(|(descr_, in_sym_, _, _)| descr == descr_ && in_sym == in_sym_),
-                    "missing transition for {:?} {:?}. Please add it to `AfterIf` transition set.",
-                    descr,
-                    in_sym
-                );
-            });
-    }
 }
