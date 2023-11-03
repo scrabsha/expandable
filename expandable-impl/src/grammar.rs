@@ -540,11 +540,19 @@ generate_grammar! {
             // optional `else` branch.
             RBrace, Consequence => AfterIf;
             RBrace, Alternative => AfterExpr;
+
+            // <expr> .
+            Dot => ExprDot;
         },
 
         #[accepting]
         AfterIf(AfterExpr) {
             Else => AfterElse;
+        },
+
+        // <expr> .
+        ExprDot {
+            Await => AfterExpr;
         },
 
         AfterElse {
