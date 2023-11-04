@@ -466,9 +466,9 @@ generate_grammar! {
     #[derive(Copy, Clone, Debug, Eq, Hash, PartialEq)]
     pub(crate) enum State {
         ExprStart {
-            "ident" => AfterExpr;
+            "ident" => AfterIdentExpr;
             "expr" => AfterExpr;
-            Ident => AfterExpr;
+            Ident => AfterIdentExpr;
             Literal => AfterExpr;
             If => ExprStart, Condition;
 
@@ -486,8 +486,14 @@ generate_grammar! {
             RBracket, ArrayExprThen => AfterExpr;
         },
 
+        // <ident>
         #[accepting]
-        // Transitions added here must be added in `AfterIf` as well.
+        AfterIdentExpr(AfterExpr) {
+            // <ident> ::
+            ColonColon => CallGenericArgumentList;
+        },
+
+        #[accepting]
         AfterExpr {
             // Arithmetic expressions
             // https://spec.ferrocene.dev/expressions.html#arithmetic-expressions
