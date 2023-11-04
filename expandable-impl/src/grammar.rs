@@ -476,6 +476,10 @@ generate_grammar! {
             // https://spec.ferrocene.dev/expressions.html#array-expressions
             LBracket => ExprStart, ArrayExprFirst;
 
+            // Block expressions
+            // https://spec.ferrocene.dev/expressions.html#syntax_blockexpression
+            LBrace => ExprStart, BlockExpr;
+
             // <expr> ( <expr> ,)
             RParen, FnArgList => AfterExpr;
             // []
@@ -542,6 +546,9 @@ generate_grammar! {
             // optional `else` branch.
             RBrace, Consequence => AfterIf;
             RBrace, Alternative => AfterExpr;
+
+            // { <expr> }
+            RBrace, BlockExpr => AfterExpr;
 
             // <expr> .
             Dot => ExprDot;
@@ -677,4 +684,5 @@ pub(crate) enum StackSymbol {
     ArrayExprThen,
     ArrayExprSize,
     CallGenerics,
+    BlockExpr,
 }
