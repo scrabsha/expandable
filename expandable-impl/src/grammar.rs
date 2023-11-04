@@ -466,9 +466,9 @@ generate_grammar! {
     #[derive(Copy, Clone, Debug, Eq, Hash, PartialEq)]
     pub(crate) enum State {
         ExprStart {
-            "ident" => AfterExpr;
+            "ident" => AfterIdentExpr;
             "expr" => AfterExpr;
-            Ident => AfterExpr;
+            Ident => AfterIdentExpr;
             Literal => AfterExpr;
             If => ExprStart, Condition;
 
@@ -476,18 +476,22 @@ generate_grammar! {
             // https://spec.ferrocene.dev/expressions.html#array-expressions
             LBracket => ExprStart, ArrayExprFirst;
 
-            // <expr> ()
-            RParen, FnArgListFirst => AfterExpr;
-            // <expr> ( <expr>, )
-            RParen, FnArgListThen => AfterExpr;
+            // <expr> ( <expr> ,)
+            RParen, FnArgList => AfterExpr;
             // []
             RBracket, ArrayExprFirst => AfterExpr;
             // [ <expr>, ]
             RBracket, ArrayExprThen => AfterExpr;
         },
 
+        // <ident>
         #[accepting]
-        // Transitions added here must be added in `AfterIf` as well.
+        AfterIdentExpr(AfterExpr) {
+            // <ident> ::
+            ColonColon => CallGenericArgumentList;
+        },
+
+        #[accepting]
         AfterExpr {
             // Arithmetic expressions
             // https://spec.ferrocene.dev/expressions.html#arithmetic-expressions
@@ -526,15 +530,13 @@ generate_grammar! {
             LBrace, Condition => ExprStart, Consequence;
 
             // <expr> (
-            LParen => ExprStart, FnArgListFirst;
+            LParen => ExprStart, FnArgList;
             // <expr>, <expr>, ...
-            Comma, FnArgListFirst => ExprStart, FnArgListThen;
-            Comma, FnArgListThen => ExprStart, FnArgListThen;
+            Comma, FnArgList => ExprStart, FnArgList;
             Comma, ArrayExprFirst => ExprStart, ArrayExprThen;
             Comma, ArrayExprThen => ExprStart, ArrayExprThen;
             // <expr> )
-            RParen, FnArgListFirst => AfterExpr;
-            RParen, FnArgListThen => AfterExpr;
+            RParen, FnArgList => AfterExpr;
 
             // We don't continue to `AfterExpr` because we want to parse an
             // optional `else` branch.
@@ -570,12 +572,31 @@ generate_grammar! {
         // <expr> . <ident>
         #[accepting]
         FieldOrMethod(AfterExpr) {
-            // TODO: handle turbofish calls:
-            // <expr> . <ident> :: < ... > (
-
             // Method call
             // <expr> . <ident> (
-            LParen => ExprStart, FnArgListFirst;
+            LParen => ExprStart, FnArgList;
+
+            // Turbofish:
+            // <expr> . <ident> ::
+            ColonColon => CallGenericArgumentList;
+        },
+
+        // <expr> . <ident> ::
+        CallGenericArgumentList {
+            // <expr> . <ident> :: <
+            LessThan => GenericStart, CallGenerics;
+        },
+
+        // <expr> . <ident> :: <
+        GenericStart(TypeStart) {
+            // <expr> . <ident> :: < >
+            GreaterThan, CallGenerics => AfterMethodCallGenericParams;
+        },
+
+        // <expr> . <ident> :: < >
+        AfterMethodCallGenericParams {
+            // <expr> . <ident> :: < > (
+            LParen => ExprStart, FnArgList;
         },
 
         AfterElse {
@@ -620,6 +641,11 @@ generate_grammar! {
             Comma, FnParam => FnArgStart, FnParam;
             RParen, FnParam => AfterFnParams;
             LBrace, AfterFnParams => ExprStart, FnBlockExpr;
+
+            // fn_name :: < <type> ,
+            Comma, CallGenerics => GenericStart, CallGenerics;
+            // fn_name :: < <type> >
+            GreaterThan, CallGenerics => AfterMethodCallGenericParams;
         },
     }
 }
@@ -640,11 +666,15 @@ pub(crate) enum StackSymbol {
     Condition,
     Consequence,
     Alternative,
-    FnArgListFirst,
-    FnArgListThen,
+    FnArgList,
     FnParam,
     AfterFnParams,
+    // We have to distinguish between the first and the other elements of an
+    // array in order to detect ArrayRepetitionConstructors:
+    //
+    // https://spec.ferrocene.dev/expressions.html#syntax_arrayrepetitionconstructor
     ArrayExprFirst,
     ArrayExprThen,
     ArrayExprSize,
+    CallGenerics,
 }
