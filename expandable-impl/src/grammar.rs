@@ -476,10 +476,8 @@ generate_grammar! {
             // https://spec.ferrocene.dev/expressions.html#array-expressions
             LBracket => ExprStart, ArrayExprFirst;
 
-            // <expr> ()
-            RParen, FnArgListFirst => AfterExpr;
-            // <expr> ( <expr>, )
-            RParen, FnArgListThen => AfterExpr;
+            // <expr> ( <expr> ,)
+            RParen, FnArgList => AfterExpr;
             // []
             RBracket, ArrayExprFirst => AfterExpr;
             // [ <expr>, ]
@@ -532,15 +530,13 @@ generate_grammar! {
             LBrace, Condition => ExprStart, Consequence;
 
             // <expr> (
-            LParen => ExprStart, FnArgListFirst;
+            LParen => ExprStart, FnArgList;
             // <expr>, <expr>, ...
-            Comma, FnArgListFirst => ExprStart, FnArgListThen;
-            Comma, FnArgListThen => ExprStart, FnArgListThen;
+            Comma, FnArgList => ExprStart, FnArgList;
             Comma, ArrayExprFirst => ExprStart, ArrayExprThen;
             Comma, ArrayExprThen => ExprStart, ArrayExprThen;
             // <expr> )
-            RParen, FnArgListFirst => AfterExpr;
-            RParen, FnArgListThen => AfterExpr;
+            RParen, FnArgList => AfterExpr;
 
             // We don't continue to `AfterExpr` because we want to parse an
             // optional `else` branch.
@@ -578,7 +574,7 @@ generate_grammar! {
         FieldOrMethod(AfterExpr) {
             // Method call
             // <expr> . <ident> (
-            LParen => ExprStart, FnArgListFirst;
+            LParen => ExprStart, FnArgList;
 
             // Turbofish:
             // <expr> . <ident> ::
@@ -600,7 +596,7 @@ generate_grammar! {
         // <expr> . <ident> :: < >
         AfterMethodCallGenericParams {
             // <expr> . <ident> :: < > (
-            LParen => ExprStart, FnArgListFirst;
+            LParen => ExprStart, FnArgList;
         },
 
         AfterElse {
@@ -670,10 +666,13 @@ pub(crate) enum StackSymbol {
     Condition,
     Consequence,
     Alternative,
-    FnArgListFirst,
-    FnArgListThen,
+    FnArgList,
     FnParam,
     AfterFnParams,
+    // We have to distinguish between the first and the other elements of an
+    // array in order to detect ArrayRepetitionConstructors:
+    //
+    // https://spec.ferrocene.dev/expressions.html#syntax_arrayrepetitionconstructor
     ArrayExprFirst,
     ArrayExprThen,
     ArrayExprSize,
