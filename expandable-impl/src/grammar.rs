@@ -570,11 +570,30 @@ generate_grammar! {
         // <expr> . <ident>
         #[accepting]
         FieldOrMethod(AfterExpr) {
-            // TODO: handle turbofish calls:
-            // <expr> . <ident> :: < ... > (
-
             // Method call
             // <expr> . <ident> (
+            LParen => ExprStart, FnArgListFirst;
+
+            // Turbofish:
+            // <expr> . <ident> ::
+            ColonColon => CallGenericArgumentList;
+        },
+
+        // <expr> . <ident> ::
+        CallGenericArgumentList {
+            // <expr> . <ident> :: <
+            LessThan => GenericStart, CallGenerics;
+        },
+
+        // <expr> . <ident> :: <
+        GenericStart(TypeStart) {
+            // <expr> . <ident> :: < >
+            GreaterThan, CallGenerics => AfterMethodCallGenericParams;
+        },
+
+        // <expr> . <ident> :: < >
+        AfterMethodCallGenericParams {
+            // <expr> . <ident> :: < > (
             LParen => ExprStart, FnArgListFirst;
         },
 
@@ -620,6 +639,11 @@ generate_grammar! {
             Comma, FnParam => FnArgStart, FnParam;
             RParen, FnParam => AfterFnParams;
             LBrace, AfterFnParams => ExprStart, FnBlockExpr;
+
+            // fn_name :: < <type> ,
+            Comma, CallGenerics => GenericStart, CallGenerics;
+            // fn_name :: < <type> >
+            GreaterThan, CallGenerics => AfterMethodCallGenericParams;
         },
     }
 }
@@ -647,4 +671,5 @@ pub(crate) enum StackSymbol {
     ArrayExprFirst,
     ArrayExprThen,
     ArrayExprSize,
+    CallGenerics,
 }
