@@ -15,7 +15,11 @@ macro_rules! call {
 
     () => {
         foo::<bar>() + foo::<bar,>() + foo::<bar, baz,>()
-    }
+    };
+
+    () => {
+        foo::<{bar}, -1, 1, foo>()
+    };
 }
 
 fn main() {}
