@@ -476,6 +476,10 @@ generate_grammar! {
             // https://spec.ferrocene.dev/expressions.html#array-expressions
             LBracket => ExprStart, ArrayExprFirst;
 
+            // Block expressions
+            // https://spec.ferrocene.dev/expressions.html#syntax_blockexpression
+            LBrace => ExprStart, BlockExpr;
+
             // <expr> ( <expr> ,)
             RParen, FnArgList => AfterExpr;
             // []
@@ -543,6 +547,10 @@ generate_grammar! {
             RBrace, Consequence => AfterIf;
             RBrace, Alternative => AfterExpr;
 
+            // { <expr> }
+            RBrace, BlockExpr => AfterExpr;
+            RBrace, GenericBlockExpr => AfterGenericExpr;
+
             // <expr> .
             Dot => ExprDot;
         },
@@ -590,11 +598,28 @@ generate_grammar! {
         // <expr> . <ident> :: <
         GenericStart(TypeStart) {
             // <expr> . <ident> :: < >
-            GreaterThan, CallGenerics => AfterMethodCallGenericParams;
+            GreaterThan, CallGenerics => AfterCallGenericParams;
+            // <expr> . <ident> :: < { <expr> } >
+            LBrace => ExprStart, GenericBlockExpr;
+            // <expr> . <ident> :: < literal >
+            Literal => AfterGenericExpr;
+            // <expr> . <ident> :: < - <literal> >
+            Minus => GenericLiteralExpr;
+        },
+
+        // <expr> . <ident> :: < - <literal> >
+        GenericLiteralExpr {
+            Literal => AfterGenericExpr;
+        },
+
+        // <expr> . <ident> :: < { <expr> }
+        AfterGenericExpr {
+            Comma => GenericStart;
+            GreaterThan, CallGenerics => AfterCallGenericParams;
         },
 
         // <expr> . <ident> :: < >
-        AfterMethodCallGenericParams {
+        AfterCallGenericParams {
             // <expr> . <ident> :: < > (
             LParen => ExprStart, FnArgList;
         },
@@ -645,7 +670,7 @@ generate_grammar! {
             // fn_name :: < <type> ,
             Comma, CallGenerics => GenericStart, CallGenerics;
             // fn_name :: < <type> >
-            GreaterThan, CallGenerics => AfterMethodCallGenericParams;
+            GreaterThan, CallGenerics => AfterCallGenericParams;
         },
     }
 }
@@ -677,4 +702,6 @@ pub(crate) enum StackSymbol {
     ArrayExprThen,
     ArrayExprSize,
     CallGenerics,
+    BlockExpr,
+    GenericBlockExpr,
 }
