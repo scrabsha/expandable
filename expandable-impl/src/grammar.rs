@@ -1,6 +1,9 @@
 // Architectural invariant: this module contains basic types that allow to parse
 // the Rust language.
 
+#[cfg(transition_coverage)]
+mod log;
+
 use smallvec::{smallvec, SmallVec};
 
 use crate::{FragmentKind, Terminal};
@@ -23,9 +26,12 @@ impl DynamicState {
         self,
         descr: TokenDescription,
     ) -> Result<DynamicState, Vec<TokenDescription>> {
-        self.state
-            .trans(descr, self.stack_top())
-            .map(|transition| self.with(transition))
+        self.state.trans(descr, self.stack_top()).map(|transition| {
+            #[cfg(transition_coverage)]
+            log::log_transition(self.state, descr, self.stack_top(), transition);
+
+            self.with(transition)
+        })
     }
 
     pub(crate) fn is_accepting(&self) -> bool {
