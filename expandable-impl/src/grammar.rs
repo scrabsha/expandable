@@ -75,7 +75,7 @@ impl DynamicState {
     }
 }
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 pub(crate) struct Transition {
     pub(crate) state: State,
     pub(crate) pop: bool,
