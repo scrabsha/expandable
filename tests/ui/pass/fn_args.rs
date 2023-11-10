@@ -32,6 +32,15 @@ macro_rules! test {
             { 42 }
         }
     };
+
+    () => {
+        fn test() -> u8 {
+            let x = 1;
+            let y = x + 1;
+            let z = y + 1;
+            z + 1
+        }
+    };
 }
 
 fn main() {}
