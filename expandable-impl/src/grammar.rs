@@ -1,6 +1,9 @@
 // Architectural invariant: this module contains basic types that allow to parse
 // the Rust language.
 
+#[cfg(transition_coverage)]
+mod log;
+
 use smallvec::{smallvec, SmallVec};
 
 use crate::{FragmentKind, Terminal};
@@ -23,9 +26,12 @@ impl DynamicState {
         self,
         descr: TokenDescription,
     ) -> Result<DynamicState, Vec<TokenDescription>> {
-        self.state
-            .trans(descr, self.stack_top())
-            .map(|transition| self.with(transition))
+        self.state.trans(descr, self.stack_top()).map(|transition| {
+            #[cfg(transition_coverage)]
+            log::log_transition(self.state, descr, self.stack_top(), transition);
+
+            self.with(transition)
+        })
     }
 
     pub(crate) fn is_accepting(&self) -> bool {
@@ -69,7 +75,7 @@ impl DynamicState {
     }
 }
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 pub(crate) struct Transition {
     pub(crate) state: State,
     pub(crate) pop: bool,
@@ -184,10 +190,12 @@ macro_rules! generate_grammar {
         }
 
         impl $name {
+            #[allow(unused_variables)]
             const TRANSITIONS: &'static[
                 (
                     &'static [(TokenDescription, Option<StackSymbol>, State, Option<StackSymbol>)],
                     Option<State>,
+                    $name,
                 )
             ] = &[
                 $(
@@ -203,6 +211,7 @@ macro_rules! generate_grammar {
                             ),*
                         ],
                         generate_grammar!(@inherit $( $inherit )?),
+                        generate_grammar!(@state $in_state),
                     )
                 ),*
             ];
