@@ -478,7 +478,7 @@ generate_grammar! {
 
             // Block expressions
             // https://spec.ferrocene.dev/expressions.html#syntax_blockexpression
-            LBrace => ExprStart, BlockExpr;
+            LBrace => StmtStart, BlockExpr;
 
             // <expr> ( <expr> ,)
             RParen, FnArgList => AfterExpr;
@@ -566,8 +566,8 @@ generate_grammar! {
             Dot => ExprDot;
 
             // <expr> ;
-            Semicolon, BlockExpr => ExprStart, BlockExpr;
-            Semicolon, FnBlockExpr => ExprStart, FnBlockExpr;
+            Semicolon, BlockExpr => StmtStart, BlockExpr;
+            Semicolon, FnBlockExpr => StmtStart, FnBlockExpr;
         },
 
         #[accepting]
@@ -644,6 +644,24 @@ generate_grammar! {
         },
 
         #[accepting]
+        StmtStart(ExprStart) {
+            // Let statement
+            Let => PatternStart, LetStmt;
+        },
+
+        PatternStart {
+            // let <pattern>
+            "ident" => AfterPattern;
+            Ident => AfterPattern;
+        },
+
+        AfterPattern {
+            // TODO: type ascription.
+            // let <pattern> =
+            Equals, LetStmt => ExprStart;
+        },
+
+        #[accepting]
         ItemStart {
             Fn => AfterFnKw;
         },
@@ -659,7 +677,7 @@ generate_grammar! {
 
         AfterFnParams {
             RightArrow => TypeStart, AfterFnParams;
-            LBrace => ExprStart, FnBlockExpr;
+            LBrace => StmtStart, FnBlockExpr;
         },
 
         FnArgStart {
@@ -680,7 +698,7 @@ generate_grammar! {
         AfterType {
             Comma, FnParam => FnArgStart, FnParam;
             RParen, FnParam => AfterFnParams;
-            LBrace, AfterFnParams => ExprStart, FnBlockExpr;
+            LBrace, AfterFnParams => StmtStart, FnBlockExpr;
 
             // fn_name :: < <type> ,
             Comma, CallGenerics => GenericStart, CallGenerics;
@@ -719,4 +737,5 @@ pub(crate) enum StackSymbol {
     CallGenerics,
     BlockExpr,
     GenericBlockExpr,
+    LetStmt,
 }
