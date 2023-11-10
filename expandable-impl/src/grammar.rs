@@ -564,6 +564,10 @@ generate_grammar! {
 
             // <expr> .
             Dot => ExprDot;
+
+            // <expr> ;
+            Semicolon, BlockExpr => ExprStart, BlockExpr;
+            Semicolon, FnBlockExpr => ExprStart, FnBlockExpr;
         },
 
         #[accepting]
