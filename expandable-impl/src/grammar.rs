@@ -190,10 +190,12 @@ macro_rules! generate_grammar {
         }
 
         impl $name {
+            #[allow(unused_variables)]
             const TRANSITIONS: &'static[
                 (
                     &'static [(TokenDescription, Option<StackSymbol>, State, Option<StackSymbol>)],
                     Option<State>,
+                    $name,
                 )
             ] = &[
                 $(
@@ -209,6 +211,7 @@ macro_rules! generate_grammar {
                             ),*
                         ],
                         generate_grammar!(@inherit $( $inherit )?),
+                        generate_grammar!(@state $in_state),
                     )
                 ),*
             ];
