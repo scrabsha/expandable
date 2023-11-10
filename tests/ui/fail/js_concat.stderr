@@ -1,4 +1,4 @@
-error: Potentially invalid expansion. Expected an identifier, a literal, `if`, a `[`, a `{`.
+error: Potentially invalid expansion. Expected an identifier, a literal, `if`, a `[`, a `{`, `break`, `return`.
  --> tests/ui/fail/js_concat.rs:5:16
   |
 5 |         $left ++ $right
