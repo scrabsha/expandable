@@ -486,6 +486,12 @@ generate_grammar! {
             RBracket, ArrayExprFirst => AfterExpr;
             // [ <expr>, ]
             RBracket, ArrayExprThen => AfterExpr;
+
+            // break <expr>
+            // TODO: handle labels
+            Break => AfterBreakOrReturn;
+            // return <expr>
+            Return => AfterBreakOrReturn;
         },
 
         // <ident>
@@ -494,6 +500,11 @@ generate_grammar! {
             // <ident> ::
             ColonColon => CallGenericArgumentList;
         },
+
+        // break <expr>
+        // return <expr>
+        #[accepting]
+        AfterBreakOrReturn(ExprStart) {},
 
         #[accepting]
         AfterExpr {
