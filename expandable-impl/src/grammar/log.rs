@@ -1,8 +1,9 @@
 use std::{
-    fmt::{Debug, Write as _},
+    fmt::{Debug, Write},
     fs,
     fs::OpenOptions,
     io::Write as _,
+    path::Path,
     process,
     sync::Mutex,
 };
@@ -11,6 +12,35 @@ use crate::{
     grammar::{StackSymbol, State, Transition},
     TokenDescription,
 };
+
+pub(crate) fn log_transition(
+    state: State,
+    descr: TokenDescription,
+    top: Option<StackSymbol>,
+    transition: Transition,
+) {
+    if !Path::new("target/coverage/all.json").exists() {
+        // Let's pretend fs errors never happen for a while.
+        log_all_transitions();
+    }
+    let dir_path = format!("target/coverage/{:?}", process::id());
+    fs::create_dir_all(&dir_path).expect("failed to create coverage directory");
+
+    let file_path = format!(
+        "target/coverage/{:?}/{:?}.json",
+        process::id(),
+        transition_id()
+    );
+    let transition = LoggableTransition::from_actual_transition(state, descr, top, transition);
+
+    let mut file = OpenOptions::new()
+        .create(true)
+        .append(true)
+        .open(file_path)
+        .expect("failed to create coverage file");
+
+    writeln!(file, "{}", transition.pp()).expect("failed to write to coverage file");
+}
 
 struct LoggableTransition {
     in_state: State,
@@ -86,27 +116,41 @@ fn transition_id() -> usize {
     id
 }
 
-pub(crate) fn log_transition(
-    state: State,
-    descr: TokenDescription,
-    top: Option<StackSymbol>,
-    transition: Transition,
-) {
-    let dir_path = format!("target/coverage/{:?}", process::id());
-    fs::create_dir_all(&dir_path).expect("failed to create coverage directory");
-
-    let file_path = format!(
-        "target/coverage/{:?}/{:?}.json",
-        process::id(),
-        transition_id()
-    );
-    let transition = LoggableTransition::from_actual_transition(state, descr, top, transition);
-
+fn log_all_transitions() {
+    fs::create_dir_all("target/coverage").expect("failed to create coverage directory");
     let mut file = OpenOptions::new()
-        .create(true)
+        .create_new(true)
         .append(true)
-        .open(file_path)
+        .open("target/coverage/all.json")
         .expect("failed to create coverage file");
 
-    writeln!(file, "{}", transition.pp()).expect("failed to write to coverage file");
+    writeln!(file, "[").expect("failed to write to coverage file");
+
+    let mut first = true;
+    State::TRANSITIONS
+        .iter()
+        .flat_map(|(transes, _, state)| {
+            transes
+                .iter()
+                .map(|(descr, pop, out, push)| (*state, descr, pop, out, push))
+        })
+        .for_each(|(state, descr, pop, out, push)| {
+            if first {
+                first = false;
+            } else {
+                writeln!(file, ",").expect("failed to write to coverage file");
+            }
+
+            write!(
+                file,
+                "  {{ \"in_state\": \"{:?}\", \"out_state\": \"{:?}\", \"token\": \"{:?}\", \
+                 \"in_top\": \"{:?}\", \"out_top\": \"{:?}\" }}",
+                state, out, descr, pop, push
+            )
+            .expect("failed to write to coverage file");
+        });
+
+    writeln!(file, ",\n]");
 }
+
+fn log_transitions(f: &mut impl Write, state: State) {}
