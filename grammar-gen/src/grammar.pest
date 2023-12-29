@@ -1,0 +1,135 @@
+Document = { Rule* }
+
+Rule = { RuleName ~ ":" ~ RuleBody ~ ";" }
+
+RuleName = { Identifier }
+
+RuleBody = { OrExpression }
+
+OrExpression = { AndExpression ~ ( "|" ~ AndExpression )* }
+
+AndExpression = { Term ~ Term* }
+
+Term = { Atom ~ Quantifier? }
+
+Atom = { RuleName | Group | Token | Repetition }
+
+Group = { "`(`" ~ OrExpression ~ "`)`" | ("`[`" ~ OrExpression ~ "`]`") | ("`{`" ~ OrExpression ~ "`}`*") }
+
+Repetition = { "(" ~ OrExpression ~ ")" ~ Quantifier }
+
+Token = {
+    Keyword
+    | Fragment
+    | Punctuation
+    // Delimiters are hardcoded in the `Group` rule. This should be ok because
+    // these delimiters are non-contextual.
+    // | Delimiter
+}
+
+Keyword = {
+    // Strong keywords
+    "as"
+    | "async"
+    | "await"
+    | "break"
+    | "const"
+    | "continue"
+    | "crate"
+    | "dyn"
+    | "else"
+    | "enum"
+    | "extern"
+    | "false"
+    | "fn"
+    | "for"
+    | "if"
+    | "impl"
+    | "in"
+    | "let"
+    | "loop"
+    | "match"
+    | "mod"
+    | "move"
+    | "mut"
+    | "pub"
+    | "ref"
+    | "return"
+    | "self"
+    | "Self"
+    | "static"
+    | "struct"
+    | "super"
+    | "trait"
+    | "true"
+    | "type"
+    | "unsafe"
+    | "use"
+    | "where"
+    | "while"
+    // Weak keywords
+    | "macro_rules"
+    | "union"
+    | "'static"
+}
+
+Fragment = {
+    "<ident>"
+    | "<literal>"
+    | "<lifetime>"
+}
+
+Punctuation = {
+    "`+`"
+    | "`-`"
+    | "`*`"
+    | "`/`"
+    | "`%`"
+    | "`^`"
+    | "`!`"
+    | "`&`"
+    | "`|`"
+    | "`&&`"
+    | "`||`"
+    | "`<<`"
+    | "`>>`"
+    | "`+=`"
+    | "`-=`"
+    | "`*=`"
+    | "`/=`"
+    | "`%=`"
+    | "`^=`"
+    | "`&=`"
+    | "`|=`"
+    | "`<<=`"
+    | "`>>=`"
+    | "`=`"
+    | "`==`"
+    | "`!=`"
+    | "`>`"
+    | "`<`"
+    | "`>=`"
+    | "`<=`"
+    | "`@`"
+    | "`_`"
+    | "`.`"
+    | "`..`"
+    | "`...`"
+    | "`..=`"
+    | "`,`"
+    | "`;`"
+    | "`:`"
+    | "`::`"
+    | "`->`"
+    | "`=>`"
+    | "`#`"
+    | "`$`"
+    | "`?`"
+    | "`~`"
+}
+
+Quantifier = { "*" | "+" | "?" }
+
+Identifier = { ASCII_ALPHA +}
+
+WHITESPACE = _{ " " | "\t" | "\n" | "\r" }

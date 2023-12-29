@@ -1,0 +1,12 @@
+PathInExpression:
+    `::`? PathExprSegment (`::` PathExprSegment)*;
+
+PathExprSegment:
+    PathIdentSegment (`::` GenericArgs)?;
+
+PathIdentSegment:
+    <ident> | super | self | Self | crate;
+
+GenericArgs:
+    `<` `>`
+    | `<` (GenericArg `,`)* GenericArg `,`? `>`;
