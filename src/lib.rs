@@ -52,18 +52,11 @@
 
 extern crate proc_macro;
 
-use std::{
-    fmt::{Display, Formatter},
-    str::FromStr,
-};
+use std::fmt::{Display, Formatter};
 
 use expandable_impl::{RepetitionQuantifierKind, Terminal, TokenDescription};
 use proc_macro::TokenStream as TokenStream1;
 use proc_macro2::{Delimiter, Spacing, Span, TokenStream, TokenTree};
-use syn::{
-    parse::{Parse, ParseStream},
-    Ident,
-};
 use syn_shim::ItemMacroRules;
 
 mod syn_shim;
@@ -507,23 +500,6 @@ fn parse_punctuation(mut input: &[TokenTree]) -> Option<(Span, Terminal, &[Token
     }
 
     current.map(|(span, terminal)| (span, terminal, input))
-}
-
-struct InvocationContext(expandable_impl::InvocationContext);
-
-impl Parse for InvocationContext {
-    fn parse(input: ParseStream) -> syn::Result<InvocationContext> {
-        let ident = input.parse::<Ident>()?;
-
-        expandable_impl::InvocationContext::from_str(&ident.to_string())
-            .map(InvocationContext)
-            .map_err(|()| {
-                syn::Error::new(
-                    ident.span(),
-                    "Unknown invocation context. Expected `item` or `expr`",
-                )
-            })
-    }
 }
 
 #[cfg(test)]

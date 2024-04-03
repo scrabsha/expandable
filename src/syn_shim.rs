@@ -74,9 +74,9 @@ impl Attribute {
 fn parse_delimited(input: ParseStream) -> syn::Result<(MacroDelimiter, TokenStream)> {
     let (delim, span, inner) = input.parse_any_delimiter()?;
     let delim = match delim {
-        Delimiter::Parenthesis => MacroDelimiter(span),
-        Delimiter::Brace => MacroDelimiter(span),
-        Delimiter::Bracket => MacroDelimiter(span),
+        Delimiter::Parenthesis => MacroDelimiter { _inner: span },
+        Delimiter::Brace => MacroDelimiter { _inner: span },
+        Delimiter::Bracket => MacroDelimiter { _inner: span },
         Delimiter::None => {
             return Err(syn::Error::new(
                 span.join(),
@@ -90,7 +90,9 @@ fn parse_delimited(input: ParseStream) -> syn::Result<(MacroDelimiter, TokenStre
     Ok((delim, inner))
 }
 
-struct MacroDelimiter(DelimSpan);
+struct MacroDelimiter {
+    _inner: DelimSpan,
+}
 
 mod inner {
     // The `custom_keyword` macro defines a `pub` item, which is not allowed at
