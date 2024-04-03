@@ -125,7 +125,7 @@ pub enum MacroRuleNode {
     MetaVariableMatch,
     /// A repetition quantifier (`?`, `*`, `+`).
     RepetitionQuantifier,
-    /// A repetition separator (the `,` in `$( $expr ),*.
+    /// A repetition separator (the `,` in `$( $expr ),*`).
     RepetitionSeparator,
     /// Any terminal.
     Terminal(Terminal),
