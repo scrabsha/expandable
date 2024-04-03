@@ -259,40 +259,6 @@ fn codegen_builtin_call(builtin: Builtin, descr: Option<Ident>) -> TokenStream {
     }
 }
 
-impl ProductionKind {
-    /// Returns `true` if the production kind is [`Bump`].
-    ///
-    /// [`Bump`]: ProductionKind::Bump
-    #[must_use]
-    fn is_bump(&self) -> bool {
-        matches!(self, Self::Bump { .. })
-    }
-
-    /// Returns `true` if the production kind is [`CallNow`].
-    ///
-    /// [`CallNow`]: ProductionKind::CallNow
-    #[must_use]
-    fn is_call_now(&self) -> bool {
-        matches!(self, Self::CallNow { .. })
-    }
-
-    /// Returns `true` if the production kind is [`Error`].
-    ///
-    /// [`Error`]: ProductionKind::Error
-    #[must_use]
-    fn is_error(&self) -> bool {
-        matches!(self, Self::Error)
-    }
-
-    /// Returns `true` if the production kind is [`Cond`].
-    ///
-    /// [`Cond`]: ProductionKind::Cond
-    #[must_use]
-    fn is_cond(&self) -> bool {
-        matches!(self, Self::Cond { .. })
-    }
-}
-
 #[derive(Clone, Debug, PartialEq)]
 struct GenCtxt {
     base_fn: Ident,
