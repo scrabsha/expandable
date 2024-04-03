@@ -25,6 +25,6 @@ pub(crate) fn fmt(code: &str) -> String {
     assert!(output.status.success());
 
     let code = String::from_utf8(output.stdout).unwrap();
-    
+
     format!("{HEADER}\n{code}")
 }
