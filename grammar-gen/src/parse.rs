@@ -142,17 +142,13 @@ impl Parse for Expr {
         let lookahead = input.lookahead1();
         if input.peek(token::Brace) {
             Ok(Expr::Block(input.parse()?))
-        } else if lookahead.peek(kw::bump) {
-            Ok(Expr::Builtin(input.parse()?))
-        } else if lookahead.peek(kw::read) {
-            Ok(Expr::Builtin(input.parse()?))
-        } else if lookahead.peek(kw::peek) {
-            Ok(Expr::Builtin(input.parse()?))
-        } else if lookahead.peek(kw::peek2) {
-            Ok(Expr::Builtin(input.parse()?))
-        } else if lookahead.peek(kw::peek3) {
-            Ok(Expr::Builtin(input.parse()?))
-        } else if lookahead.peek(kw::error) {
+        } else if lookahead.peek(kw::bump)
+            || lookahead.peek(kw::read)
+            || lookahead.peek(kw::peek)
+            || lookahead.peek(kw::peek2)
+            || lookahead.peek(kw::peek3)
+            || lookahead.peek(kw::error)
+        {
             Ok(Expr::Builtin(input.parse()?))
         } else if lookahead.peek(Token![if]) {
             Ok(Expr::Condition(input.parse()?))
