@@ -15,12 +15,19 @@ pub(crate) fn productions_from_document(doc: Document) -> Vec<Production> {
 
 #[derive(Clone, Debug, PartialEq)]
 pub(crate) struct Production {
-    name: Ident,
-    kind: ProductionKind,
+    pub(crate) name: Ident,
+    pub(crate) vis: Vis,
+    pub(crate) kind: ProductionKind,
 }
 
 #[derive(Clone, Debug, PartialEq)]
-enum ProductionKind {
+pub(crate) enum Vis {
+    Public,
+    Private,
+}
+
+#[derive(Clone, Debug, PartialEq)]
+pub(crate) enum ProductionKind {
     Bump {
         descr: Option<Ident>,
         then: Vec<Ident>,
@@ -39,17 +46,19 @@ enum ProductionKind {
 
 impl Production {
     pub(crate) fn from_document(doc: &Document) -> Vec<Production> {
-        doc.fns
-            .iter()
-            .flat_map(Production::generate_from_fn)
-            .collect()
+        doc.fns.iter().flat_map(Production::for_fn).collect()
     }
 
-    fn generate_from_fn(fn_: &Function) -> Vec<Production> {
+    fn for_fn(fn_: &Function) -> Vec<Production> {
         let ctxt = GenCtxt::new(fn_.name.clone());
 
         let (mut fns, entry_point) = Production::for_block(&fn_.body, None, &ctxt);
-        fns.push(Production::mk_entry_point(&fn_.name, entry_point));
+        let vis = match fn_.pub_ {
+            Some(_) => Vis::Public,
+            None => Vis::Private,
+        };
+
+        fns.push(Production::mk_entry_point(&fn_.name, entry_point, vis));
 
         fns
     }
@@ -81,6 +90,7 @@ impl Production {
 
                 let prod = Production {
                     name: ctxt.gensym(),
+                    vis: Vis::Private,
                     kind: ProductionKind::CallNow { then: then_ },
                 };
                 let name = prod.name.clone();
@@ -115,6 +125,7 @@ impl Production {
 
                 let prod = Production {
                     name: ctxt.gensym(),
+                    vis: Vis::Private,
                     kind: ProductionKind::Cond {
                         builtin,
                         descr,
@@ -144,6 +155,7 @@ impl Production {
 
                 let prod = Production {
                     name: ctxt.gensym(),
+                    vis: Vis::Private,
                     kind,
                 };
                 let name = prod.name.clone();
@@ -159,6 +171,7 @@ impl Production {
         let then = then.into_iter().collect();
         let prod = Production {
             name: ctxt.gensym(),
+            vis: Vis::Private,
             kind: ProductionKind::CallNow { then },
         };
         let name = prod.name.clone();
@@ -167,7 +180,7 @@ impl Production {
     }
 
     pub(crate) fn into_token_stream(self) -> TokenStream {
-        let Production { name, kind } = self;
+        let Production { name, kind, vis: _ } = self;
         let input_ty = rt::input_ty();
         let output_ty = rt::output_ty();
 
@@ -229,10 +242,11 @@ impl Production {
         }
     }
 
-    fn mk_entry_point(name: &Ident, entry_point: Ident) -> Production {
+    fn mk_entry_point(name: &Ident, entry_point: Ident, vis: Vis) -> Production {
         let name = name.clone();
         Production {
             name,
+            vis,
             kind: ProductionKind::CallNow {
                 then: vec![entry_point],
             },

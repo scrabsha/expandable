@@ -1,7 +1,10 @@
 use proc_macro2::TokenStream;
 use quote::quote;
+use syn::Ident;
 
-pub(crate) fn runtime_base() -> TokenStream {
+pub(crate) fn runtime_base(entry_points: impl IntoIterator<Item = Ident>) -> TokenStream {
+    let entry_points = entry_points.into_iter();
+
     quote! {
         #![allow(
             unused,
@@ -151,19 +154,14 @@ pub(crate) fn runtime_base() -> TokenStream {
         }
 
         impl RustParser {
-            pub fn item() -> RustParser {
-                RustParser {
-                    buffer: TokenBuffer::Empty([]),
-                    stack: vec![(item, "<item entry point>")],
+            #(
+                pub fn #entry_points() -> RustParser {
+                    RustParser {
+                        buffer: TokenBuffer::Empty([]),
+                        stack: vec![(#entry_points, concat!("<", stringify!(#entry_points), " entry point>"))]
+                    }
                 }
-            }
-
-            pub fn expr() -> RustParser {
-                RustParser {
-                    buffer: TokenBuffer::Empty([]),
-                    stack: vec![(expr, "<expr entry point>")],
-                }
-            }
+            )*
 
             pub fn step(&mut self, token: TokenDescription) -> Option<TransitionData> {
                 match self.buffer.len() {

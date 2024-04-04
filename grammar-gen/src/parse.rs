@@ -1,5 +1,10 @@
 use proc_macro2::Ident;
-use syn::{parenthesized, parse::Parse, token, token::Paren, Error, Result, Token};
+use syn::{
+    parenthesized,
+    parse::Parse,
+    token::{self, Paren, Pub},
+    Error, Result, Token,
+};
 
 pub(crate) fn parse(content: &str) -> Result<Document> {
     syn::parse_str(content)
@@ -12,6 +17,7 @@ pub(crate) struct Document {
 
 #[derive(Clone, Debug, PartialEq)]
 pub(crate) struct Function {
+    pub(crate) pub_: Option<Pub>,
     pub(crate) fn_token: Token![fn],
     pub(crate) name: Ident,
     pub(crate) signature: Signature,
@@ -92,6 +98,7 @@ impl Parse for Document {
 impl Parse for Function {
     fn parse(input: syn::parse::ParseStream) -> syn::Result<Self> {
         Ok(Function {
+            pub_: input.parse()?,
             fn_token: input.parse()?,
             name: input.parse()?,
             signature: input.parse()?,
