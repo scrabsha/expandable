@@ -205,13 +205,13 @@ pub(crate) fn runtime_base(entry_points: impl IntoIterator<Item = Ident>) -> Tok
                     let (state, name) = self.stack.pop()?;
                     match state(self)? {
                         Transition::CallNow(states) => {
-                            states.iter().rev().for_each(|(_, fn_)| trans.log_push(fn_));
-                            self.stack.extend(states.iter().rev().copied());
+                            states.iter().for_each(|(_, fn_)| trans.log_push(fn_));
+                            self.stack.extend(states.iter().copied());
                         },
                         Transition::CallThen(states) => {
                             self.buffer.shift();
-                            states.iter().rev().for_each(|(_, fn_)| trans.log_push(fn_));
-                            self.stack.extend(states.iter().rev().copied());
+                            states.iter().for_each(|(_, fn_)| trans.log_push(fn_));
+                            self.stack.extend(states.iter().copied());
                             break Some(trans);
                         },
                     }

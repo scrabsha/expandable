@@ -189,6 +189,8 @@ impl Production {
                 descr: Some(descr),
                 then,
             } => {
+                let then = then.into_iter().rev();
+
                 quote! {
                     if bump![input, #descr] {
                         call_then![input, #( #then ),* ]
@@ -199,6 +201,8 @@ impl Production {
             }
 
             ProductionKind::Bump { descr: None, then } => {
+                let then = then.into_iter().rev();
+
                 quote! {
                     if bump![input] {
                         call_then![input, #( #then),* ]
@@ -209,6 +213,8 @@ impl Production {
             }
 
             ProductionKind::CallNow { then } => {
+                let then = then.into_iter().rev();
+
                 quote! {
                     call_now![input, #( #then ),* ]
                 }
@@ -223,6 +229,8 @@ impl Production {
                 alt,
             } => {
                 let builtin_call = codegen_builtin_call(builtin, descr);
+                let cons = cons.into_iter().rev();
+                let alt = alt.into_iter().rev();
 
                 quote! {
                     if #builtin_call {
