@@ -29,11 +29,9 @@ fn check_all_functions_are_defined(productions: &[Production]) {
     let fn_names = productions.iter().map(|p| &p.name).collect::<HashSet<_>>();
 
     let check_all_defined = |fns: &[Ident]| {
-        fns.iter()
-            .for_each(|fn_| 
+        fns.iter().for_each(|fn_|
                 // TODO: panicking here is not a good solution.
-                assert!(fn_names.get(fn_).is_some(), "Function {fn_} is not defined")
-            )
+                assert!(fn_names.contains(fn_), "Function {fn_} is not defined"))
     };
 
     for prod in productions {
