@@ -205,7 +205,7 @@ impl Production {
 
                 quote! {
                     if bump![input] {
-                        call_then![input, #( #then),* ]
+                        call_then![input, #( #then ),* ]
                     } else {
                         error![input]
                     }
@@ -277,7 +277,7 @@ fn codegen_builtin_call(builtin: Builtin, descr: Option<Ident>) -> TokenStream {
     let descr = descr.into_iter().collect::<Vec<_>>();
 
     quote! {
-        cond![input, #builtin #( , #descr )*]
+        cond![input, #builtin #( , #descr )* ]
     }
 }
 
