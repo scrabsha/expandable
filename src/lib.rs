@@ -105,7 +105,9 @@ fn mk_error_msg(error: expandable_impl::Error<Span>) -> syn::Error {
         }
 
         expandable_impl::Error::InvalidProducedAst { span, expected, .. } => {
-            let expected = expected.iter().map(describe).collect::<Vec<_>>().join(", ");
+            let mut expected = expected.iter().map(describe).collect::<Vec<_>>();
+            expected.sort_unstable();
+            let expected = expected.join(", ");
             (
                 format!("Potentially invalid expansion. Expected {expected}."),
                 Some(span),
