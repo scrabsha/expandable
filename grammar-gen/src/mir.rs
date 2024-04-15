@@ -52,7 +52,7 @@ impl Production {
     fn for_fn(fn_: &Function) -> Vec<Production> {
         let ctxt = GenCtxt::new(fn_.name.clone());
 
-        let (mut fns, entry_point) = Production::for_block(&fn_.body, None, &ctxt);
+        let (mut fns, entry_point) = Production::for_block(&fn_.body, &ctxt);
         let vis = match fn_.pub_ {
             Some(_) => Vis::Public,
             None => Vis::Private,
@@ -63,35 +63,40 @@ impl Production {
         fns
     }
 
-    fn for_block(block: &Block, then: Option<Ident>, ctxt: &GenCtxt) -> (Vec<Production>, Ident) {
-        let (mut intermediates, entry_point) = block.stmts.iter().rev().fold(
-            (Vec::new(), then.clone()),
-            |(mut intermediates, then), stmt| {
-                let (new_intermediates, entry_point) = Production::for_expr(&stmt.expr, then, ctxt);
+    fn for_block(block: &Block, ctxt: &GenCtxt) -> (Vec<Production>, Ident) {
+        let (mut intermediates, entry_points) = block.stmts.iter().rev().fold(
+            (Vec::new(), Vec::new()),
+            |(mut intermediates, mut names), stmt| {
+                let (new_intermediates, name) = Production::for_expr(&stmt.expr, ctxt);
                 intermediates.extend(new_intermediates);
-                (intermediates, Some(entry_point))
+                names.push(name);
+                (intermediates, names)
             },
         );
 
-        let entry_point = entry_point.unwrap_or_else(|| {
-            let (intermediates_, entry_point) = Production::empty_rule(then, ctxt);
-            intermediates.extend(intermediates_);
-            entry_point
-        });
+        let then = entry_points.into_iter().rev().collect();
 
-        (intermediates, entry_point)
+        let production = Production {
+            name: ctxt.gensym(),
+            vis: Vis::Private,
+            kind: ProductionKind::CallNow { then },
+        };
+        let name = production.name.clone();
+
+        intermediates.push(production);
+
+        (intermediates, name)
     }
 
-    fn for_expr(expr: &Expr, then: Option<Ident>, ctxt: &GenCtxt) -> (Vec<Production>, Ident) {
+    fn for_expr(expr: &Expr, ctxt: &GenCtxt) -> (Vec<Production>, Ident) {
         match expr {
             Expr::Call(block) => {
-                let mut then_ = vec![block.func.clone()];
-                then_.extend(then);
+                let then = vec![block.func.clone()];
 
                 let prod = Production {
                     name: ctxt.gensym(),
                     vis: Vis::Private,
-                    kind: ProductionKind::CallNow { then: then_ },
+                    kind: ProductionKind::CallNow { then },
                 };
                 let name = prod.name.clone();
 
@@ -99,13 +104,12 @@ impl Production {
             }
 
             Expr::Condition(cond) => {
-                let (intermediate_cons, cons_name) =
-                    Production::for_block(&cond.consequence, then.clone(), ctxt);
+                let (intermediate_cons, cons_name) = Production::for_block(&cond.consequence, ctxt);
 
                 let (intermediate_alt, alt_name) = cond
                     .alternative
                     .as_ref()
-                    .map(|(_, alt)| Production::for_expr(alt, then.clone(), ctxt))
+                    .map(|(_, alt)| Production::for_expr(alt, ctxt))
                     .map(|(intermediates, alt_name)| (intermediates, Some(alt_name)))
                     .unwrap_or_default();
 
@@ -117,11 +121,8 @@ impl Production {
                     .map(|pred| &pred.ident)
                     .cloned();
 
-                let mut cons = vec![cons_name];
-                let mut alt = alt_name.into_iter().collect::<Vec<_>>();
-
-                cons.extend(then.clone());
-                alt.extend(then);
+                let cons = vec![cons_name];
+                let alt = alt_name.into_iter().collect::<Vec<_>>();
 
                 let prod = Production {
                     name: ctxt.gensym(),
@@ -145,7 +146,7 @@ impl Production {
 
             Expr::Builtin(builtin) => {
                 let descr = builtin.predicate.as_ref().map(|pred| &pred.ident).cloned();
-                let then = then.into_iter().collect();
+                let then = vec![];
                 let kind = match builtin.builtin {
                     Builtin::Bump | Builtin::Read => ProductionKind::Bump { descr, then },
                     Builtin::Error => ProductionKind::Error,
@@ -163,24 +164,13 @@ impl Production {
                 (vec![prod], name)
             }
 
-            Expr::Block(block) => Production::for_block(block, then, ctxt),
+            Expr::Block(block) => Production::for_block(block, ctxt),
         }
-    }
-
-    fn empty_rule(then: Option<Ident>, ctxt: &GenCtxt) -> (Vec<Production>, Ident) {
-        let then = then.into_iter().collect();
-        let prod = Production {
-            name: ctxt.gensym(),
-            vis: Vis::Private,
-            kind: ProductionKind::CallNow { then },
-        };
-        let name = prod.name.clone();
-
-        (vec![prod], name)
     }
 
     pub(crate) fn into_token_stream(self) -> TokenStream {
         let Production { name, kind, vis: _ } = self;
+        let generic = rt::generic();
         let input_ty = rt::input_ty();
         let output_ty = rt::output_ty();
 
@@ -243,8 +233,8 @@ impl Production {
         };
 
         quote! {
-            fn #name(input: #input_ty) -> #output_ty {
-                eprintln!("{}: {:?}", stringify!(#name), input.buffer.peek());
+            fn #name<#generic>(input: #input_ty) -> #output_ty {
+                // eprintln!("{}: {:?}", stringify!(#name), input.buffer.peek().map(|(k, _)| k));
                 #body
             }
         }
