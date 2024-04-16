@@ -1,6 +1,6 @@
 #[allow(unused_macros)]
 #[expandable::expr]
-macro_rules! if_ {
+macro_rules! range_expr {
     () => {
         0..42
     };
