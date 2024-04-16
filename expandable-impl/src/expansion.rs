@@ -331,7 +331,7 @@ where
 
             // let outcome = self.parse_single_repetition(to_test, sep, stream)?;
             let (to_test_, reached_transitions_) = self
-                .apply(to_test, |this, states| {
+                .apply(to_test.clone(), |this, states| {
                     this.parse_single_repetition(states, sep, stream)
                 })?
                 .into_iter()
@@ -344,7 +344,7 @@ where
                 })
                 .unzip::<_, _, Set<_>, Vec<_>>();
 
-            to_test = to_test_.clone();
+            to_test.clone_from(&to_test_);
             outcomes.extend(to_test_.into_iter().map(|(s, (t, id))| (s, t, id)));
 
             reached_transitions.extend(reached_transitions_);
