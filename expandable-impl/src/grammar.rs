@@ -1,52 +1,86 @@
 // Architectural invariant: this module contains basic types that allow to parse
 // the Rust language.
 
-use smallvec::{smallvec, SmallVec};
+use std::{
+    hash::{Hash, Hasher},
+    marker::PhantomData,
+    ptr,
+};
+
+use smallvec::SmallVec;
 
 use crate::{FragmentKind, Terminal};
 
-#[derive(Clone, Debug, Eq, Hash, PartialEq)]
-pub(crate) struct DynamicState {
+#[derive(Clone, Debug)]
+pub(crate) struct DynamicState<Span> {
     pub(crate) state: State,
     pub(crate) stack: SmallVec<[StackSymbol; 16]>,
+    inner: PhantomData<Span>,
 }
 
-impl DynamicState {
+impl<Span> PartialEq for DynamicState<Span>
+where
+    Span: 'static,
+{
+    fn eq(&self, other: &Self) -> bool {
+        ptr::eq(self, other) || self.state == other.state
+    }
+}
+
+impl<Span> Eq for DynamicState<Span> where Span: 'static {}
+
+impl<Span> Hash for DynamicState<Span> {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.state.hash(state);
+    }
+}
+
+impl<Span> DynamicState<Span> {
+    pub(crate) fn expr() -> DynamicState<Span> {
+        DynamicState {
+            state: State::ExprStart,
+            stack: SmallVec::new(),
+            inner: PhantomData,
+        }
+    }
+
+    pub(crate) fn item() -> DynamicState<Span> {
+        DynamicState {
+            state: State::ItemStart,
+            stack: SmallVec::new(),
+            inner: PhantomData,
+        }
+    }
+
     pub(crate) fn accept_fragment(
         self,
         fragment: FragmentKind,
-    ) -> Result<DynamicState, Vec<TokenDescription>> {
-        self.accept(TokenDescription::Fragment(fragment))
+        s: Span,
+    ) -> Result<(DynamicState<Span>, Transition), (Span, Vec<TokenDescription>)> {
+        self.accept(TokenDescription::Fragment(fragment), s)
     }
 
     pub(crate) fn accept(
         self,
         descr: TokenDescription,
-    ) -> Result<DynamicState, Vec<TokenDescription>> {
+        s: Span,
+    ) -> Result<(DynamicState<Span>, Transition), (Span, Vec<TokenDescription>)> {
         self.state
             .trans(descr, self.stack_top())
-            .map(|transition| self.with(transition))
+            .map(|transition| {
+                (
+                    self.with(transition.clone()),
+                    Transition::from_raw(transition),
+                )
+            })
+            .map_err(|e| (s, e))
     }
 
-    pub(crate) fn is_accepting(&self) -> bool {
-        self.stack.is_empty() && self.state.is_accepting()
-    }
-
-    pub(crate) fn fresh_stack(&mut self) -> DynamicState {
-        let symbol = self.stack.pop().unwrap();
-        DynamicState {
-            state: self.state,
-            stack: smallvec![symbol],
-        }
-    }
-
-    pub(crate) fn with_old_stack(&self, old_state: &DynamicState) -> DynamicState {
-        assert!(self.stack.is_empty());
-        let stack = old_state.stack.clone();
-
-        DynamicState {
-            state: self.state,
-            stack,
+    pub(crate) fn is_accepting(&self) -> Result<(), Option<(Span, Vec<TokenDescription>)>> {
+        if self.stack.is_empty() && self.state.is_accepting() {
+            Ok(())
+        } else {
+            Err(None)
         }
     }
 
@@ -54,7 +88,7 @@ impl DynamicState {
         self.stack.last().copied()
     }
 
-    fn with(mut self, trans: Transition) -> DynamicState {
+    fn with(mut self, trans: GrammarTransition) -> DynamicState<Span> {
         if trans.pop {
             self.stack.pop().unwrap();
         }
@@ -69,8 +103,50 @@ impl DynamicState {
     }
 }
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq, Hash)]
 pub(crate) struct Transition {
+    popped: usize,
+    pushed: Vec<String>,
+}
+
+impl Transition {
+    fn from_raw(trans: GrammarTransition) -> Transition {
+        Transition {
+            popped: if trans.pop { 1 } else { 0 },
+            pushed: trans.push.into_iter().map(|s| format!("{s:?}")).collect(),
+        }
+    }
+
+    pub(crate) fn empty() -> Transition {
+        Transition {
+            popped: 0,
+            pushed: vec![],
+        }
+    }
+
+    pub(crate) fn combine_chasles(mut self, other: Transition) -> Transition {
+        for _ in 0..other.popped {
+            self.log_pop();
+        }
+        for pushed in other.pushed {
+            self.log_push(pushed);
+        }
+        self
+    }
+
+    fn log_pop(&mut self) {
+        if self.pushed.pop().is_none() {
+            self.popped += 1;
+        }
+    }
+
+    fn log_push(&mut self, state: String) {
+        self.pushed.push(state);
+    }
+}
+
+#[derive(Clone, Debug, PartialEq)]
+pub(crate) struct GrammarTransition {
     pub(crate) state: State,
     pub(crate) pop: bool,
     pub(crate) push: Option<StackSymbol>,
@@ -213,14 +289,14 @@ macro_rules! generate_grammar {
                 )*
             ];
 
-            pub(crate) fn trans(self, descr: TokenDescription, top: Option<StackSymbol>) -> Result<Transition, Vec<TokenDescription>> {
+            pub(crate) fn trans(self, descr: TokenDescription, top: Option<StackSymbol>) -> Result<GrammarTransition, Vec<TokenDescription>> {
                 let mut state = Some(self);
                 let mut errs = Vec::new();
 
                 while let Some(state_) = state {
                     let out_state = Self::TRANSITIONS[state_ as usize].0.iter().find_map(|(descr_, in_sym, out_state, out_sym)| {
                         if descr_ == &descr && (in_sym.is_none() || in_sym == &top) {
-                            Some(Transition {
+                            Some(GrammarTransition {
                                 state: *out_state,
                                 pop: in_sym.is_some(),
                                 push: *out_sym,
@@ -711,15 +787,6 @@ generate_grammar! {
             // fn_name :: < <type> >
             GreaterThan, CallGenerics => AfterCallGenericParams;
         },
-    }
-}
-
-impl State {
-    pub(crate) fn into_dynamic_state(self) -> DynamicState {
-        DynamicState {
-            state: self,
-            stack: smallvec![],
-        }
     }
 }
 

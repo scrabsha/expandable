@@ -1,69 +1,89 @@
 // Architectural invariant: this module contains the parsing logic for macro
 // transcribers.
 
-use std::collections::HashMap;
+use std::{
+    cell::RefCell,
+    collections::{HashMap, HashSet},
+    hash::Hash,
+    iter,
+};
 
 use crate::{
     error::Error,
-    grammar::{DynamicState, State},
+    grammar::{DynamicState, Transition},
     matcher::{BindingData, Matcher},
-    states::DynamicStateSet,
     substitution::{TokenTree, TokenTreeKind},
     RepetitionQuantifier, RepetitionQuantifierKind, TokenDescription,
 };
 
 type Cursor<'ast, Span> = &'ast [TokenTree<Span>];
+type Set<T> = HashSet<T>;
 
 pub(crate) fn check_arm<Span>(
-    init_state: State,
+    init_state: DynamicState<Span>,
     bindings: Matcher<Span>,
     substitution: &[TokenTree<Span>],
 ) -> Result<(), Error<Span>>
 where
-    Span: Copy,
+    Span: Copy + 'static,
 {
     let bindings = bindings.bindings;
-    ExpCtx::check_rule(bindings, substitution, init_state.into_dynamic_state())
+    ExpCtx::check_rule(bindings, substitution, init_state)
 }
 
 struct ExpCtx<Span> {
     // todo: we also want to see which depth a macro repeats at.
     bindings: HashMap<String, BindingData<Span>>,
+    id: RefCell<usize>,
 }
 
 impl<Span> ExpCtx<Span>
 where
-    Span: Copy,
+    Span: Copy + 'static,
 {
     fn check_rule(
         bindings: HashMap<String, BindingData<Span>>,
         subst: &[TokenTree<Span>],
-        initial_state: DynamicState,
+        initial_state: DynamicState<Span>,
     ) -> Result<(), Error<Span>> {
         let ctx = ExpCtx::new(bindings);
-        let states = ctx.parse_stream(DynamicStateSet::singleton(initial_state), subst)?;
+        let states = ctx.parse_stream(singleton((initial_state, ctx.id())), subst)?;
 
-        if states.into_iter().any(|state| !state.is_accepting()) {
-            // TODO: this does not feel like it's the right error kind.
-            //
-            // As a matter of facts, rustc emits the following message:
-            // > macro expansion ends with an incomplete expression: expected expression
-            // https://play.rust-lang.org/?version=stable&mode=debug&edition=2021&gist=19fb5e7169f37e967ad84e155fe92e22
-            return Err(Error::UnexpectedEnd { last_token: None });
-        }
-
-        Ok(())
+        states
+            .into_iter()
+            .try_for_each(|(state, _, _)| state.is_accepting())
+            .map_err(|e| match e {
+                Some((span, expected)) => Error::InvalidProducedAst { span, expected },
+                None => Error::UnexpectedEnd {
+                    last_token: subst.last().map(|t| t.span),
+                },
+            })
     }
 
     fn new(bindings: HashMap<String, BindingData<Span>>) -> ExpCtx<Span> {
-        ExpCtx { bindings }
+        ExpCtx {
+            bindings,
+            id: RefCell::default(),
+        }
     }
 
-    fn parse_single_tree(
+    fn id(&self) -> usize {
+        let mut id = self.id.borrow_mut();
+        let id_ = *id;
+
+        *id += 1;
+
+        id_
+    }
+
+    fn parse_single_tree<Id>(
         &self,
-        states: DynamicStateSet,
+        states: Set<(DynamicState<Span>, Id)>,
         tree: &TokenTree<Span>,
-    ) -> Result<DynamicStateSet, Error<Span>> {
+    ) -> Result<Set<(DynamicState<Span>, Transition, Id)>, Error<Span>>
+    where
+        Id: Clone + Eq + Hash,
+    {
         match &tree.kind {
             TokenTreeKind::Repetition {
                 inner,
@@ -78,7 +98,7 @@ where
 
             _ => Ok(states
                 .into_iter()
-                .map(|state| self.parse_single_tree_inner(state, tree))
+                .map(|(state, id)| self.parse_single_tree_inner(state, tree, id))
                 .collect::<Result<Vec<_>, _>>()?
                 .into_iter()
                 .flatten()
@@ -86,19 +106,21 @@ where
         }
     }
 
-    fn parse_single_tree_inner(
+    fn parse_single_tree_inner<Id>(
         &self,
-        state: DynamicState,
+        state: DynamicState<Span>,
         tree: &TokenTree<Span>,
-    ) -> Result<DynamicStateSet, Error<Span>> {
+        id: Id,
+    ) -> Result<Set<(DynamicState<Span>, Transition, Id)>, Error<Span>>
+    where
+        Id: Clone + Eq + Hash,
+    {
         match &tree.kind {
             TokenTreeKind::Terminal(_, descr) => state
-                .accept(*descr)
-                .map_err(|expected| Error::InvalidProducedAst {
-                    span: tree.span,
-                    expected,
-                })
-                .map(DynamicStateSet::singleton),
+                .accept(*descr, tree.span)
+                .map_err(|(span, expected)| Error::InvalidProducedAst { span, expected })
+                .map(|(s, t)| (s, t, id))
+                .map(singleton),
 
             TokenTreeKind::Parenthesed(inner) => self.check_delimited_stream(
                 TokenDescription::LParen,
@@ -106,6 +128,7 @@ where
                 TokenDescription::RParen,
                 tree.span,
                 state,
+                id,
             ),
 
             TokenTreeKind::CurlyBraced(inner) => self.check_delimited_stream(
@@ -114,6 +137,7 @@ where
                 TokenDescription::RBrace,
                 tree.span,
                 state,
+                id,
             ),
 
             TokenTreeKind::Bracketed(inner) => self.check_delimited_stream(
@@ -122,6 +146,7 @@ where
                 TokenDescription::RBracket,
                 tree.span,
                 state,
+                id,
             ),
 
             TokenTreeKind::Fragment(f) => {
@@ -129,70 +154,94 @@ where
                 // a fragment with that name indeed exists.
                 let kind = self.bindings.get(f).expect("Fragment not found").kind;
                 state
-                    .accept_fragment(kind)
-                    .map(DynamicStateSet::singleton)
-                    .map_err(|expected| Error::InvalidProducedAst {
-                        span: tree.span,
-                        expected,
-                    })
+                    .accept_fragment(kind, tree.span)
+                    .map(|(s, t)| (s, t, id))
+                    .map(singleton)
+                    .map_err(|(span, expected)| Error::InvalidProducedAst { span, expected })
             }
 
             TokenTreeKind::Repetition { .. } => {
-                unreachable!("Repetitions should be handled by ExpCtx::parse_single_tree`")
+                unreachable!("Repetitions should be handled by `ExpCtx::parse_single_tree`")
             }
         }
     }
 
-    fn check_delimited_stream(
+    fn check_delimited_stream<Id>(
         &self,
         open: TokenDescription,
         inner: &[TokenTree<Span>],
         close: TokenDescription,
         span: Span,
-        initial_state: DynamicState,
-    ) -> Result<DynamicStateSet, Error<Span>> {
+        initial_state: DynamicState<Span>,
+        id: Id,
+    ) -> Result<Set<(DynamicState<Span>, Transition, Id)>, Error<Span>>
+    where
+        Id: Clone + Eq + Hash,
+    {
         // Parse open delimiter
-        let mut after_open_delimiter = initial_state
+        let (s_after_open_delim, t_after_open_delim) = initial_state
             .clone()
-            .accept(open)
-            .map_err(|expected| Error::InvalidProducedAst { span, expected })?;
+            .accept(open, span)
+            .map_err(|(span, expected)| Error::InvalidProducedAst { span, expected })?;
 
-        let inner_state = after_open_delimiter.fresh_stack();
-        let states = self.parse_stream(DynamicStateSet::singleton(inner_state), inner)?;
+        let states = self.parse_stream(singleton((s_after_open_delim, id)), inner)?;
+        let states = states
+            .into_iter()
+            .map(|(s, t, id)| (s, t_after_open_delim.clone().combine_chasles(t), id));
 
         // Parse close delimiter
         let states = states
             .into_iter()
-            .map(|state| {
+            .map(|(state, trans, id)| {
                 state
-                    .accept(close)
-                    .map(|state| state.with_old_stack(&after_open_delimiter))
-                    .map_err(|expected| Error::InvalidProducedAst { span, expected })
+                    .accept(close, span)
+                    .map(|(state, new_trans)| {
+                        let trans = trans.combine_chasles(new_trans);
+                        (state, trans, id)
+                    })
+                    .map_err(|(span, expected)| Error::InvalidProducedAst { span, expected })
             })
-            .collect::<Result<DynamicStateSet, _>>()?;
+            .collect::<Result<_, _>>()?;
 
         Ok(states)
     }
 
-    fn parse_stream(
+    fn parse_stream<Id>(
         &self,
-        mut states: DynamicStateSet,
+        states: Set<(DynamicState<Span>, Id)>,
         stream: Cursor<Span>,
-    ) -> Result<DynamicStateSet, Error<Span>> {
+    ) -> Result<Set<(DynamicState<Span>, Transition, Id)>, Error<Span>>
+    where
+        Id: Clone + Eq + Hash,
+    {
+        let mut states: Set<(DynamicState<Span>, (Transition, Id))> = states
+            .into_iter()
+            .map(|(s, id)| (s, (Transition::empty(), id)))
+            .collect();
+
         for tree in stream {
-            states = self.parse_single_tree(states, tree)?;
+            states = self
+                .apply(states, |this, states| this.parse_single_tree(states, tree))?
+                .into_iter()
+                .map(|(state, trans_, (trans, id))| (state, (trans.combine_chasles(trans_), id)))
+                .collect();
         }
 
+        let states = states.into_iter().map(|(s, (t, id))| (s, t, id)).collect();
+
         Ok(states)
     }
 
-    fn parse_repetition(
+    fn parse_repetition<Id>(
         &self,
-        states: DynamicStateSet,
+        states: Set<(DynamicState<Span>, Id)>,
         stream: Cursor<Span>,
         sep: Option<&TokenTree<Span>>,
         quantifier: RepetitionQuantifier<Span>,
-    ) -> Result<DynamicStateSet, Error<Span>> {
+    ) -> Result<Set<(DynamicState<Span>, Transition, Id)>, Error<Span>>
+    where
+        Id: Clone + Eq + Hash,
+    {
         match quantifier.kind {
             RepetitionQuantifierKind::ZeroOrOne => {
                 assert!(sep.is_none());
@@ -209,71 +258,198 @@ where
         }
     }
 
-    fn parse_zero_or_one_repetitions(
+    fn parse_zero_or_one_repetitions<Id>(
         &self,
-        states: DynamicStateSet,
+        states: Set<(DynamicState<Span>, Id)>,
         stream: Cursor<Span>,
-    ) -> Result<DynamicStateSet, Error<Span>> {
-        let candidates = states.clone();
-        let candidates = candidates.union(self.parse_single_repetition(states, None, stream)?);
+    ) -> Result<Set<(DynamicState<Span>, Transition, Id)>, Error<Span>>
+    where
+        Id: Clone + Eq + Hash,
+    {
+        let mut candidates = states
+            .into_iter()
+            .map(|(s, id)| (s, Transition::empty(), id))
+            .collect::<Set<_>>();
+
+        let candidates_ = candidates
+            .iter()
+            .cloned()
+            .map(|(s, t, id)| (s, (t, id)))
+            .collect::<Set<_>>();
+
+        candidates.extend(
+            self.parse_single_repetition(candidates_, None, stream)?
+                .into_iter()
+                .map(|(s, t_, (t, id))| (s, t.combine_chasles(t_), id)),
+        );
 
         Ok(candidates)
     }
 
-    fn parse_zero_or_more_repetitions(
+    fn parse_zero_or_more_repetitions<Id>(
         &self,
-        states: DynamicStateSet,
+        states: Set<(DynamicState<Span>, Id)>,
         stream: Cursor<Span>,
         sep: Option<&TokenTree<Span>>,
-    ) -> Result<DynamicStateSet, Error<Span>> {
+    ) -> Result<Set<(DynamicState<Span>, Transition, Id)>, Error<Span>>
+    where
+        Id: Clone + Eq + Hash,
+    {
         self.parse_zero_or_more_repetitions_inner(states, stream, sep, true)
     }
 
-    fn parse_zero_or_more_repetitions_inner(
+    fn parse_zero_or_more_repetitions_inner<Id>(
         &self,
-        states: DynamicStateSet,
+        states: Set<(DynamicState<Span>, Id)>,
         stream: Cursor<Span>,
         sep: Option<&TokenTree<Span>>,
         mut first: bool,
-    ) -> Result<DynamicStateSet, Error<Span>> {
-        let mut outcomes = DynamicStateSet::empty();
-        let mut to_test = states;
+    ) -> Result<Set<(DynamicState<Span>, Transition, Id)>, Error<Span>>
+    where
+        Id: Clone + Eq + Hash,
+    {
+        // Values accumulated during the previous iterations.
+        let mut outcomes = Set::new();
+        let mut reached_transitions = Set::<Transition>::new();
+        // Values discovered during the current iteration.
+        let mut to_test: Set<(DynamicState<_>, (Transition, Id))> = states
+            .into_iter()
+            .map(|(s, id)| (s, (Transition::empty(), id)))
+            .collect();
 
-        while !to_test.is_included_in(&outcomes) {
-            outcomes = outcomes.union(to_test.clone());
+        // Parsing code is so fragile that 16 iterations should be enough for
+        // us to converge.
+        //
+        // We may have to increase this limit if proved wrong.
+        let mut fuel = 16;
 
-            let sep = if !first { sep } else { None };
-            to_test = self.parse_single_repetition(to_test, sep, stream)?;
+        while !to_test.is_empty() {
+            assert!(fuel > 0, "No remaining fuel. This is a bug.");
+            fuel -= 1;
+
+            let sep = if first { None } else { sep };
+
+            // let outcome = self.parse_single_repetition(to_test, sep, stream)?;
+            let (to_test_, reached_transitions_) = self
+                .apply(to_test, |this, states| {
+                    this.parse_single_repetition(states, sep, stream)
+                })?
+                .into_iter()
+                .filter_map(|(s, t_, (t, id))| {
+                    if !reached_transitions.contains(&t_) {
+                        Some(((s, (t.combine_chasles(t_.clone()), id)), t_))
+                    } else {
+                        None
+                    }
+                })
+                .unzip::<_, _, Set<_>, Vec<_>>();
+
+            to_test = to_test_.clone();
+            outcomes.extend(to_test_.into_iter().map(|(s, (t, id))| (s, t, id)));
+
+            reached_transitions.extend(reached_transitions_);
+
             first = false;
         }
 
         Ok(outcomes)
     }
 
-    fn parse_one_or_more_repetitions(
+    fn parse_one_or_more_repetitions<Id>(
         &self,
-        states: DynamicStateSet,
+        states: Set<(DynamicState<Span>, Id)>,
         stream: Cursor<Span>,
         sep: Option<&TokenTree<Span>>,
-    ) -> Result<DynamicStateSet, Error<Span>> {
-        let states = self.parse_single_repetition(states, None, stream)?;
+    ) -> Result<Set<(DynamicState<Span>, Transition, Id)>, Error<Span>>
+    where
+        Id: Clone + Eq + Hash,
+    {
+        let states = self
+            .parse_single_repetition(states, None, stream)?
+            .into_iter()
+            .map(|(s, t, id)| (s, (t, id)))
+            .collect();
 
-        self.parse_zero_or_more_repetitions_inner(states, stream, sep, false)
+        Ok(self
+            .parse_zero_or_more_repetitions_inner(states, stream, sep, false)?
+            .into_iter()
+            .map(|(s, t_, (t, id))| (s, t.combine_chasles(t_), id))
+            .collect())
     }
 
-    fn parse_single_repetition(
+    fn parse_single_repetition<Id>(
         &self,
-        states: DynamicStateSet,
+        states: Set<(DynamicState<Span>, Id)>,
         sep: Option<&TokenTree<Span>>,
         stream: Cursor<Span>,
-    ) -> Result<DynamicStateSet, Error<Span>> {
+    ) -> Result<Set<(DynamicState<Span>, Transition, Id)>, Error<Span>>
+    where
+        Id: Eq + Hash + Clone,
+    {
         let states = match sep {
-            Some(sep) => self.parse_single_tree(states, sep)?,
-            None => states,
+            Some(sep) => {
+                let mut buf = Set::new();
+
+                for (state, id) in states {
+                    let s = self.parse_single_tree_inner(state, sep, id)?;
+
+                    for (s, t, id) in s {
+                        buf.insert((s, t, id.clone()));
+                    }
+                }
+
+                buf
+            }
+
+            None => states
+                .into_iter()
+                .map(|(s, id)| (s, Transition::empty(), id))
+                .collect(),
         };
 
-        self.parse_stream(states, stream)
+        let states = states.into_iter().map(|(s, t, id)| (s, (t, id))).collect();
+
+        Ok(self
+            .parse_stream(states, stream)?
+            .into_iter()
+            .map(|(s, t_, (t, id))| (s, t.combine_chasles(t_), id))
+            .collect())
     }
+
+    fn apply<F, Id, Id_>(
+        &self,
+        states: Set<(DynamicState<Span>, Id)>,
+        mut f: F,
+    ) -> Result<Set<(DynamicState<Span>, Id_, Id)>, Error<Span>>
+    where
+        F: FnMut(
+            &Self,
+            Set<(DynamicState<Span>, usize)>,
+        ) -> Result<Set<(DynamicState<Span>, Id_, usize)>, Error<Span>>,
+        Id: Clone + Eq + Hash,
+        Id_: Clone + Eq + Hash,
+    {
+        // Let's use usize as new id :)
+        let (states, joint) = states
+            .into_iter()
+            .enumerate()
+            .map(|(new_id, (s, id))| ((s, new_id), id))
+            .unzip::<_, _, Set<_>, Vec<_>>();
+
+        let output = f(self, states)?;
+
+        Ok(output
+            .into_iter()
+            .map(|(s, id_, id)| (s, id_, joint.get(id).expect("Unknown id 👀").clone()))
+            .collect())
+    }
+}
+
+fn singleton<T>(t: T) -> Set<T>
+where
+    T: Eq + Hash,
+{
+    iter::once(t).collect()
 }
 
 #[cfg(test)]
@@ -355,6 +531,15 @@ mod tests {
                 fn #name:ident() { #body:expr }
             ) => {
                 fn #name() { #body }
+            }
+        }
+    }
+
+    assert_valid_arm! {
+        fn_with_arg {
+            #[item]
+            () => {
+                fn test(a: u8) { 101 }
             }
         }
     }
