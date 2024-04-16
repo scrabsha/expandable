@@ -1,0 +1,6 @@
+# I really tried to remove these overly generic type in `expansion.rs`. As I
+# understand it, it is impossible to remove without breaking the MSRV or using
+# nightly features.
+#
+# The best fix I see is to increase the type complexity threshold.
+type-complexity-threshold = 280
