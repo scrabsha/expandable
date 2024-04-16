@@ -523,6 +523,8 @@ generate_grammar! {
             Caret => ExprStart;
             Shl => ExprStart;
             Shr => ExprStart;
+            AndAnd => ExprStart;
+            OrOr => ExprStart;
 
             // Comparison expressions
             // https://spec.ferrocene.dev/expressions.html#comparison-expressions
@@ -532,6 +534,10 @@ generate_grammar! {
             LessThan => ExprStart;
             LessThanEquals => ExprStart;
             NotEquals => ExprStart;
+
+            // Range expressions
+            DotDot => ExprStart;
+            DotDotEquals => ExprStart;
 
             // [ <expr> ]
             RBracket, ArrayExprFirst => AfterExpr;

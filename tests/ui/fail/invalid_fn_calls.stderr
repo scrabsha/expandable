@@ -10,7 +10,7 @@ error: Potentially invalid expansion. Expected `break`, `if`, `return`, a `)`, a
 14 |         $fn_name(,,)
    |                  ^
 
-error: Potentially invalid expansion. Expected `!=`, `%`, `&`, `*`, `+`, `,`, `-`, `.`, `/`, `<<`, `<=`, `<`, `==`, `>=`, `>>`, `>`, `^`, `|`, a `(`, a `)`.
+error: Potentially invalid expansion. Expected `!=`, `%`, `&&`, `&`, `*`, `+`, `,`, `-`, `..=`, `..`, `.`, `/`, `<<`, `<=`, `<`, `==`, `>=`, `>>`, `>`, `^`, `|`, `||`, a `(`, a `)`.
   --> tests/ui/fail/invalid_fn_calls.rs:22:25
    |
 22 |         $fn_name($arg1 $arg2)
