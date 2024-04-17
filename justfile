@@ -17,3 +17,6 @@ readme:
 check-readme:
     cargo rustdoc -- --output-format json -Zunstable-options
     cat target/doc/expandable.json | jq ".index[.root].docs" -r | cmp README.md -
+
+grammar:
+    cargo run -p grammar-gen -- grammar.rs rust-grammar-dpdfa/src/generated.rs
