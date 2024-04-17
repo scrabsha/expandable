@@ -59,7 +59,7 @@ where
 
         states
             .into_iter()
-            .try_for_each(|(state, _, _)| state.is_accepting())
+            .try_for_each(|(mut state, _, _)| state.is_accepting())
             .map_err(|e| match e {
                 Some((span, expected)) => Error::InvalidProducedAst { span, expected },
                 None => Error::UnexpectedEnd {

@@ -3,19 +3,20 @@
 
 use std::{
     hash::{Hash, Hasher},
-    marker::PhantomData,
     ptr,
 };
 
-use smallvec::SmallVec;
+use rust_grammar_dpdfa::RustParser;
+pub use rust_grammar_dpdfa::Transition;
 
 use crate::{FragmentKind, Terminal};
 
 #[derive(Clone, Debug)]
-pub(crate) struct DynamicState<Span> {
-    pub(crate) state: State,
-    pub(crate) stack: SmallVec<[StackSymbol; 16]>,
-    inner: PhantomData<Span>,
+pub struct DynamicState<Span>
+where
+    Span: 'static,
+{
+    pub(crate) state: RustParser<Span>,
 }
 
 impl<Span> PartialEq for DynamicState<Span>
@@ -27,7 +28,7 @@ where
     }
 }
 
-impl<Span> Eq for DynamicState<Span> where Span: 'static {}
+impl<Span> Eq for DynamicState<Span> {}
 
 impl<Span> Hash for DynamicState<Span> {
     fn hash<H: Hasher>(&self, state: &mut H) {
@@ -35,121 +36,52 @@ impl<Span> Hash for DynamicState<Span> {
     }
 }
 
-impl<Span> DynamicState<Span> {
-    pub(crate) fn expr() -> DynamicState<Span> {
+impl<Span> DynamicState<Span>
+where
+    Span: Copy + 'static,
+{
+    pub fn item() -> DynamicState<Span> {
         DynamicState {
-            state: State::ExprStart,
-            stack: SmallVec::new(),
-            inner: PhantomData,
+            state: RustParser::item(),
         }
     }
 
-    pub(crate) fn item() -> DynamicState<Span> {
+    pub fn expr() -> DynamicState<Span> {
         DynamicState {
-            state: State::ItemStart,
-            stack: SmallVec::new(),
-            inner: PhantomData,
+            state: RustParser::expr(),
         }
     }
 
     pub(crate) fn accept_fragment(
         self,
         fragment: FragmentKind,
-        s: Span,
+        span: Span,
     ) -> Result<(DynamicState<Span>, Transition), (Span, Vec<TokenDescription>)> {
-        self.accept(TokenDescription::Fragment(fragment), s)
+        self.accept(TokenDescription::Fragment(fragment), span)
     }
 
     pub(crate) fn accept(
-        self,
+        mut self,
         descr: TokenDescription,
-        s: Span,
+        span: Span,
     ) -> Result<(DynamicState<Span>, Transition), (Span, Vec<TokenDescription>)> {
-        self.state
-            .trans(descr, self.stack_top())
-            .map(|transition| {
-                (
-                    self.with(transition.clone()),
-                    Transition::from_raw(transition),
-                )
+        let descr = rust_grammar_dpdfa::TokenDescription::from(descr);
+        let trans = self.state.step(descr, span).map_err(|(s, e)| {
+            let e = e.into_iter().flat_map(TokenDescription::try_from).collect();
+            (s, e)
+        })?;
+
+        Ok((self, trans))
+    }
+
+    pub(crate) fn is_accepting(&mut self) -> Result<(), Option<(Span, Vec<TokenDescription>)>> {
+        self.state.finish().map_err(|e| {
+            e.map(|(s, e)| {
+                let e = e.into_iter().flat_map(TokenDescription::try_from).collect();
+                (s, e)
             })
-            .map_err(|e| (s, e))
+        })
     }
-
-    pub(crate) fn is_accepting(&self) -> Result<(), Option<(Span, Vec<TokenDescription>)>> {
-        if self.stack.is_empty() && self.state.is_accepting() {
-            Ok(())
-        } else {
-            Err(None)
-        }
-    }
-
-    fn stack_top(&self) -> Option<StackSymbol> {
-        self.stack.last().copied()
-    }
-
-    fn with(mut self, trans: GrammarTransition) -> DynamicState<Span> {
-        if trans.pop {
-            self.stack.pop().unwrap();
-        }
-
-        if let Some(symbol) = trans.push {
-            self.stack.push(symbol);
-        }
-
-        self.state = trans.state;
-
-        self
-    }
-}
-
-#[derive(Clone, Debug, Eq, PartialEq, Hash)]
-pub(crate) struct Transition {
-    popped: usize,
-    pushed: Vec<String>,
-}
-
-impl Transition {
-    fn from_raw(trans: GrammarTransition) -> Transition {
-        Transition {
-            popped: if trans.pop { 1 } else { 0 },
-            pushed: trans.push.into_iter().map(|s| format!("{s:?}")).collect(),
-        }
-    }
-
-    pub(crate) fn empty() -> Transition {
-        Transition {
-            popped: 0,
-            pushed: vec![],
-        }
-    }
-
-    pub(crate) fn combine_chasles(mut self, other: Transition) -> Transition {
-        for _ in 0..other.popped {
-            self.log_pop();
-        }
-        for pushed in other.pushed {
-            self.log_push(pushed);
-        }
-        self
-    }
-
-    fn log_pop(&mut self) {
-        if self.pushed.pop().is_none() {
-            self.popped += 1;
-        }
-    }
-
-    fn log_push(&mut self, state: String) {
-        self.pushed.push(state);
-    }
-}
-
-#[derive(Clone, Debug, PartialEq)]
-pub(crate) struct GrammarTransition {
-    pub(crate) state: State,
-    pub(crate) pop: bool,
-    pub(crate) push: Option<StackSymbol>,
 }
 
 macro_rules! token_description {
@@ -197,138 +129,51 @@ macro_rules! token_description {
                 }
             }
         }
-    };
-}
 
-macro_rules! generate_grammar {
-    (@descr "ident") => {
-        TokenDescription::Fragment(FragmentKind::Ident)
-    };
-
-    (@descr "expr") => {
-        TokenDescription::Fragment(FragmentKind::Expr)
-    };
-
-    (@descr $descr:tt) => {
-        TokenDescription::$descr
-    };
-
-    (@symbol) => {
-        None
-    };
-
-    (@symbol $symbol:tt) => {
-        Some(StackSymbol::$symbol)
-    };
-
-    (@state $state:tt) => {
-        State::$state
-    };
-
-    (@accepting accepting) => {
-        true
-    };
-    (@accepting) => {
-        false
-    };
-
-    (@inherit $state:ident) => {
-        Some(State::$state)
-    };
-    (@inherit) => {
-        None
-    };
-
-    (
-        $( #[$meta:meta] )*
-        $vis:vis enum $name:ident {
-            $(
-                $( #[$accepting:ident] )?
-                $in_state:ident $( ( $inherit:ident ) )? {
+        impl From<$name> for rust_grammar_dpdfa::TokenDescription {
+            fn from(descr: $name) -> rust_grammar_dpdfa::TokenDescription {
+                match descr {
                     $(
-                        $descr:tt $(, $in_symbol:tt )? => $out_state:tt $(, $out_symbol:tt )?
-                    );* $(;)?
+                        $name::$variant => rust_grammar_dpdfa::TokenDescription::$variant,
+                    )*
+
+                    $name::LParen => rust_grammar_dpdfa::TokenDescription::LParen,
+                    $name::RParen => rust_grammar_dpdfa::TokenDescription::RParen,
+                    $name::LBracket => rust_grammar_dpdfa::TokenDescription::LBracket,
+                    $name::RBracket => rust_grammar_dpdfa::TokenDescription::RBracket,
+                    $name::LBrace => rust_grammar_dpdfa::TokenDescription::LBrace,
+                    $name::RBrace => rust_grammar_dpdfa::TokenDescription::RBrace,
+
+                    $name::Fragment(FragmentKind::Expr) => rust_grammar_dpdfa::TokenDescription::FragmentExpr,
+                    $name::Fragment(FragmentKind::Ident) => rust_grammar_dpdfa::TokenDescription::FragmentIdent,
+                    $name::Fragment(FragmentKind::Item) => rust_grammar_dpdfa::TokenDescription::FragmentItem,
+
+                    $name::Invalid => unreachable!(),
                 }
-            ),* $(,)?
-        }
-    ) => {
-        $( #[$meta] )*
-        $vis enum $name {
-            $(
-                $in_state
-            ),*
+            }
         }
 
-        impl $name {
-            const TRANSITIONS: &'static[
-                (
-                    &'static [(TokenDescription, Option<StackSymbol>, State, Option<StackSymbol>)],
-                    Option<State>,
+        impl TryFrom<rust_grammar_dpdfa::TokenDescription> for $name {
+            type Error = ();
+
+            fn try_from(descr: rust_grammar_dpdfa::TokenDescription) -> Result<$name, ()> {
+                Ok(
+                    match descr {
+                        $(
+                            rust_grammar_dpdfa::TokenDescription::$variant => $name::$variant,
+                        )*
+
+                        rust_grammar_dpdfa::TokenDescription::LParen => TokenDescription::LParen,
+                        rust_grammar_dpdfa::TokenDescription::RParen => TokenDescription::RParen,
+                        rust_grammar_dpdfa::TokenDescription::LBracket => TokenDescription::LBracket,
+                        rust_grammar_dpdfa::TokenDescription::RBracket => TokenDescription::RBracket,
+                        rust_grammar_dpdfa::TokenDescription::LBrace => TokenDescription::LBrace,
+                        rust_grammar_dpdfa::TokenDescription::RBrace => TokenDescription::RBrace,
+
+                        _ => return Err(()),
+                    }
+
                 )
-            ] = &[
-                $(
-                    (
-                        &[
-                            $(
-                                (
-                                    generate_grammar!(@descr $descr),
-                                    generate_grammar!(@symbol $( $in_symbol )?),
-                                    generate_grammar!(@state $out_state),
-                                    generate_grammar!(@symbol $( $out_symbol )?),
-                                )
-                            ),*
-                        ],
-                        generate_grammar!(@inherit $( $inherit )?),
-                    )
-                ),*
-            ];
-
-            const ACCEPTING_STATES: &'static [bool] = &[
-                $(
-                    generate_grammar!(@accepting $( $accepting )?),
-                )*
-            ];
-
-            pub(crate) fn trans(self, descr: TokenDescription, top: Option<StackSymbol>) -> Result<GrammarTransition, Vec<TokenDescription>> {
-                let mut state = Some(self);
-                let mut errs = Vec::new();
-
-                while let Some(state_) = state {
-                    let out_state = Self::TRANSITIONS[state_ as usize].0.iter().find_map(|(descr_, in_sym, out_state, out_sym)| {
-                        if descr_ == &descr && (in_sym.is_none() || in_sym == &top) {
-                            Some(GrammarTransition {
-                                state: *out_state,
-                                pop: in_sym.is_some(),
-                                push: *out_sym,
-                            })
-                        } else { None }
-                    });
-
-                    match out_state {
-                        Some(out_state) => return Ok(out_state),
-                        None => errs.extend(state_.follow(top)),
-                    }
-
-                    state = Self::TRANSITIONS[state_ as usize].1;
-                }
-
-                Err(errs)
-            }
-
-            fn follow(self, top: Option<StackSymbol>) -> Vec<TokenDescription> {
-                Self::TRANSITIONS[self as usize].0.iter().filter_map(|(descr, in_sym, _, _)| {
-                    // We try to be smårt here and only suggest tokens that we
-                    // can actually accept.
-                    if !matches!(descr, TokenDescription::Fragment(_)) && (in_sym.is_none() || in_sym == &top) {
-                        Some(*descr)
-                    } else {
-                        None
-                    }
-                }).collect()
-            }
-
-            fn is_accepting(self) -> bool {
-                Self::ACCEPTING_STATES[self as usize]
             }
         }
     };
@@ -426,19 +271,30 @@ token_description! {
         /// The `async` keyword.
         Terminal::Yield => Yield,
 
-        /// An unused keyword.
-        Terminal::Abstract
-        | Terminal::Become
-        | Terminal::Box
-        | Terminal::Do
-        | Terminal::Final
-        | Terminal::Macro
-        | Terminal::Override
-        | Terminal::Priv
-        | Terminal::Try
-        | Terminal::Typeof
-        | Terminal::Unsized
-        | Terminal::Virtual => UnusedKeyword,
+        /// The `abstract` keyword.
+        Terminal::Abstract => Abstract,
+        /// The `become` keyword.
+        Terminal::Become => Become,
+        /// The `box` keyword.
+        Terminal::Box => Box,
+        /// The `do` keyword.
+        Terminal::Do => Do,
+        /// The `final` keyword.
+        Terminal::Final => Final,
+        /// The `macro` keyword.
+        Terminal::Macro => Macro,
+        /// The `override` keyword.
+        Terminal::Override => Override,
+        /// The `priv` keyword.
+        Terminal::Priv => Priv,
+        /// The `try` keyword.
+        Terminal::Try => Try,
+        /// The `typeof` keyword.
+        Terminal::Typeof => Typeof,
+        /// The `unsized` keyword.
+        Terminal::Unsized => Unsized,
+        /// The `virtual` keyword.
+        Terminal::Virtual => Virtual,
 
         // Literals
         /// A literal
@@ -536,279 +392,4 @@ token_description! {
         /// A question mark (`?`).
         Terminal::QuestionMark => QuestionMark,
     }
-}
-
-generate_grammar! {
-    #[derive(Copy, Clone, Debug, Eq, Hash, PartialEq)]
-    pub(crate) enum State {
-        ExprStart {
-            "ident" => AfterIdentExpr;
-            "expr" => AfterExpr;
-            Ident => AfterIdentExpr;
-            Literal => AfterExpr;
-            If => ExprStart, Condition;
-
-            // Array expression
-            // https://spec.ferrocene.dev/expressions.html#array-expressions
-            LBracket => ExprStart, ArrayExprFirst;
-
-            // Block expressions
-            // https://spec.ferrocene.dev/expressions.html#syntax_blockexpression
-            LBrace => StmtStart, BlockExpr;
-
-            // <expr> ( <expr> ,)
-            RParen, FnArgList => AfterExpr;
-            // []
-            RBracket, ArrayExprFirst => AfterExpr;
-            // [ <expr>, ]
-            RBracket, ArrayExprThen => AfterExpr;
-
-            // break <expr>
-            // TODO: handle labels
-            Break => AfterBreakOrReturn;
-            // return <expr>
-            Return => AfterBreakOrReturn;
-        },
-
-        // <ident>
-        #[accepting]
-        AfterIdentExpr(AfterExpr) {
-            // <ident> ::
-            ColonColon => CallGenericArgumentList;
-        },
-
-        // break <expr>
-        // return <expr>
-        #[accepting]
-        AfterBreakOrReturn(ExprStart) {},
-
-        #[accepting]
-        AfterExpr {
-            // Arithmetic expressions
-            // https://spec.ferrocene.dev/expressions.html#arithmetic-expressions
-            Plus => ExprStart;
-            Minus => ExprStart;
-            Star => ExprStart;
-            Slash => ExprStart;
-            Percent => ExprStart;
-
-            // Bit expressions
-            // https://spec.ferrocene.dev/expressions.html#bit-expressions
-            And => ExprStart;
-            Or => ExprStart;
-            Caret => ExprStart;
-            Shl => ExprStart;
-            Shr => ExprStart;
-            AndAnd => ExprStart;
-            OrOr => ExprStart;
-
-            // Comparison expressions
-            // https://spec.ferrocene.dev/expressions.html#comparison-expressions
-            EqualsEquals => ExprStart;
-            GreaterThan => ExprStart;
-            GreaterThanEquals => ExprStart;
-            LessThan => ExprStart;
-            LessThanEquals => ExprStart;
-            NotEquals => ExprStart;
-
-            // Range expressions
-            DotDot => ExprStart;
-            DotDotEquals => ExprStart;
-
-            // [ <expr> ]
-            RBracket, ArrayExprFirst => AfterExpr;
-            RBracket, ArrayExprThen => AfterExpr;
-
-            // [ <expr> ; <expr> ]
-            Semicolon, ArrayExprFirst => ExprStart, ArrayExprSize;
-            RBracket, ArrayExprSize => AfterExpr;
-
-            RBrace, FnBlockExpr => ItemStart;
-            LBrace, Condition => ExprStart, Consequence;
-
-            // <expr> (
-            LParen => ExprStart, FnArgList;
-            // <expr>, <expr>, ...
-            Comma, FnArgList => ExprStart, FnArgList;
-            Comma, ArrayExprFirst => ExprStart, ArrayExprThen;
-            Comma, ArrayExprThen => ExprStart, ArrayExprThen;
-            // <expr> )
-            RParen, FnArgList => AfterExpr;
-
-            // We don't continue to `AfterExpr` because we want to parse an
-            // optional `else` branch.
-            RBrace, Consequence => AfterIf;
-            RBrace, Alternative => AfterExpr;
-
-            // { <expr> }
-            RBrace, BlockExpr => AfterExpr;
-            RBrace, GenericBlockExpr => AfterGenericExpr;
-
-            // <expr> .
-            Dot => ExprDot;
-
-            // <expr> ;
-            Semicolon, BlockExpr => StmtStart, BlockExpr;
-            Semicolon, FnBlockExpr => StmtStart, FnBlockExpr;
-        },
-
-        #[accepting]
-        AfterIf(AfterExpr) {
-            Else => AfterElse;
-        },
-
-        // <expr> .
-        ExprDot {
-            // <expr> . await
-            Await => AfterExpr;
-            // <expr> . <ident>
-            "ident" => FieldOrMethod;
-            Ident => FieldOrMethod;
-
-            // <expr> . decimal
-            // TODO: this is badness 10_000: this means that we accept things
-            // like `"foo"."bar"`, which is obviously not valid Rust.
-            //
-            // TODO: when the `literal` fragment is recognized, we may want to
-            // accept a $literal here as well.
-            Literal => AfterExpr;
-        },
-
-        // <expr> . <ident>
-        #[accepting]
-        FieldOrMethod(AfterExpr) {
-            // Method call
-            // <expr> . <ident> (
-            LParen => ExprStart, FnArgList;
-
-            // Turbofish:
-            // <expr> . <ident> ::
-            ColonColon => CallGenericArgumentList;
-        },
-
-        // <expr> . <ident> ::
-        CallGenericArgumentList {
-            // <expr> . <ident> :: <
-            LessThan => GenericStart, CallGenerics;
-        },
-
-        // <expr> . <ident> :: <
-        GenericStart(TypeStart) {
-            // <expr> . <ident> :: < >
-            GreaterThan, CallGenerics => AfterCallGenericParams;
-            // <expr> . <ident> :: < { <expr> } >
-            LBrace => ExprStart, GenericBlockExpr;
-            // <expr> . <ident> :: < literal >
-            Literal => AfterGenericExpr;
-            // <expr> . <ident> :: < - <literal> >
-            Minus => GenericLiteralExpr;
-        },
-
-        // <expr> . <ident> :: < - <literal> >
-        GenericLiteralExpr {
-            Literal => AfterGenericExpr;
-        },
-
-        // <expr> . <ident> :: < { <expr> }
-        AfterGenericExpr {
-            Comma => GenericStart;
-            GreaterThan, CallGenerics => AfterCallGenericParams;
-        },
-
-        // <expr> . <ident> :: < >
-        AfterCallGenericParams {
-            // <expr> . <ident> :: < > (
-            LParen => ExprStart, FnArgList;
-        },
-
-        AfterElse {
-            LBrace => ExprStart, Alternative;
-        },
-
-        #[accepting]
-        StmtStart(ExprStart) {
-            // Let statement
-            Let => PatternStart, LetStmt;
-        },
-
-        PatternStart {
-            // let <pattern>
-            "ident" => AfterPattern;
-            Ident => AfterPattern;
-        },
-
-        AfterPattern {
-            // TODO: type ascription.
-            // let <pattern> =
-            Equals, LetStmt => ExprStart;
-        },
-
-        #[accepting]
-        ItemStart {
-            Fn => AfterFnKw;
-        },
-
-        AfterFnKw {
-            "ident" => AfterFnName;
-            Ident => AfterFnName;
-        },
-
-        AfterFnName {
-            LParen => FnArgStart, FnParam;
-        },
-
-        AfterFnParams {
-            RightArrow => TypeStart, AfterFnParams;
-            LBrace => StmtStart, FnBlockExpr;
-        },
-
-        FnArgStart {
-            "ident" => AfterFnParamName;
-            Ident => AfterFnParamName;
-            RParen, FnParam => AfterFnParams
-        },
-
-        AfterFnParamName {
-            Colon => TypeStart;
-        },
-
-        TypeStart {
-            "ident" => AfterType;
-            Ident => AfterType;
-        },
-
-        AfterType {
-            Comma, FnParam => FnArgStart, FnParam;
-            RParen, FnParam => AfterFnParams;
-            LBrace, AfterFnParams => StmtStart, FnBlockExpr;
-
-            // fn_name :: < <type> ,
-            Comma, CallGenerics => GenericStart, CallGenerics;
-            // fn_name :: < <type> >
-            GreaterThan, CallGenerics => AfterCallGenericParams;
-        },
-    }
-}
-
-// We probably want more, more descriptive, names for these.
-#[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
-pub(crate) enum StackSymbol {
-    FnBlockExpr,
-    Condition,
-    Consequence,
-    Alternative,
-    FnArgList,
-    FnParam,
-    AfterFnParams,
-    // We have to distinguish between the first and the other elements of an
-    // array in order to detect ArrayRepetitionConstructors:
-    //
-    // https://spec.ferrocene.dev/expressions.html#syntax_arrayrepetitionconstructor
-    ArrayExprFirst,
-    ArrayExprThen,
-    ArrayExprSize,
-    CallGenerics,
-    BlockExpr,
-    GenericBlockExpr,
-    LetStmt,
 }

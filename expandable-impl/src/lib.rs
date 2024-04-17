@@ -1,6 +1,6 @@
 #![deny(missing_debug_implementations)]
 #![warn(
-    missing_docs,
+    // missing_docs,
     clippy::cast_sign_loss,
     clippy::cast_precision_loss,
     clippy::cast_lossless,
@@ -82,8 +82,7 @@
 use std::{marker::Copy, str::FromStr};
 
 pub use error::{Error, MacroRuleNode};
-use grammar::DynamicState;
-pub use grammar::TokenDescription;
+pub use grammar::{DynamicState, TokenDescription};
 
 #[macro_use]
 mod macros;
