@@ -7,7 +7,7 @@ use std::{
 };
 
 use rust_grammar_dpdfa::RustParser;
-pub use rust_grammar_dpdfa::Transition;
+pub(crate) use rust_grammar_dpdfa::Transition;
 
 use crate::{FragmentKind, Terminal};
 
