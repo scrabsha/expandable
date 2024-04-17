@@ -3,6 +3,7 @@ members = [
     "",
     "expandable-impl",
     "grammar-gen",
+    "rust-grammar-dpdfa"
 ]
 
 [package]
