@@ -19,4 +19,4 @@ check-readme:
     cat target/doc/expandable.json | jq ".index[.root].docs" -r | cmp README.md -
 
 grammar:
-    cargo run -p grammar-gen -- grammar.rs rust-grammar-dpdfa/src/generated.rs
+    cargo run -p grammar-gen -- rust-grammar-dpdfa/grammar.rs rust-grammar-dpdfa/src/generated.rs
