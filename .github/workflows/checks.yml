@@ -107,6 +107,9 @@ jobs:
       - name: Check ui tests formatting
         run: find tests/ -name "*.rs" -exec rustfmt +nightly --check {} +
 
+      - name: Check grammar formatting
+        run: rustfmt +nightly --check rust-grammar-dpdfa/grammar.rs
+
   readme-check:
     runs-on: ubuntu-latest
 
