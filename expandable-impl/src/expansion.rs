@@ -320,7 +320,7 @@ where
         // Parsing code is so fragile that 16 iterations should be enough for
         // us to converge.
         //
-        // We may have to increase this limit if proved wrong.
+        // We may have to increase this limit if proven wrong.
         let mut fuel = 16;
 
         while !to_test.is_empty() {
