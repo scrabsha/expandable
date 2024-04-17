@@ -96,7 +96,6 @@ mod repetition_stack;
 
 #[doc(hidden)]
 pub mod span;
-mod states;
 mod substitution;
 
 /// The whole point.

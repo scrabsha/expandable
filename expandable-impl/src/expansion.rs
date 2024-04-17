@@ -41,6 +41,14 @@ impl<Span> ExpCtx<Span>
 where
     Span: Copy + 'static,
 {
+    // This value allows us to ensure that the check does not hang even if
+    // there's a bug in the state machine logic. It is used in any fixed-point
+    // iteration in the codebase.
+    //
+    // Parsing code is so fragile that a low value should be enough for us to
+    // either find the fixed-point or detect a syntax error.
+    const FIXED_POINT_ITERATIONS_FUEL: usize = 16;
+
     fn check_rule(
         bindings: HashMap<String, BindingData<Span>>,
         subst: &[TokenTree<Span>],
@@ -317,11 +325,7 @@ where
             .map(|(s, id)| (s, (Transition::empty(), id)))
             .collect();
 
-        // Parsing code is so fragile that 16 iterations should be enough for
-        // us to converge.
-        //
-        // We may have to increase this limit if proven wrong.
-        let mut fuel = 16;
+        let mut fuel = Self::FIXED_POINT_ITERATIONS_FUEL;
 
         while !to_test.is_empty() {
             assert!(fuel > 0, "No remaining fuel. This is a bug.");
@@ -329,7 +333,6 @@ where
 
             let sep = if first { None } else { sep };
 
-            // let outcome = self.parse_single_repetition(to_test, sep, stream)?;
             let (to_test_, reached_transitions_) = self
                 .apply(to_test.clone(), |this, states| {
                     this.parse_single_repetition(states, sep, stream)
