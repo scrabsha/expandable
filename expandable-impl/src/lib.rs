@@ -82,7 +82,7 @@
 use std::{marker::Copy, str::FromStr};
 
 pub use error::{Error, MacroRuleNode};
-use grammar::State;
+use grammar::DynamicState;
 pub use grammar::TokenDescription;
 
 #[macro_use]
@@ -96,7 +96,6 @@ mod repetition_stack;
 
 #[doc(hidden)]
 pub mod span;
-mod states;
 mod substitution;
 
 /// The whole point.
@@ -109,7 +108,7 @@ pub fn check_macro<Span>(
     input: Vec<TokenTree<Span>>,
 ) -> Result<(), Error<Span>>
 where
-    Span: Copy,
+    Span: Copy + 'static,
 {
     let mut iter = input.into_iter();
 
@@ -488,10 +487,13 @@ pub enum InvocationContext {
 }
 
 impl InvocationContext {
-    fn to_state(self) -> State {
+    fn to_state<T>(self) -> DynamicState<T>
+    where
+        T: Copy,
+    {
         match self {
-            InvocationContext::Expr => State::ExprStart,
-            InvocationContext::Item => State::ItemStart,
+            InvocationContext::Expr => DynamicState::expr(),
+            InvocationContext::Item => DynamicState::item(),
         }
     }
 }
@@ -780,8 +782,8 @@ mod tests {
         array_repeat {
             #[expr]
             {
-                ( #a:expr, #b:expr ) => {
-                    [#a; #b]
+                ( #( #a:expr )* ) => {
+                    [ #( #a, )* ]
                 };
             }
         }
