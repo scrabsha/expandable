@@ -16,6 +16,12 @@ pub(crate) fn runtime_base(entry_points: impl IntoIterator<Item = Ident>) -> Tok
 
         use smallvec::SmallVec;
 
+        /// A single token.
+        ///
+        /// We are not interested in the exact token, but rather in what kind
+        /// of token it is. For instance, both `foo` and `bar` are [`Ident`].
+        ///
+        /// This also includes the different types of fragment.
         #[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
         pub enum TokenDescription {
             Ident,
@@ -158,6 +164,8 @@ pub(crate) fn runtime_base(entry_points: impl IntoIterator<Item = Ident>) -> Tok
                 || (self.buffer == other.buffer && self.stack == other.stack)
             }
         }
+
+        impl<Span> Eq for RustParser<Span> {}
 
         impl<Span> Hash for RustParser<Span> where Span: 'static {
             fn hash<H: Hasher>(&self, state: &mut H) {
