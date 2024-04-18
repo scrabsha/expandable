@@ -16,15 +16,16 @@ macro_rules! check_parse {
             let mut parser = RustParser::$start_state();
 
             #[allow(unused_mut)]
-            let input = $crate::quote! {
+            let input = quote! {
                 $( $code )*
             };
 
             for (idx, token) in input.into_iter().enumerate() {
-                match parser.step(token, ()) {
+                dbg!(token);
+                match parser.step(token, idx) {
                     Ok(_) => {},
 
-                    Err(_) => {
+                    Err((idx, _)) => {
                         panic!("Failed to parse token `{:?}` at index {}", token, idx);
                     }
                 }
