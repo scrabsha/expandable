@@ -9,6 +9,7 @@ rust-version = "1.65.0"
 [dependencies]
 # MSRV: 1.36 (checked in CI)
 smallvec = "1.11"
+rust-grammar-dpdfa = { path = "../rust-grammar-dpdfa" }
 
 [dev-dependencies]
 # MSRV: 1.45 (crate-level documentation)
