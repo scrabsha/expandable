@@ -10,6 +10,12 @@ use std::{
 };
 
 use smallvec::SmallVec;
+#[doc = r" A single token."]
+#[doc = r""]
+#[doc = r" We are not interested in the exact token, but rather in what kind"]
+#[doc = r" of token it is. For instance, both `foo` and `bar` are [`Ident`]."]
+#[doc = r""]
+#[doc = r" This also includes the different types of fragment."]
 #[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
 pub enum TokenDescription {
     Ident,
@@ -143,6 +149,7 @@ impl<Span> PartialEq for RustParser<Span> {
         std::ptr::eq(self, other) || (self.buffer == other.buffer && self.stack == other.stack)
     }
 }
+impl<Span> Eq for RustParser<Span> {}
 impl<Span> Hash for RustParser<Span>
 where
     Span: 'static,
