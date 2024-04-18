@@ -133,3 +133,24 @@ jobs:
 
       - name: Compare README with crate-level documentation
         run: cat target/doc/expandable.json | jq ".index[.root].docs" -r | cmp README.md -
+
+  grammar-check:
+    runs-on: ubuntu-latest
+
+    env:
+      CARGO_TERM_COLOR: always
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Install toolchain
+        run: rustup toolchain install nightly
+
+      - name: Install nightly rustfmt
+        run: rustup component add rustfmt --toolchain nightly-x86_64-unknown-linux-gnu
+
+      - name: Generate a new generated.rs file
+        run: cargo +nightly run -p grammar-gen -- rust-grammar-dpdfa/grammar.rs generated.rs
+
+      - name: Compare new generated.rs file with HEAD
+        run: cmp -l rust-grammar-dpdfa/src/generated.rs generated.rs
