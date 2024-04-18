@@ -147,7 +147,7 @@ jobs:
         run: rustup toolchain install nightly
 
       - name: Generate a new generated.rs file
-        run: cargo run -p grammar-gen -- rust-grammar-dpdfa/grammar.rs generated.rs
+        run: cargo +nightly run -p grammar-gen -- rust-grammar-dpdfa/grammar.rs generated.rs
 
       - name: Compare new generated.rs file with HEAD
-        run: cmp rust-grammar-dpdfa/src/generated.rs generated.rs
+        run: cmp -l rust-grammar-dpdfa/src/generated.rs generated.rs
