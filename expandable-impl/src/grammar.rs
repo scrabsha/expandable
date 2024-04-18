@@ -12,7 +12,7 @@ pub(crate) use rust_grammar_dpdfa::Transition;
 use crate::{FragmentKind, Terminal};
 
 #[derive(Clone, Debug)]
-pub struct DynamicState<Span>
+pub(crate) struct DynamicState<Span>
 where
     Span: 'static,
 {
@@ -40,13 +40,13 @@ impl<Span> DynamicState<Span>
 where
     Span: Copy + 'static,
 {
-    pub fn item() -> DynamicState<Span> {
+    pub(crate) fn item() -> DynamicState<Span> {
         DynamicState {
             state: RustParser::item(),
         }
     }
 
-    pub fn expr() -> DynamicState<Span> {
+    pub(crate) fn expr() -> DynamicState<Span> {
         DynamicState {
             state: RustParser::expr(),
         }
