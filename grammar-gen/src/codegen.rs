@@ -43,8 +43,7 @@ fn check_all_functions_are_defined(productions: &[Production]) {
             ProductionKind::Error => {}
 
             ProductionKind::Cond {
-                builtin: _,
-                descr: _,
+                builtins: _,
                 cons,
                 alt,
             } => {
