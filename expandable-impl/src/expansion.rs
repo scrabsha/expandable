@@ -546,4 +546,13 @@ mod tests {
             }
         }
     }
+
+    assert_valid_arm! {
+        expr_path_full_fragment {
+            #[expr]
+            ( #ident:ident ) => {
+                #( :: #ident )*
+            }
+        }
+    }
 }
