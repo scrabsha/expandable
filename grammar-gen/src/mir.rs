@@ -112,14 +112,6 @@ impl Production {
                     .map(|(intermediates, alt_name)| (intermediates, Some(alt_name)))
                     .unwrap_or_default();
 
-                // let builtin = cond.cond.builtin.clone();
-                // let descr = cond
-                //     .cond
-                //     .predicate
-                //     .as_ref()
-                //     .map(|pred| &pred.ident)
-                //     .cloned();
-
                 let builtin = cond
                     .cond
                     .iter()
