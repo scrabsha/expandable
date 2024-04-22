@@ -2,6 +2,7 @@ use proc_macro2::Ident;
 use syn::{
     parenthesized,
     parse::Parse,
+    punctuated::Punctuated,
     token::{self, Paren, Pub},
     Error, Result, Token,
 };
@@ -58,7 +59,7 @@ pub(crate) struct CallExpr {
 #[derive(Clone, Debug, PartialEq)]
 pub(crate) struct CondExpr {
     pub(crate) if_: Token![if],
-    pub(crate) cond: BuiltinExpr,
+    pub(crate) cond: Punctuated<BuiltinExpr, Token![||]>,
     pub(crate) consequence: Block,
     pub(crate) alternative: Option<(Token![else], Box<Expr>)>,
 }
@@ -179,7 +180,7 @@ impl Parse for CondExpr {
     fn parse(input: syn::parse::ParseStream) -> syn::Result<Self> {
         Ok(CondExpr {
             if_: input.parse()?,
-            cond: input.parse()?,
+            cond: Punctuated::parse_separated_nonempty(input)?,
             consequence: input.parse()?,
             alternative: {
                 if input.peek(Token![else]) {

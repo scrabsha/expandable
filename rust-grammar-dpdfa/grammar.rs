@@ -145,64 +145,38 @@ pub fn expr() {
 }
 
 fn expr_after_atom() {
-    if peek(Plus) {
+    if peek(Plus)
+        || peek(Minus)
+        || peek(Star)
+        || peek(Slash)
+        || peek(Percent)
+        || peek(And)
+        || peek(Or)
+        || peek(Caret)
+        || peek(Shl)
+        || peek(Shr)
+    {
+        // Arithmetic expressions and logical expressions
+        // https://doc.rust-lang.org/reference/expressions/operator-expr.html#arithmetic-and-logical-binary-operators
         bump();
         expr();
-    } else if peek(Minus) {
+    } else if peek(EqualsEquals)
+        || peek(NotEquals)
+        || peek(GreaterThan)
+        || peek(LessThan)
+        || peek(GreaterThanEquals)
+        || peek(LessThanEquals)
+    {
+        // Comparison expressions:
+        // https://doc.rust-lang.org/reference/expressions/operator-expr.html#comparison-operators
         bump();
         expr();
-    } else if peek(Star) {
+    } else if peek(OrOr) || peek(AndAnd) {
+        // Lazy Boolean Expressions
+        // https://spec.ferrocene.dev/expressions.html#lazy-boolean-expressions
         bump();
         expr();
-    } else if peek(Slash) {
-        bump();
-        expr();
-    } else if peek(Percent) {
-        bump();
-        expr();
-    } else if peek(Caret) {
-        bump();
-        expr();
-    } else if peek(And) {
-        bump();
-        expr();
-    } else if peek(Or) {
-        bump();
-        expr();
-    } else if peek(AndAnd) {
-        bump();
-        expr();
-    } else if peek(OrOr) {
-        bump();
-        expr();
-    } else if peek(Shl) {
-        bump();
-        expr();
-    } else if peek(Shr) {
-        bump();
-        expr();
-    } else if peek(EqualsEquals) {
-        bump();
-        expr();
-    } else if peek(NotEquals) {
-        bump();
-        expr();
-    } else if peek(GreaterThan) {
-        bump();
-        expr();
-    } else if peek(LessThan) {
-        bump();
-        expr();
-    } else if peek(GreaterThanEquals) {
-        bump();
-        expr();
-    } else if peek(LessThanEquals) {
-        bump();
-        expr();
-    } else if peek(DotDot) {
-        bump();
-        expr();
-    } else if peek(DotDotEquals) {
+    } else if peek(DotDot) || peek(DotDotEquals) {
         bump();
         expr();
     } else if peek(LParen) {
@@ -215,17 +189,12 @@ fn expr_after_atom() {
 }
 
 fn expr_atom() {
-    if peek(Return) {
+    if peek(Return) || peek(Break) {
         expr_return_or_break();
-    } else if peek(Break) {
-        expr_return_or_break();
-    } else if peek(Ident) {
+    } else if peek(Ident) || peek(FragmentIdent) {
+        // Maybe beginning of a path expression?
         expr_ident();
-    } else if peek(FragmentIdent) {
-        bump();
-    } else if peek(FragmentExpr) {
-        bump();
-    } else if peek(Literal) {
+    } else if peek(FragmentExpr) || peek(Literal) {
         bump();
     } else if peek(If) {
         expr_if();
@@ -249,78 +218,52 @@ fn expr_return_or_break() {
 
     // https://github.com/dtolnay/syn/blob/922ea2dfe9a15f3d7305a8177d1df9e2c617a953/src/expr.rs#L1339
     // TODO: lifetimes -> labeled loops
-    if peek(Async) {
-        expr_atom();
-    } else if peek(Break) {
-        expr_atom();
-    } else if peek(Continue) {
-        expr_atom();
-    } else if peek(Crate) {
-        expr_atom();
-    } else if peek(False) {
-        expr_atom();
-    } else if peek(For) {
-        expr_atom();
-    } else if peek(Let) {
-        expr_atom();
-    } else if peek(Loop) {
-        expr_atom();
-    } else if peek(Match) {
-        expr_atom();
-    } else if peek(Move) {
-        expr_atom();
-    } else if peek(Return) {
-        expr_atom();
-    } else if peek(Self_) {
-        expr_atom();
-    } else if peek(SelfUpper) {
-        expr_atom();
-    } else if peek(True) {
-        expr_atom();
-    } else if peek(Union) {
-        expr_atom();
-    } else if peek(While) {
-        expr_atom();
-    } else if peek(Yield) {
-        expr_atom();
-    } else if peek(Ident) {
-        expr_atom();
-    } else if peek(FragmentIdent) {
-        expr_atom();
-    } else if peek(LParen) {
-        expr_atom();
-    } else if peek(LBracket) {
-        expr_atom();
-    } else if peek(LBrace) {
-        expr_atom();
-    } else if peek(Literal) {
-        expr_atom();
-    } else if peek(FragmentLiteral) {
-        expr_atom();
-    } else if peek(Not) {
-        expr_atom();
-    } else if peek(Star) {
-        expr_atom();
-    } else if peek(Or) {
-        expr_atom();
-    } else if peek(And) {
-        expr_atom();
-    } else if peek(DotDot) {
-        expr_atom();
-    } else if peek(LessThan) {
-        expr_atom();
-    } else if peek(ColonColon) {
-        expr_atom();
-    } else if peek(Pound) {
-        expr_atom();
-    } else if peek(FragmentExpr) {
+    if peek(Async)
+        || peek(Break)
+        || peek(Continue)
+        || peek(Crate)
+        || peek(False)
+        || peek(For)
+        || peek(Let)
+        || peek(Loop)
+        || peek(Match)
+        || peek(Move)
+        || peek(Return)
+        || peek(Self_)
+        || peek(SelfUpper)
+        || peek(True)
+        || peek(Union)
+        || peek(While)
+        || peek(Yield)
+        || peek(Ident)
+        || peek(FragmentIdent)
+        || peek(LParen)
+        || peek(LBracket)
+        || peek(LBrace)
+        || peek(Literal)
+        || peek(FragmentLiteral)
+        || peek(Not)
+        || peek(Star)
+        || peek(Or)
+        || peek(And)
+        || peek(DotDot)
+        || peek(LessThan)
+        || peek(ColonColon)
+        || peek(Pound)
+        || peek(FragmentExpr)
+    {
         expr_atom();
     }
 }
 
 fn expr_ident() {
     // TODO: call path() or sth
-    bump(Ident);
+    if peek(Ident) || peek(FragmentIdent) {
+        bump();
+    } else {
+        error();
+    }
+
     if peek(ColonColon) {
         bump(ColonColon);
         expr_angle_bracketed_generic_arguments();

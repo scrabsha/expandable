@@ -37,8 +37,7 @@ pub(crate) enum ProductionKind {
     },
     Error,
     Cond {
-        builtin: Builtin,
-        descr: Option<Ident>,
+        builtins: Vec<(Builtin, Option<Ident>)>,
         cons: Vec<Ident>,
         alt: Vec<Ident>,
     },
@@ -113,13 +112,16 @@ impl Production {
                     .map(|(intermediates, alt_name)| (intermediates, Some(alt_name)))
                     .unwrap_or_default();
 
-                let builtin = cond.cond.builtin.clone();
-                let descr = cond
+                let builtin = cond
                     .cond
-                    .predicate
-                    .as_ref()
-                    .map(|pred| &pred.ident)
-                    .cloned();
+                    .iter()
+                    .map(|b_e| {
+                        (
+                            b_e.builtin.clone(),
+                            b_e.predicate.as_ref().map(|pred| pred.ident.clone()),
+                        )
+                    })
+                    .collect();
 
                 let cons = vec![cons_name];
                 let alt = alt_name.into_iter().collect::<Vec<_>>();
@@ -128,8 +130,7 @@ impl Production {
                     name: ctxt.gensym(),
                     vis: Vis::Private,
                     kind: ProductionKind::Cond {
-                        builtin,
-                        descr,
+                        builtins: builtin,
                         cons,
                         alt,
                     },
@@ -213,17 +214,18 @@ impl Production {
             ProductionKind::Error => quote! { error![input] },
 
             ProductionKind::Cond {
-                builtin,
-                descr,
+                builtins,
                 cons,
                 alt,
             } => {
-                let builtin_call = codegen_builtin_call(builtin, descr);
+                let builtin_calls = builtins
+                    .into_iter()
+                    .map(|(b, p)| codegen_builtin_call(b, p));
                 let cons = cons.into_iter().rev();
                 let alt = alt.into_iter().rev();
 
                 quote! {
-                    if #builtin_call {
+                    if #( #builtin_calls )||* {
                         call_now![input, #( #cons ),* ]
                     } else {
                         call_now![input, #( #alt ),* ]
