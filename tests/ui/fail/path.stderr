@@ -1,0 +1,17 @@
+error: Potentially invalid expansion. Expected `Self`, an identifier.
+ --> tests/ui/fail/path.rs:6:15
+  |
+6 |         path:::<foo>
+  |               ^
+
+error: Potentially invalid expansion. Expected `-`, `>`, a `{`, a literal, an identifier, an identifier.
+  --> tests/ui/fail/path.rs:13:17
+   |
+13 |         path::< <foo> >
+   |                 ^
+
+error: Potentially invalid expansion. Expected `Self`, an identifier.
+  --> tests/ui/fail/path.rs:20:15
+   |
+20 |         path::1
+   |               ^

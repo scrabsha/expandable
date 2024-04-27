@@ -1267,14 +1267,17 @@ fn expr_atom_1<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Sp
 fn expr_atom_18<Span: Copy>(
     input: &mut RustParser<Span>,
 ) -> Result<Transition<Span>, Option<Span>> {
-    if cond![input, peek, Ident] || cond![input, peek, FragmentIdent] {
+    if cond![input, peek, Ident]
+        || cond![input, peek, FragmentIdent]
+        || cond![input, peek, ColonColon]
+    {
         call_now![input, expr_atom_3]
     } else {
         call_now![input, expr_atom_17]
     }
 }
 fn expr_atom_2<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    call_now![input, expr_ident]
+    call_now![input, expr_path]
 }
 fn expr_atom_3<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
     call_now![input, expr_atom_2]
@@ -1483,21 +1486,70 @@ fn expr_return_or_break<Span: Copy>(
 ) -> Result<Transition<Span>, Option<Span>> {
     call_now![input, expr_return_or_break_11]
 }
-fn expr_ident_3<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
+fn expr_path_2<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
     if cond![input, peek, ColonColon] {
-        call_now![input, expr_ident_2]
+        call_now![input, expr_path_1]
     } else {
         call_now![input,]
     }
 }
-fn expr_ident_0<Span: Copy>(
+fn expr_path_0<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
+    call_now![input, expr_path_]
+}
+fn expr_path_1<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
+    call_now![input, expr_path_0]
+}
+fn expr_path_3<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
+    call_now![input, expr_path_segment]
+}
+fn expr_path_6<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
+    if cond![input, peek, ColonColon] {
+        call_now![input, expr_path_5]
+    } else {
+        call_now![input,]
+    }
+}
+fn expr_path_4<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
+    if bump![input, ColonColon] {
+        call_then![input,]
+    } else {
+        error![input]
+    }
+}
+fn expr_path_5<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
+    call_now![input, expr_path_4]
+}
+fn expr_path_7<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
+    call_now![input, expr_path_2, expr_path_3, expr_path_6]
+}
+fn expr_path<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
+    call_now![input, expr_path_7]
+}
+fn expr_path__2<Span: Copy>(
     input: &mut RustParser<Span>,
 ) -> Result<Transition<Span>, Option<Span>> {
-    call_now![input, expr_angle_bracketed_generic_arguments]
+    if cond![input, peek, ColonColon] {
+        call_now![input, expr_path__1]
+    } else {
+        call_now![input,]
+    }
 }
-fn expr_ident_1<Span: Copy>(
+fn expr_path__0<Span: Copy>(
+    input: &mut RustParser<Span>,
+) -> Result<Transition<Span>, Option<Span>> {
+    call_now![input, expr_path_]
+}
+fn expr_path__1<Span: Copy>(
+    input: &mut RustParser<Span>,
+) -> Result<Transition<Span>, Option<Span>> {
+    call_now![input, expr_path__0]
+}
+fn expr_path__3<Span: Copy>(
+    input: &mut RustParser<Span>,
+) -> Result<Transition<Span>, Option<Span>> {
+    call_now![input, expr_path_segment]
+}
+fn expr_path__4<Span: Copy>(
     input: &mut RustParser<Span>,
 ) -> Result<Transition<Span>, Option<Span>> {
     if bump![input, ColonColon] {
@@ -1506,21 +1558,84 @@ fn expr_ident_1<Span: Copy>(
         error![input]
     }
 }
-fn expr_ident_2<Span: Copy>(
+fn expr_path__5<Span: Copy>(
     input: &mut RustParser<Span>,
 ) -> Result<Transition<Span>, Option<Span>> {
-    call_now![input, expr_ident_0, expr_ident_1]
+    call_now![input, expr_path__2, expr_path__3, expr_path__4]
 }
-fn expr_ident_8<Span: Copy>(
+fn expr_path_<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
+    call_now![input, expr_path__5]
+}
+fn expr_path_segment_5<Span: Copy>(
     input: &mut RustParser<Span>,
 ) -> Result<Transition<Span>, Option<Span>> {
-    if cond![input, peek, Ident] || cond![input, peek, FragmentIdent] {
-        call_now![input, expr_ident_5]
+    if cond![input, peek, ColonColon] {
+        call_now![input, expr_path_segment_4]
     } else {
-        call_now![input, expr_ident_7]
+        call_now![input,]
     }
 }
-fn expr_ident_4<Span: Copy>(
+fn expr_path_segment_3<Span: Copy>(
+    input: &mut RustParser<Span>,
+) -> Result<Transition<Span>, Option<Span>> {
+    if cond![input, peek2, LessThan] {
+        call_now![input, expr_path_segment_2]
+    } else {
+        call_now![input,]
+    }
+}
+fn expr_path_segment_0<Span: Copy>(
+    input: &mut RustParser<Span>,
+) -> Result<Transition<Span>, Option<Span>> {
+    call_now![input, expr_angle_bracketed_generic_arguments]
+}
+fn expr_path_segment_1<Span: Copy>(
+    input: &mut RustParser<Span>,
+) -> Result<Transition<Span>, Option<Span>> {
+    if bump![input, ColonColon] {
+        call_then![input,]
+    } else {
+        error![input]
+    }
+}
+fn expr_path_segment_2<Span: Copy>(
+    input: &mut RustParser<Span>,
+) -> Result<Transition<Span>, Option<Span>> {
+    call_now![input, expr_path_segment_0, expr_path_segment_1]
+}
+fn expr_path_segment_4<Span: Copy>(
+    input: &mut RustParser<Span>,
+) -> Result<Transition<Span>, Option<Span>> {
+    call_now![input, expr_path_segment_3]
+}
+fn expr_path_segment_6<Span: Copy>(
+    input: &mut RustParser<Span>,
+) -> Result<Transition<Span>, Option<Span>> {
+    call_now![input, path_segment]
+}
+fn expr_path_segment_7<Span: Copy>(
+    input: &mut RustParser<Span>,
+) -> Result<Transition<Span>, Option<Span>> {
+    call_now![input, expr_path_segment_5, expr_path_segment_6]
+}
+fn expr_path_segment<Span: Copy>(
+    input: &mut RustParser<Span>,
+) -> Result<Transition<Span>, Option<Span>> {
+    call_now![input, expr_path_segment_7]
+}
+fn path_segment_4<Span: Copy>(
+    input: &mut RustParser<Span>,
+) -> Result<Transition<Span>, Option<Span>> {
+    if cond![input, peek, Ident]
+        || cond![input, peek, FragmentIdent]
+        || cond![input, peek, SelfUpper]
+    {
+        call_now![input, path_segment_1]
+    } else {
+        call_now![input, path_segment_3]
+    }
+}
+fn path_segment_0<Span: Copy>(
     input: &mut RustParser<Span>,
 ) -> Result<Transition<Span>, Option<Span>> {
     if bump![input] {
@@ -1529,28 +1644,30 @@ fn expr_ident_4<Span: Copy>(
         error![input]
     }
 }
-fn expr_ident_5<Span: Copy>(
+fn path_segment_1<Span: Copy>(
     input: &mut RustParser<Span>,
 ) -> Result<Transition<Span>, Option<Span>> {
-    call_now![input, expr_ident_4]
+    call_now![input, path_segment_0]
 }
-fn expr_ident_6<Span: Copy>(
+fn path_segment_2<Span: Copy>(
     input: &mut RustParser<Span>,
 ) -> Result<Transition<Span>, Option<Span>> {
     error![input]
 }
-fn expr_ident_7<Span: Copy>(
+fn path_segment_3<Span: Copy>(
     input: &mut RustParser<Span>,
 ) -> Result<Transition<Span>, Option<Span>> {
-    call_now![input, expr_ident_6]
+    call_now![input, path_segment_2]
 }
-fn expr_ident_9<Span: Copy>(
+fn path_segment_5<Span: Copy>(
     input: &mut RustParser<Span>,
 ) -> Result<Transition<Span>, Option<Span>> {
-    call_now![input, expr_ident_3, expr_ident_8]
+    call_now![input, path_segment_4]
 }
-fn expr_ident<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    call_now![input, expr_ident_9]
+fn path_segment<Span: Copy>(
+    input: &mut RustParser<Span>,
+) -> Result<Transition<Span>, Option<Span>> {
+    call_now![input, path_segment_5]
 }
 fn expr_if_3<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
     if cond![input, peek, Else] {

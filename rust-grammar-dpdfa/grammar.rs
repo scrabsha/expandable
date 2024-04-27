@@ -191,9 +191,8 @@ fn expr_after_atom() {
 fn expr_atom() {
     if peek(Return) || peek(Break) {
         expr_return_or_break();
-    } else if peek(Ident) || peek(FragmentIdent) {
-        // Maybe beginning of a path expression?
-        expr_ident();
+    } else if peek(Ident) || peek(FragmentIdent) || peek(ColonColon) {
+        expr_path();
     } else if peek(FragmentExpr) || peek(Literal) {
         bump();
     } else if peek(If) {
@@ -256,17 +255,42 @@ fn expr_return_or_break() {
     }
 }
 
-fn expr_ident() {
-    // TODO: call path() or sth
-    if peek(Ident) || peek(FragmentIdent) {
+fn expr_path() {
+    if peek(ColonColon) {
+        bump(ColonColon);
+    }
+    expr_path_segment();
+
+    if peek(ColonColon) {
+        expr_path_();
+    }
+}
+
+fn expr_path_() {
+    bump(ColonColon);
+    expr_path_segment();
+
+    if peek(ColonColon) {
+        expr_path_();
+    }
+}
+
+fn expr_path_segment() {
+    path_segment();
+
+    if peek(ColonColon) {
+        if peek2(LessThan) {
+            bump(ColonColon);
+            expr_angle_bracketed_generic_arguments();
+        }
+    }
+}
+
+fn path_segment() {
+    if peek(Ident) || peek(FragmentIdent) || peek(SelfUpper) {
         bump();
     } else {
         error();
-    }
-
-    if peek(ColonColon) {
-        bump(ColonColon);
-        expr_angle_bracketed_generic_arguments();
     }
 }
 
