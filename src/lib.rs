@@ -107,9 +107,21 @@ fn mk_error_msg(error: expandable_impl::Error<Span>) -> syn::Error {
         expandable_impl::Error::InvalidProducedAst { span, expected, .. } => {
             let mut expected = expected.iter().map(describe).collect::<Vec<_>>();
             expected.sort_unstable();
-            let expected = expected.join(", ");
+
+            let expected_len = expected.len();
+            let (actually_printed, or_n_others) = if expected_len > 6 {
+                let n = expected_len - 6;
+                let actually_printed = expected[0..6].join(", ");
+                let s = if n > 1 { "s" } else { "" };
+                let or_n_others = format!(" or {n} other{s}");
+
+                (actually_printed, or_n_others)
+            } else {
+                (expected.join(", "), String::new())
+            };
+
             (
-                format!("Potentially invalid expansion. Expected {expected}."),
+                format!("Potentially invalid expansion. Expected {actually_printed}{or_n_others}."),
                 Some(span),
             )
         }
