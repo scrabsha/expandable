@@ -1,4 +1,4 @@
-error: Potentially invalid expansion. Expected `::`, `break`, `if`, `return`, a `[`, a `{` or 2 others.
+error: Potentially invalid expansion. Expected `::`, `break`, `if`, `return`, a `(`, a `[` or 3 others.
  --> tests/ui/fail/python_power_operator.rs:5:14
   |
 5 |         $e * *$e
