@@ -56,7 +56,7 @@ fn block() {
 fn block_() {
     if peek(RBrace) {
         bump(RBrace);
-    } else if peek(Semicolon) {
+    } else {
         bump(Semicolon);
         if peek(RBrace) {
             bump(RBrace);
@@ -197,6 +197,8 @@ fn expr_atom() {
         bump();
     } else if peek(If) {
         expr_if();
+    } else if peek(LParen) {
+        expr_tuple();
     } else if peek(LBracket) {
         expr_array();
     } else if peek(LBrace) {
@@ -460,4 +462,33 @@ fn minus_prefixed_literal() {
 
 fn expr_prefixed_unary_op() {
     // TODO: `!` operator, ...
+}
+
+fn expr_tuple() {
+    // We parse tuple expressions and grouped expressions here
+    // https://doc.rust-lang.org/reference/expressions/tuple-expr.html#tuple-expressions
+    // https://doc.rust-lang.org/reference/expressions/grouped-expr.html#grouped-expressions
+    bump(LParen);
+
+    if peek(RParen) {
+        bump(RParen);
+    } else {
+        expr();
+        expr_tuple_();
+    }
+}
+
+fn expr_tuple_() {
+    if peek(RParen) {
+        bump(RParen);
+    } else {
+        bump(Comma);
+
+        if peek(RParen) {
+            bump(RParen);
+        } else {
+            expr();
+            expr_tuple_();
+        }
+    }
 }
