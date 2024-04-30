@@ -12,6 +12,10 @@ macro_rules! field {
     () => {
         "foo".0 + 1
     };
+
+    () => {
+        a.b.0.1.c.2.3
+    };
 }
 
 fn main() {}
