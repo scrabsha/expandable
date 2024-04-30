@@ -1,16 +1,16 @@
-error: Potentially invalid expansion. Expected `::`, `break`, `if`, `return`, a `(`, a `)` or 4 others.
+error: Potentially invalid expansion. Expected `::`, `break`, `for`, `if`, `loop`, `return` or 7 others.
  --> tests/ui/fail/invalid_fn_calls.rs:6:18
   |
 6 |         $fn_name(,)
   |                  ^
 
-error: Potentially invalid expansion. Expected `::`, `break`, `if`, `return`, a `(`, a `)` or 4 others.
+error: Potentially invalid expansion. Expected `::`, `break`, `for`, `if`, `loop`, `return` or 7 others.
   --> tests/ui/fail/invalid_fn_calls.rs:14:18
    |
 14 |         $fn_name(,,)
    |                  ^
 
-error: Potentially invalid expansion. Expected `!=`, `%`, `&&`, `&`, `*`, `+` or 18 others.
+error: Potentially invalid expansion. Expected `!=`, `%`, `&&`, `&`, `*`, `+` or 19 others.
   --> tests/ui/fail/invalid_fn_calls.rs:22:25
    |
 22 |         $fn_name($arg1 $arg2)
