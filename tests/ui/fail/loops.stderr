@@ -1,0 +1,17 @@
+error: Potentially invalid expansion. Expected a `{`.
+ --> tests/ui/fail/loops.rs:6:14
+  |
+6 |         loop loop {}
+  |              ^^^^
+
+error: Potentially invalid expansion. Expected `::`, `break`, `for`, `if`, `loop`, `return` or 6 others.
+  --> tests/ui/fail/loops.rs:13:15
+   |
+13 |         while < 42 {}
+   |               ^
+
+error: Potentially invalid expansion. Expected an identifier.
+  --> tests/ui/fail/loops.rs:20:13
+   |
+20 |         for ! in in {}
+   |             ^

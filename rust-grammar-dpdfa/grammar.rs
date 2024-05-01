@@ -182,6 +182,12 @@ fn expr_after_atom() {
     } else if peek(LParen) {
         expr_call();
         expr_after_atom();
+    } else if peek(LBracket) {
+        // Index expression:
+        // https://doc.rust-lang.org/reference/expressions/array-expr.html#array-and-slice-indexing-expressions
+        bump(LBracket);
+        expr();
+        bump(RBracket);
     } else if peek(Dot) {
         expr_dot_expr();
         expr_after_atom();
@@ -203,6 +209,12 @@ fn expr_atom() {
         expr_array();
     } else if peek(LBrace) {
         block();
+    } else if peek(Loop) {
+        expr_loop();
+    } else if peek(While) {
+        expr_while();
+    } else if peek(For) {
+        expr_for();
     } else {
         error();
     }
@@ -491,4 +503,25 @@ fn expr_tuple_() {
             expr_tuple_();
         }
     }
+}
+
+fn expr_loop() {
+    bump(Loop);
+    block();
+}
+
+fn expr_while() {
+    bump(While);
+    // TODO: we must not allow struct expressions here
+    expr();
+    block();
+}
+
+fn expr_for() {
+    bump(For);
+    pat();
+    bump(In);
+    // TODO: we must not allow struct expressions here
+    expr();
+    block();
 }
