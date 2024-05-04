@@ -1,16 +1,16 @@
-error: Potentially invalid expansion. Expected an identifier, a `)`.
+error: Potentially invalid expansion. Expected an identifier, `&`, `-`, `..=`, `..`, `_` or 9 others.
  --> tests/ui/fail/fn_args.rs:5:17
   |
 5 |         fn test(,) -> u8 {
   |                 ^
 
-error: Potentially invalid expansion. Expected an identifier, a `)`.
+error: Potentially invalid expansion. Expected an identifier, `&`, `-`, `..=`, `..`, `_` or 9 others.
   --> tests/ui/fail/fn_args.rs:15:23
    |
 15 |         fn test(a: u8,,) -> u8 {
    |                       ^
 
-error: Potentially invalid expansion. Expected `:`.
+error: Potentially invalid expansion. Expected `..=`, `..`, `:`, `@`, `|`, a `(` or 1 others.
   --> tests/ui/fail/fn_args.rs:25:16
    |
 25 |         fn test(a) -> u8 {

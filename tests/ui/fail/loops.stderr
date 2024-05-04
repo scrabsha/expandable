@@ -10,7 +10,7 @@ error: Potentially invalid expansion. Expected an expression, an identifier, `::
 13 |         while < 42 {}
    |               ^
 
-error: Potentially invalid expansion. Expected an identifier.
+error: Potentially invalid expansion. Expected an identifier, `&`, `-`, `..=`, `..`, `_` or 8 others.
   --> tests/ui/fail/loops.rs:20:13
    |
 20 |         for ! in in {}
