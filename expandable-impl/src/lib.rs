@@ -507,6 +507,8 @@ pub enum FragmentKind {
     Ident,
     /// An item (`item`).
     Item,
+    /// A pattern (`pat`).
+    Pat,
 }
 
 impl FromStr for FragmentKind {
@@ -517,6 +519,7 @@ impl FromStr for FragmentKind {
             "ident" => FragmentKind::Ident,
             "item" => FragmentKind::Item,
             "expr" => FragmentKind::Expr,
+            "pat" => FragmentKind::Pat,
 
             _ => return Err(()),
         })

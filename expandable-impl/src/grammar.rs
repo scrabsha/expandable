@@ -147,6 +147,7 @@ macro_rules! token_description {
                     $name::Fragment(FragmentKind::Expr) => rust_grammar_dpdfa::TokenDescription::FragmentExpr,
                     $name::Fragment(FragmentKind::Ident) => rust_grammar_dpdfa::TokenDescription::FragmentIdent,
                     $name::Fragment(FragmentKind::Item) => rust_grammar_dpdfa::TokenDescription::FragmentItem,
+                    $name::Fragment(FragmentKind::Pat) => rust_grammar_dpdfa::TokenDescription::FragmentPat,
 
                     $name::Invalid => unreachable!(),
                 }
