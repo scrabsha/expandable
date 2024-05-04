@@ -52,6 +52,12 @@ where
         }
     }
 
+    pub(crate) fn pat() -> DynamicState<Span> {
+        DynamicState {
+            state: RustParser::pat(),
+        }
+    }
+
     pub(crate) fn accept_fragment(
         self,
         fragment: FragmentKind,

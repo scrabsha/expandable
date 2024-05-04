@@ -78,6 +78,7 @@ macro_rules! attribute_macro {
 
 attribute_macro!(expr => Expr);
 attribute_macro!(item => Item);
+attribute_macro!(pat => Pat);
 
 fn expandable_inner(ctx: expandable_impl::InvocationContext, item: TokenStream1) -> TokenStream1 {
     let mut item_ = item.clone();

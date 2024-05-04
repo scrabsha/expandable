@@ -484,6 +484,8 @@ pub enum InvocationContext {
     Expr,
     /// The macro expands to any number of item.
     Item,
+    /// The macro expands to a pattern.
+    Pat,
 }
 
 impl InvocationContext {
@@ -494,6 +496,7 @@ impl InvocationContext {
         match self {
             InvocationContext::Expr => DynamicState::expr(),
             InvocationContext::Item => DynamicState::item(),
+            InvocationContext::Pat => DynamicState::pat(),
         }
     }
 }

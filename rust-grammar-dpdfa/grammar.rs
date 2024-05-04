@@ -118,7 +118,7 @@ fn fn_args_() {
     }
 }
 
-fn pat() {
+pub fn pat() {
     if peek(Or) {
         bump(Or);
     }
