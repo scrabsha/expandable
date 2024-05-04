@@ -119,14 +119,292 @@ fn fn_args_() {
 }
 
 fn pat() {
-    if peek(Ident) {
+    if peek(Or) {
+        bump(Or);
+    }
+
+    pat_no_top_alt();
+
+    pat_();
+}
+
+fn pat_() {
+    if peek(Or) {
+        bump(Or);
+        pat_no_top_alt();
+
+        pat_();
+    }
+}
+
+fn pat_no_top_alt() {
+    // TODO: macro calls
+    if peek(FragmentPat) {
         bump();
-    } else if peek(FragmentIdent) {
+    } else if peek(Ref) || peek(Mut) {
+        pat_ident();
+    } else if peek(Literal) || peek(FragmentLiteral) || peek(True) || peek(False) || peek(Minus) {
+        pat_literal();
+        pat_maybe_range_tail();
+    } else if peek(DotDotEquals) {
+        bump(DotDotEquals);
+        pat_literal();
+    } else if peek(Ident) || peek(FragmentIdent) {
+        // TODO: can we merge the two branches?
+        if peek2(ColonColon) {
+            expr_path();
+        } else {
+            pat_ident();
+            pat_maybe_range_tail();
+        }
+
+        if peek(LBrace) {
+            pat_struct_tail();
+        } else if peek(LParen) {
+            // Tuple struct = path expression + tuple pattern
+            pat_tuple();
+        }
+    } else if peek(FragmentPath) {
+        bump(FragmentPath);
+        pat_maybe_range_tail();
+    } else if peek(Underscore) || peek(DotDot) {
         bump();
-    } else if peek(FragmentPat) {
+    } else if peek(And) {
+        bump(And);
+        if peek(And) {
+            bump(And);
+        }
+        pat_without_range();
+    } else if peek(LParen) {
+        pat_tuple();
+    } else if peek(LBracket) {
+        pat_slice();
+    } else {
+        error();
+    }
+}
+
+fn pat_without_range() {
+    // TODO: macro calls
+    if peek(FragmentPat) {
+        bump();
+    } else if peek(Ref) || peek(Mut) {
+        pat_ident();
+    } else if peek(Literal) || peek(FragmentLiteral) || peek(True) || peek(False) || peek(Minus) {
+        pat_literal();
+    } else if peek(DotDotEquals) {
+        bump(DotDotEquals);
+        pat_literal();
+    } else if peek(Ident) || peek(FragmentIdent) {
+        // TODO: can we merge the two branches?
+        if peek2(ColonColon) {
+            expr_path();
+        } else {
+            pat_ident();
+        }
+
+        if peek(LBrace) {
+            pat_struct_tail();
+        } else if peek(LParen) {
+            // Tuple struct = path expression + tuple pattern
+            pat_tuple();
+        }
+    } else if peek(FragmentPath) {
+        bump(FragmentPath);
+    } else if peek(Underscore) || peek(DotDot) {
+        bump();
+    } else if peek(And) {
+        bump(And);
+        if peek(And) {
+            bump(And);
+        }
+    } else if peek(LParen) {
+        pat_tuple();
+    } else if peek(LBracket) {
+        pat_slice();
+    } else {
+        error();
+    }
+}
+
+fn pat_maybe_range_tail() {
+    if peek(DotDotEquals) {
+        bump(DotDotEquals);
+        if peek(Ident)
+            || peek(FragmentIdent)
+            || peek(ColonColon)
+            || peek(FragmentPath)
+            || peek(LessThan)
+        {
+            expr_path();
+        } else {
+            pat_literal();
+        }
+    } else if peek(DotDot) {
+        bump();
+    }
+}
+
+fn pat_struct_tail() {
+    bump(LBrace);
+
+    if peek(DotDot) {
+        bump(DotDot);
+        bump(RBrace);
+    } else if peek(RBrace) {
+        bump(RBrace);
+    } else {
+        pat_struct_field();
+
+        if peek(RBrace) {
+            bump(RBrace);
+        } else {
+            pat_struct_tail_();
+        }
+    }
+}
+
+fn pat_struct_tail_() {
+    if peek(DotDot) {
+        bump(DotDot);
+        bump(RBrace);
+    } else if peek(Comma) {
+        bump(Comma);
+
+        if peek(RBrace) {
+            bump(RBrace);
+        } else {
+            pat_struct_field();
+            pat_struct_tail_();
+        }
+    } else {
+        bump(RBrace);
+    }
+}
+
+fn pat_tuple() {
+    bump(LParen);
+
+    if peek(RParen) {
+        bump(RParen);
+    } else {
+        pat_tuple_field();
+
+        if peek(RParen) {
+            bump(RParen);
+        } else {
+            pat_tuple_();
+        }
+    }
+}
+
+fn pat_tuple_() {
+    if peek(Comma) {
+        bump(Comma);
+
+        if peek(RParen) {
+            bump(RParen);
+        } else {
+            pat_tuple_field();
+            pat_tuple_();
+        }
+    } else {
+        bump(RParen);
+    }
+}
+
+fn pat_struct_field() {
+    if peek(Literal) {
+        // 0: <pat>
+        bump(Literal);
+        bump(Colon);
+        pat();
+    } else if peek(Ident) {
+        if peek2(Colon) {
+            // { field: pat }
+            bump(Ident);
+            bump(Colon);
+            pat();
+        } else {
+            // { binding }
+            bump(Ident);
+        }
+    } else if peek(Ref) || peek(Mut) {
+        pat_ident();
+    }
+}
+
+fn pat_tuple_field() {
+    pat();
+}
+
+fn pat_slice() {
+    bump(LBracket);
+
+    if peek(RBracket) {
+        bump(RBracket);
+    } else {
+        pat();
+        pat_slice_();
+    }
+}
+
+fn pat_slice_() {
+    if peek(Comma) {
+        bump(Comma);
+
+        if peek(RBracket) {
+            bump(RBracket);
+        } else {
+            pat();
+            pat_slice_();
+        }
+    } else {
+        bump(RBracket);
+    }
+}
+
+fn pat_range_bound() {
+    if peek(Minus) {
+        pat_literal();
+    } else if peek(Literal) || peek(FragmentLiteral) {
+        pat_literal();
+    } else if peek(Ident) || peek(FragmentIdent) || peek(FragmentPath) || peek(LessThan) {
+        expr_path();
+    }
+}
+
+fn pat_literal() {
+    if peek(Minus) {
+        bump(Minus);
+    }
+    if peek(Literal) || peek(FragmentLiteral) || peek(True) || peek(False) {
         bump();
     } else {
         error();
+    }
+}
+
+fn pat_ident() {
+    if peek(Ref) {
+        bump(Ref);
+    }
+
+    if peek(Mut) {
+        bump(Mut);
+    }
+
+    if peek(Ident) {
+        bump(Ident);
+    } else if peek(FragmentIdent) {
+        bump(FragmentIdent);
+    } else {
+        error();
+    }
+
+    if peek(At) {
+        bump(At);
+        pat_no_top_alt();
     }
 }
 
