@@ -178,6 +178,14 @@ where
         }
     }
 
+    pub fn pat() -> RustParser<Span> {
+        RustParser {
+            buffer: TokenBuffer::Empty([]),
+            stack: vec![(pat, concat!("<", stringify!(pat), " entry point>"))],
+            tried: SmallVec::new(),
+        }
+    }
+
     pub fn expr() -> RustParser<Span> {
         RustParser {
             buffer: TokenBuffer::Empty([]),
