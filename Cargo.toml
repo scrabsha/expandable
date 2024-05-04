@@ -30,3 +30,5 @@ syn = { version = "2.0", default-features = false, features = ["parsing"] }
 [dev-dependencies]
 # MSRV: 1.45 (README)
 trybuild = "1.0"
+# MSRV: 1.32 (README, checked in CI)
+rustc_version = "0.4.0"

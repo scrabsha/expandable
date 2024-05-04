@@ -556,7 +556,58 @@ fn parse_punctuation(mut input: &[TokenTree]) -> Option<(Span, Terminal, &[Token
 #[cfg(test)]
 #[test]
 fn ui() {
+    setup_channel_dependant_stderrs();
+
     let t = trybuild::TestCases::new();
     t.pass("tests/ui/pass/*.rs");
     t.compile_fail("tests/ui/fail/*.rs");
+
+    drop(t);
+
+    cleanup_channel_dependant_stderrs();
+}
+
+#[cfg(test)]
+const CHANNEL_DEPENDANT_STDERRS: [&str; 1] = ["bad_range_pattern"];
+
+#[cfg(test)]
+fn setup_channel_dependant_stderrs() {
+    // The error messages of `expandable` depend on the channel that is used
+    // when compiling the crate, as we use the nightly-only `Span::join` method.
+
+    use std::fs;
+
+    for (original, link) in nightly_dependant_stderrs() {
+        fs::hard_link(original, link).unwrap();
+    }
+}
+
+#[cfg(test)]
+fn cleanup_channel_dependant_stderrs() {
+    use std::fs;
+
+    for (_, link) in nightly_dependant_stderrs() {
+        fs::remove_file(link).unwrap();
+    }
+}
+
+#[cfg(test)]
+fn nightly_dependant_stderrs() -> Vec<(String, String)> {
+    use rustc_version::Channel;
+
+    CHANNEL_DEPENDANT_STDERRS
+        .into_iter()
+        .map(|unstable_stderr| {
+            let channel = rustc_version::version_meta().unwrap().channel;
+            let suffix = match channel {
+                Channel::Nightly | Channel::Dev => "nightly",
+                Channel::Beta | Channel::Stable => "stable",
+            };
+
+            let in_path = format!("tests/ui/fail/{unstable_stderr}.stderr_{suffix}");
+            let out_path = format!("tests/ui/fail/{unstable_stderr}.stderr");
+
+            (in_path, out_path)
+        })
+        .collect()
 }
