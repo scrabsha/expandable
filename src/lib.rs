@@ -575,10 +575,13 @@ const CHANNEL_DEPENDANT_STDERRS: [&str; 1] = ["bad_range_pattern"];
 fn setup_channel_dependant_stderrs() {
     // The error messages of `expandable` depend on the channel that is used
     // when compiling the crate, as we use the nightly-only `Span::join` method.
+    //
+    // We circumvent this by checking against a different stderr depending on
+    // the channel that is used when the macro is compiled.
 
     use std::fs;
 
-    for (original, link) in nightly_dependant_stderrs() {
+    for (original, link) in channel_dependant_stderrs() {
         fs::hard_link(original, link).unwrap();
     }
 }
@@ -587,13 +590,13 @@ fn setup_channel_dependant_stderrs() {
 fn cleanup_channel_dependant_stderrs() {
     use std::fs;
 
-    for (_, link) in nightly_dependant_stderrs() {
+    for (_, link) in channel_dependant_stderrs() {
         fs::remove_file(link).unwrap();
     }
 }
 
 #[cfg(test)]
-fn nightly_dependant_stderrs() -> Vec<(String, String)> {
+fn channel_dependant_stderrs() -> Vec<(String, String)> {
     use rustc_version::Channel;
 
     CHANNEL_DEPENDANT_STDERRS
