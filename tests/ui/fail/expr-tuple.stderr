@@ -1,16 +1,16 @@
-error: Potentially invalid expansion. Expected `::`, `break`, `for`, `if`, `loop`, `return` or 7 others.
+error: Potentially invalid expansion. Expected an expression, an identifier, `::`, `break`, `for`, `if` or 8 others.
  --> tests/ui/fail/expr-tuple.rs:6:10
   |
 6 |         (,)
   |          ^
 
-error: Potentially invalid expansion. Expected `::`, `break`, `for`, `if`, `loop`, `return` or 7 others.
+error: Potentially invalid expansion. Expected an expression, an identifier, `::`, `break`, `for`, `if` or 8 others.
   --> tests/ui/fail/expr-tuple.rs:13:13
    |
 13 |         (42,, 42)
    |             ^
 
-error: Potentially invalid expansion. Expected `!=`, `%`, `&&`, `&`, `*`, `+` or 21 others.
+error: Potentially invalid expansion. Expected `!=`, `%`, `&&`, `&`, `*`, `+` or 20 others.
   --> tests/ui/fail/expr-tuple.rs:20:12
    |
 20 |         (a b)

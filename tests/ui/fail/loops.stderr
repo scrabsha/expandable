@@ -4,7 +4,7 @@ error: Potentially invalid expansion. Expected a `{`.
 6 |         loop loop {}
   |              ^^^^
 
-error: Potentially invalid expansion. Expected `::`, `break`, `for`, `if`, `loop`, `return` or 6 others.
+error: Potentially invalid expansion. Expected an expression, an identifier, `::`, `break`, `for`, `if` or 7 others.
   --> tests/ui/fail/loops.rs:13:15
    |
 13 |         while < 42 {}
