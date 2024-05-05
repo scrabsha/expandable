@@ -182,6 +182,7 @@ macro_rules! token_description {
                         rust_grammar_dpdfa::TokenDescription::FragmentExpr => TokenDescription::Fragment(FragmentKind::Expr),
                         rust_grammar_dpdfa::TokenDescription::FragmentIdent => TokenDescription::Fragment(FragmentKind::Ident),
                         rust_grammar_dpdfa::TokenDescription::FragmentItem => TokenDescription::Fragment(FragmentKind::Item),
+                        rust_grammar_dpdfa::TokenDescription::FragmentPat => TokenDescription::Fragment(FragmentKind::Pat),
                         // TODO: support lifetime
                         // rust_grammar_dpdfa::TokenDescription::FragmentLifetime => TokenDescription::Fragment(FragmentKind::Lifetime),
                         // TODO: support literal

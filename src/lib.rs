@@ -367,6 +367,7 @@ fn describe(descr: &TokenDescription) -> String {
         TokenDescription::Fragment(FragmentKind::Expr) => "an expression",
         TokenDescription::Fragment(FragmentKind::Ident) => "an identifier",
         TokenDescription::Fragment(FragmentKind::Item) => "an item",
+        TokenDescription::Fragment(FragmentKind::Pat) => "a pattern",
 
         TokenDescription::Invalid => unreachable!(),
 
