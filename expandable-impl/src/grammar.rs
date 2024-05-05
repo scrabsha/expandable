@@ -52,6 +52,12 @@ where
         }
     }
 
+    pub(crate) fn pat() -> DynamicState<Span> {
+        DynamicState {
+            state: RustParser::pat(),
+        }
+    }
+
     pub(crate) fn accept_fragment(
         self,
         fragment: FragmentKind,
@@ -147,6 +153,7 @@ macro_rules! token_description {
                     $name::Fragment(FragmentKind::Expr) => rust_grammar_dpdfa::TokenDescription::FragmentExpr,
                     $name::Fragment(FragmentKind::Ident) => rust_grammar_dpdfa::TokenDescription::FragmentIdent,
                     $name::Fragment(FragmentKind::Item) => rust_grammar_dpdfa::TokenDescription::FragmentItem,
+                    $name::Fragment(FragmentKind::Pat) => rust_grammar_dpdfa::TokenDescription::FragmentPat,
 
                     $name::Invalid => unreachable!(),
                 }
@@ -175,6 +182,7 @@ macro_rules! token_description {
                         rust_grammar_dpdfa::TokenDescription::FragmentExpr => TokenDescription::Fragment(FragmentKind::Expr),
                         rust_grammar_dpdfa::TokenDescription::FragmentIdent => TokenDescription::Fragment(FragmentKind::Ident),
                         rust_grammar_dpdfa::TokenDescription::FragmentItem => TokenDescription::Fragment(FragmentKind::Item),
+                        rust_grammar_dpdfa::TokenDescription::FragmentPat => TokenDescription::Fragment(FragmentKind::Pat),
                         // TODO: support lifetime
                         // rust_grammar_dpdfa::TokenDescription::FragmentLifetime => TokenDescription::Fragment(FragmentKind::Lifetime),
                         // TODO: support literal

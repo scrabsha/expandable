@@ -78,6 +78,7 @@ macro_rules! attribute_macro {
 
 attribute_macro!(expr => Expr);
 attribute_macro!(item => Item);
+attribute_macro!(pat => Pat);
 
 fn expandable_inner(ctx: expandable_impl::InvocationContext, item: TokenStream1) -> TokenStream1 {
     let mut item_ = item.clone();
@@ -366,6 +367,7 @@ fn describe(descr: &TokenDescription) -> String {
         TokenDescription::Fragment(FragmentKind::Expr) => "an expression",
         TokenDescription::Fragment(FragmentKind::Ident) => "an identifier",
         TokenDescription::Fragment(FragmentKind::Item) => "an item",
+        TokenDescription::Fragment(FragmentKind::Pat) => "a pattern",
 
         TokenDescription::Invalid => unreachable!(),
 
@@ -555,7 +557,61 @@ fn parse_punctuation(mut input: &[TokenTree]) -> Option<(Span, Terminal, &[Token
 #[cfg(test)]
 #[test]
 fn ui() {
+    setup_channel_dependant_stderrs();
+
     let t = trybuild::TestCases::new();
     t.pass("tests/ui/pass/*.rs");
     t.compile_fail("tests/ui/fail/*.rs");
+
+    drop(t);
+
+    cleanup_channel_dependant_stderrs();
+}
+
+#[cfg(test)]
+const CHANNEL_DEPENDANT_STDERRS: [&str; 1] = ["bad_range_pattern"];
+
+#[cfg(test)]
+fn setup_channel_dependant_stderrs() {
+    // The error messages of `expandable` depend on the channel that is used
+    // when compiling the crate, as we use the nightly-only `Span::join` method.
+    //
+    // We circumvent this by checking against a different stderr depending on
+    // the channel that is used when the macro is compiled.
+
+    use std::fs;
+
+    for (original, link) in channel_dependant_stderrs() {
+        fs::hard_link(original, link).unwrap();
+    }
+}
+
+#[cfg(test)]
+fn cleanup_channel_dependant_stderrs() {
+    use std::fs;
+
+    for (_, link) in channel_dependant_stderrs() {
+        fs::remove_file(link).unwrap();
+    }
+}
+
+#[cfg(test)]
+fn channel_dependant_stderrs() -> Vec<(String, String)> {
+    use rustc_version::Channel;
+
+    CHANNEL_DEPENDANT_STDERRS
+        .into_iter()
+        .map(|unstable_stderr| {
+            let channel = rustc_version::version_meta().unwrap().channel;
+            let suffix = match channel {
+                Channel::Nightly | Channel::Dev => "nightly",
+                Channel::Beta | Channel::Stable => "stable",
+            };
+
+            let in_path = format!("tests/ui/fail/{unstable_stderr}.stderr_{suffix}");
+            let out_path = format!("tests/ui/fail/{unstable_stderr}.stderr");
+
+            (in_path, out_path)
+        })
+        .collect()
 }

@@ -454,7 +454,7 @@ macro_rules! quote {
     (@inner $sb:expr, $lit:literal) => {
         quote!(
             @mk_term $sb,
-            $crate::generated::TokenDescription::Literal(stringify!($lit).to_string()),
+            $crate::generated::TokenDescription::Literal,
         )
     };
 

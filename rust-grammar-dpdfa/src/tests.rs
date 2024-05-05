@@ -229,3 +229,25 @@ check_parse! {
         }
     }
 }
+
+check_parse! {
+    fn numeric_range() {
+        expr,
+        {
+            {
+                let (13..=19, _) = ();
+            }
+        }
+    }
+}
+
+check_parse! {
+    fn head_tail_pat() {
+        expr,
+        {
+            {
+                let [head, tail @ ..] = ();
+            }
+        }
+    }
+}

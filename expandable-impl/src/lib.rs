@@ -484,6 +484,8 @@ pub enum InvocationContext {
     Expr,
     /// The macro expands to any number of item.
     Item,
+    /// The macro expands to a pattern.
+    Pat,
 }
 
 impl InvocationContext {
@@ -494,6 +496,7 @@ impl InvocationContext {
         match self {
             InvocationContext::Expr => DynamicState::expr(),
             InvocationContext::Item => DynamicState::item(),
+            InvocationContext::Pat => DynamicState::pat(),
         }
     }
 }
@@ -507,6 +510,8 @@ pub enum FragmentKind {
     Ident,
     /// An item (`item`).
     Item,
+    /// A pattern (`pat`).
+    Pat,
 }
 
 impl FromStr for FragmentKind {
@@ -517,6 +522,7 @@ impl FromStr for FragmentKind {
             "ident" => FragmentKind::Ident,
             "item" => FragmentKind::Item,
             "expr" => FragmentKind::Expr,
+            "pat" => FragmentKind::Pat,
 
             _ => return Err(()),
         })
