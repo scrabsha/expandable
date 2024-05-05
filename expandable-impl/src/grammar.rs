@@ -170,6 +170,27 @@ macro_rules! token_description {
                         rust_grammar_dpdfa::TokenDescription::LBrace => TokenDescription::LBrace,
                         rust_grammar_dpdfa::TokenDescription::RBrace => TokenDescription::RBrace,
 
+                        // TODO: support block
+                        // rust_grammar_dpdfa::TokenDescription::FragmentBlock => TokenDescription::Fragment(FragmentKind::Block),
+                        rust_grammar_dpdfa::TokenDescription::FragmentExpr => TokenDescription::Fragment(FragmentKind::Expr),
+                        rust_grammar_dpdfa::TokenDescription::FragmentIdent => TokenDescription::Fragment(FragmentKind::Ident),
+                        rust_grammar_dpdfa::TokenDescription::FragmentItem => TokenDescription::Fragment(FragmentKind::Item),
+                        // TODO: support lifetime
+                        // rust_grammar_dpdfa::TokenDescription::FragmentLifetime => TokenDescription::Fragment(FragmentKind::Lifetime),
+                        // TODO: support literal
+                        // rust_grammar_dpdfa::TokenDescription::FragmentLiteral => TokenDescription::Fragment(FragmentKind::Literal),
+                        // TODO: support meta
+                        // rust_grammar_dpdfa::TokenDescription::FragmentMeta => TokenDescription::Fragment(FragmentKind::Meta),
+                        // TODO: support stmt
+                        // rust_grammar_dpdfa::TokenDescription::FragmentStmt => TokenDescription::Fragment(FragmentKind::Stmt),
+                        // TODO: support TT
+                        // rust_grammar_dpdfa::TokenDescription::FragmentTT => TokenDescription::Fragment(FragmentKind::TT),
+                        // TODO: support ty
+                        // rust_grammar_dpdfa::TokenDescription::FragmentTy => TokenDescription::Fragment(FragmentKind::Ty),
+                        // TODO: support vis
+                        // rust_grammar_dpdfa::TokenDescription::FragmentVis => TokenDescription::Fragment(FragmentKind::Vis),
+
+
                         _ => return Err(()),
                     }
 

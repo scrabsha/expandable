@@ -52,9 +52,12 @@
 
 extern crate proc_macro;
 
-use std::fmt::{Display, Formatter};
+use std::{
+    collections::BTreeSet,
+    fmt::{Display, Formatter},
+};
 
-use expandable_impl::{RepetitionQuantifierKind, Terminal, TokenDescription};
+use expandable_impl::{FragmentKind, RepetitionQuantifierKind, Terminal, TokenDescription};
 use proc_macro::TokenStream as TokenStream1;
 use proc_macro2::{Delimiter, Spacing, Span, TokenStream, TokenTree};
 use syn_shim::ItemMacroRules;
@@ -105,23 +108,9 @@ fn mk_error_msg(error: expandable_impl::Error<Span>) -> syn::Error {
         }
 
         expandable_impl::Error::InvalidProducedAst { span, expected, .. } => {
-            let mut expected = expected.iter().map(describe).collect::<Vec<_>>();
-            expected.sort_unstable();
-
-            let expected_len = expected.len();
-            let (actually_printed, or_n_others) = if expected_len > 6 {
-                let n = expected_len - 6;
-                let actually_printed = expected[0..6].join(", ");
-                let s = if n > 1 { "s" } else { "" };
-                let or_n_others = format!(" or {n} other{s}");
-
-                (actually_printed, or_n_others)
-            } else {
-                (expected.join(", "), String::new())
-            };
-
+            let expected = rassemble_expected_descrs(expected);
             (
-                format!("Potentially invalid expansion. Expected {actually_printed}{or_n_others}."),
+                format!("Potentially invalid expansion. Expected {expected}."),
                 Some(span),
             )
         }
@@ -157,6 +146,49 @@ fn mk_error_msg(error: expandable_impl::Error<Span>) -> syn::Error {
 
     let span = span.unwrap_or_else(Span::call_site);
     syn::Error::new(span, message)
+}
+
+const MAX_EXPECTED_NUM: usize = 6;
+
+fn rassemble_expected_descrs(expected: Vec<TokenDescription>) -> String {
+    // This is a slow path - we are allowed to allocate as much as required.
+    // `BtreeSet`s have set properties (no duplicate), and they give us a cool
+    // ordering.
+
+    let (mut possible_fragments, mut rest) = (BTreeSet::new(), BTreeSet::new());
+
+    for expected in expected {
+        match expected {
+            TokenDescription::Fragment(_) => possible_fragments.insert(describe(&expected)),
+
+            // We count an ident (description) as an ident (fragment) so that
+            // we avoid printing it twice in the error message.
+            TokenDescription::Ident => possible_fragments
+                .insert(describe(&TokenDescription::Fragment(FragmentKind::Ident))),
+
+            _ => rest.insert(describe(&expected)),
+        };
+    }
+
+    let mut expected = possible_fragments.into_iter().collect::<Vec<_>>();
+    expected.extend(rest);
+
+    let expected_len = expected.len();
+
+    let (expected, or_n_others) = if expected_len > MAX_EXPECTED_NUM {
+        let to_print = expected[0..MAX_EXPECTED_NUM].join(", ");
+        let n = expected_len - MAX_EXPECTED_NUM;
+        let n_others = format!(" or {n} others");
+
+        (to_print, n_others)
+    } else {
+        let to_print = expected.join(", ");
+        let n_others = String::new();
+
+        (to_print, n_others)
+    };
+
+    format!("{expected}{or_n_others}")
 }
 
 fn pp_repetition_ops(stack: &[RepetitionQuantifierKind]) -> impl Display + '_ {
@@ -330,6 +362,10 @@ fn describe(descr: &TokenDescription) -> String {
         TokenDescription::Pound => "`#`",
         TokenDescription::Dollar => "`$`",
         TokenDescription::QuestionMark => "`?`",
+
+        TokenDescription::Fragment(FragmentKind::Expr) => "an expression",
+        TokenDescription::Fragment(FragmentKind::Ident) => "an identifier",
+        TokenDescription::Fragment(FragmentKind::Item) => "an item",
 
         TokenDescription::Invalid => unreachable!(),
 
