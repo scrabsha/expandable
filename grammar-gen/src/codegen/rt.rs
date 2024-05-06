@@ -216,7 +216,12 @@ pub(crate) fn runtime_base(entry_points: impl IntoIterator<Item = Ident>) -> Tok
             pub popped: usize,
             pub buf_size: usize,
             // TODO: wrap this in an opaque type.
-            pub pushed: Vec<&'static str>,
+            pub pushed: Vec<TypeErasedState>,
+        }
+
+        #[derive(Clone, Debug, Eq, Hash, PartialEq)]
+        pub struct TypeErasedState {
+            inner: *const (),
         }
 
         impl<Span> RustParser<Span>
@@ -227,7 +232,7 @@ pub(crate) fn runtime_base(entry_points: impl IntoIterator<Item = Ident>) -> Tok
                 pub fn #entry_points() -> RustParser<Span> {
                     RustParser {
                         buffer: TokenBuffer::Empty([]),
-                        stack: vec![(#entry_points, concat!("<", stringify!(#entry_points), " entry point>"))],
+                        stack: vec![#entry_points],
                         tried: SmallVec::new(),
                     }
                 }
@@ -306,7 +311,7 @@ pub(crate) fn runtime_base(entry_points: impl IntoIterator<Item = Ident>) -> Tok
 
                     // Expected eof, found `...`
                     trans.log_pop();
-                    let (state, name) = self.stack.pop().ok_or_else(|| {
+                    let state = self.stack.pop().ok_or_else(|| {
                         let s = self.buffer.peek().map(|(_, s)| s);
                         ProgressError::EmptyStack(s)
                     })?;
@@ -315,12 +320,22 @@ pub(crate) fn runtime_base(entry_points: impl IntoIterator<Item = Ident>) -> Tok
                         ProgressError::ParsingError(s, self.tried.clone().into_vec())
                     })? {
                         Transition::CallNow(states) => {
-                            states.iter().for_each(|(_, fn_)| trans.log_push(fn_));
+                            states.iter().copied().for_each(|f| {
+                                let state = TypeErasedState {
+                                    inner: f as *const (),
+                                };
+                                trans.log_push(state);
+                            });
                             self.stack.extend(states.iter().copied());
                         },
                         Transition::CallThen(states) => {
                             self.buffer.shift();
-                            states.iter().for_each(|(_, fn_)| trans.log_push(fn_));
+                            states.iter().cloned().for_each(|f| {
+                                let state = TypeErasedState {
+                                    inner: f as *const (),
+                                };
+                                trans.log_push(state);
+                            });
                             self.stack.extend(states.iter().copied());
                             break Ok(trans);
                         },
@@ -483,7 +498,7 @@ pub(crate) fn runtime_base(entry_points: impl IntoIterator<Item = Ident>) -> Tok
 
         impl<Span> Eq for TokenBuffer<Span> {}
 
-        type State<Span> = (fn(&mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>>, &'static str);
+        type State<Span> = fn(&mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>>;
 
         #[derive(Clone, Copy, Debug, PartialEq)]
         enum Transition<Span: 'static> {
@@ -624,7 +639,7 @@ pub(crate) fn runtime_base(entry_points: impl IntoIterator<Item = Ident>) -> Tok
                 }
             }
 
-            fn log_push(&mut self, state: &'static str) {
+            fn log_push(&mut self, state: TypeErasedState) {
                 self.pushed.push(state);
             }
         }
