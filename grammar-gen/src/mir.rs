@@ -183,7 +183,7 @@ impl Production {
                 let then = then.into_iter().rev();
 
                 quote! {
-                    input.bump_expect(#descr, &[ #( (#then, stringify!(#then)) ),* ])
+                    input.bump_expect(#descr, &[ #( #then ),* ])
                 }
             }
 
@@ -199,7 +199,7 @@ impl Production {
                 let then = then.into_iter().rev();
 
                 quote! {
-                    input.call_now( &[ #( (#then, stringify!(#then)) ),* ])
+                    input.call_now( &[ #( #then ),* ])
                 }
             }
 
@@ -218,9 +218,9 @@ impl Production {
 
                 quote! {
                     if #( input.#builtins )||* {
-                        input.call_now(&[ #( (#cons, stringify!(#cons)) ),* ])
+                        input.call_now(&[ #( #cons ),* ])
                     } else {
-                        input.call_now(&[ #( (#alt, stringify!(#alt)) ),* ])
+                        input.call_now(&[ #( #alt ),* ])
                     }
                 }
             }
