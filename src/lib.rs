@@ -582,6 +582,7 @@ fn setup_channel_dependant_stderrs() {
     use std::fs;
 
     for (original, link) in channel_dependant_stderrs() {
+        let _ = fs::remove_file(&link);
         fs::hard_link(original, link).unwrap();
     }
 }

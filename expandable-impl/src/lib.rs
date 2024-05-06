@@ -794,4 +794,26 @@ mod tests {
             }
         }
     }
+
+    check_macro_test! {
+        path_repeat {
+            #[expr]
+            {
+                () => {
+                    #( :: a )*
+                }
+            }
+        }
+    }
+
+    check_macro_test! {
+        path_repeat_from_fragment {
+            #[expr]
+            {
+                ( #( #id:ident )* ) => {
+                    #( :: #id )*
+                }
+            }
+        }
+    }
 }

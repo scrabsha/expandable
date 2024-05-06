@@ -91,10 +91,9 @@ macro_rules! test {
 
         let size @ binary::MEGA..=binary::GIGA = ();
 
-        // TODO: support qualified path expressions
-        // let 0 ..= <u8 as MaxValue>::MAX = "fits in a u8";
-        // let 0 ..= <u16 as MaxValue>::MAX = "fits in a u16";
-        // let 0 ..= <u32 as MaxValue>::MAX = "fits in a u32";
+        let 0 ..= <u8 as MaxValue>::MAX = "fits in a u8";
+        let 0 ..= <u16 as MaxValue>::MAX = "fits in a u16";
+        let 0 ..= <u32 as MaxValue>::MAX = "fits in a u32";
         let _ = "too big";
 
         let 0 = ();
