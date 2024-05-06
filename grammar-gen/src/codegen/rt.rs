@@ -144,6 +144,51 @@ pub(crate) fn runtime_base(entry_points: impl IntoIterator<Item = Ident>) -> Tok
 
         use TokenDescription::*;
 
+        impl TokenDescription {
+            fn try_split_with(self, first: TokenDescription) -> Option<TokenDescription> {
+                match (self, first) {
+                    // `&&` -> `&` and `&`
+                    (AndAnd, And) => Some(And),
+                    // `||` -> `|` and `|`
+                    (OrOr, Or) => Some(Or),
+                    // `<<` -> `<` and `<`
+                    (Shl, LessThan) => Some(LessThan),
+                    // `>>` -> `>` and `>`
+                    (Shr, GreaterThan) => Some(GreaterThan),
+                    // `+=` -> `+` and `=`
+                    (PlusEquals, Plus) => Some(Equals),
+                    // `-=` -> `-` and `=`
+                    (MinusEquals, Minus) => Some(Equals),
+                    // `*=` -> `*` and `=`
+                    (StarEquals, Star) => Some(Equals),
+                    // `/=` -> `/` and `=`
+                    (SlashEquals, Slash) => Some(Equals),
+                    // `%=` -> `%` and `=`
+                    (PercentEquals, Percent) => Some(Equals),
+                    // `^=` -> `^` and `=`
+                    (CaretEquals, Caret) => Some(Equals),
+                    // `&=` -> `&` and `=`
+                    (AndEquals, And) => Some(Equals),
+                    // `|=` -> `|` and `=`
+                    (OrEquals, Or) => Some(Equals),
+                    // `<<=` -> `<<` and `=`
+                    (ShlEquals, Shl) => Some(Equals),
+                    // `<<=` -> `<` and `<=`
+                    (ShrEquals, Shr) => Some(LessThanEquals),
+                    // `>>=` -> `>>` and `=`
+                    (ShrEquals, Shr) => Some(Equals),
+                    // `>>=` -> `>` and `>=`
+                    (ShrEquals, Shr) => Some(GreaterThanEquals),
+                    // `..` -> `.` and `.`
+                    (DotDot, Dot) => Some(Dot),
+
+                    // TODO: add remaining cases if necessary.
+                    _ => None,
+
+                }
+            }
+        }
+
         #[derive(Clone, Debug)]
         pub struct RustParser<Span: 'static> {
             buffer: TokenBuffer<Span>,
@@ -207,10 +252,10 @@ pub(crate) fn runtime_base(entry_points: impl IntoIterator<Item = Ident>) -> Tok
                 };
 
                 self.perform_progress().map_err(|e| match e {
-                        // None spans arise when we are parsing the leftover
-                        // tokens. Here, we know the buffer size is 2
-                        // (2 tokens initially + 1 pushed - 1 eaten while
-                        // performing progress).
+                    // None spans arise when we are parsing the leftover
+                    // tokens. Here, we know the buffer size is 2
+                    // (2 tokens initially + 1 pushed - 1 eaten while
+                    // performing progress).
                     ProgressError::EmptyStack(s) => (s.unwrap(), vec![]),
                     | ProgressError::ParsingError(s, expected) => {
                         (s.unwrap(), expected)
@@ -281,6 +326,106 @@ pub(crate) fn runtime_base(entry_points: impl IntoIterator<Item = Ident>) -> Tok
                         },
                     }
                 }
+            }
+
+            fn bump_expect(
+                &mut self,
+                descr: TokenDescription,
+                then: &'static [State<Span>]
+            ) -> Result<Transition<Span>, Option<Span>> {
+                self.tried.push(descr);
+
+                match self.buffer.peek() {
+                    Some((descr_, sp)) if descr_ == descr => Ok(Transition::CallThen(&[])),
+                    Some((descr_, sp)) => match descr_.try_split_with(descr) {
+                        Some(replacement) => {
+                            self.buffer.replace_first(replacement);
+                            Ok(Transition::CallNow(then))
+                        },
+                        None => Err(Some(sp)),
+                    },
+
+                    _ => Err(None),
+                }
+            }
+
+            fn bump_noexpect(&mut self, then: &'static [State<Span>]) -> Result<Transition<Span>, Option<Span>> {
+                // TODO: this may eat more tokens than required. Be careful!
+                if self.buffer.peek().is_some() {
+                    Ok(Transition::CallThen(&[]))
+                } else {
+                    Err(None)
+                }
+            }
+
+            fn peek_expect(&mut self, descr: TokenDescription) -> bool {
+                self.run_cond_fn_expect(TokenBuffer::peek, descr)
+            }
+
+            fn peek2_expect(&mut self, descr: TokenDescription) -> bool {
+                self.run_cond_fn_expect(TokenBuffer::peek2, descr)
+            }
+
+            fn peek3_expect(&mut self, descr: TokenDescription) -> bool {
+                self.run_cond_fn_expect(TokenBuffer::peek3, descr)
+            }
+
+            fn peek_noexpect(&mut self) -> bool {
+                self.run_cond_fn_noexpect(TokenBuffer::peek)
+            }
+
+            fn peek2_noexpect(&mut self) -> bool {
+                self.run_cond_fn_noexpect(TokenBuffer::peek2)
+            }
+
+            fn peek3_noexpect(&mut self) -> bool {
+                self.run_cond_fn_noexpect(TokenBuffer::peek3)
+            }
+
+            fn run_cond_fn_expect<F>(
+                &mut self,
+                f: F,
+                descr: TokenDescription,
+            ) -> bool
+            where
+                F: FnOnce(&TokenBuffer<Span>) -> Option<(TokenDescription, Span)>
+            {
+                self.tried.push(descr);
+
+                match f(&self.buffer) {
+                    Some((descr_, sp)) if descr_ == descr => true,
+                    Some((descr_, sp)) => {
+                        descr_.try_split_with(descr).is_some()
+                    }
+                    otherwise => false,
+                }
+            }
+
+            fn run_cond_fn_noexpect<F>(
+                &mut self,
+                f: F,
+            ) -> bool
+            where
+                F: FnOnce(&TokenBuffer<Span>) -> Option<(TokenDescription, Span)>
+            {
+                f(&self.buffer).is_some()
+            }
+
+            // We return an OK because it is easier for the codegen
+            fn call_now(&mut self, now: &'static [State<Span>]) -> Result<Transition<Span>, Option<Span>> {
+                Ok(Transition::CallNow(now))
+            }
+
+            // We return an OK because it is easier for the codegen
+            fn call_then(&mut self, then: &'static [State<Span>]) -> Result<Transition<Span>, Option<Span>> {
+                Ok(Transition::CallThen(then))
+            }
+
+            // We return an OK because it is easier for the codegen
+            fn error(&self) -> Result<Transition<Span>, Option<Span>> {
+                let sp = self.buffer.peek().map(|(_, sp)| sp);
+
+                Err(sp)
             }
         }
 
@@ -432,6 +577,16 @@ pub(crate) fn runtime_base(entry_points: impl IntoIterator<Item = Ident>) -> Tok
                     TokenBuffer::Triple([_, _, a]) => Some(*a),
                 }
             }
+
+            fn replace_first(&mut self, descr: TokenDescription) {
+                match self {
+                    TokenBuffer::Empty(_) => unreachable!(),
+
+                    TokenBuffer::Single([(a, _)])
+                    | TokenBuffer::Double([(a, _), _])
+                    | TokenBuffer::Triple([(a, _), _, _]) => *a = descr,
+                }
+            }
         }
 
         impl TransitionData {
@@ -488,53 +643,6 @@ pub(crate) fn runtime_base(entry_points: impl IntoIterator<Item = Ident>) -> Tok
                     Transition::CallThen(&[$( ($arg, stringify!($arg)) ),*])
                 })
             };
-        }
-
-        macro_rules! nothing {
-            [$_input:expr] => {
-                Ok(Transition::CallNow (&[]))
-            };
-       }
-
-        macro_rules! bump {
-            ($input:expr) => {{
-                !$input.buffer.is_empty()
-            }};
-
-            ($input:expr, $token:expr) => {{
-                // TODO: please refactor this before the release
-                $input.tried.push($token);
-                $input.buffer.peek().map(|(k, _)| k == $token).unwrap_or_default()
-            }};
-        }
-
-        macro_rules! error {
-            ($input:expr) => {{
-                return Err($input.buffer.peek().map(|(_, span)| span));
-            }};
-        }
-
-        macro_rules! end {
-            ($input:expr) => {{
-                return Ok(Transition::CallNow(&[]));
-            }};
-        }
-
-        macro_rules! cond {
-            ($input:expr, $method:ident) => {{
-                // TODO: why did I write this?
-                !$input.buffer.is_empty()
-            }};
-
-            ($input:expr, peek, $expected:expr) => {{
-                // TODO: please refactor this before the release
-                $input.tried.push($expected);
-                $input.buffer.peek().map(|(k, _)| k == $expected).unwrap_or_default()
-            }};
-
-            ($input:expr, $method:ident, $expected:expr) => {{
-                $input.buffer.$method().map(|(k, _)| k == $expected).unwrap_or_default()
-            }};
         }
     }
 }

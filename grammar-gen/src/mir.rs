@@ -183,11 +183,7 @@ impl Production {
                 let then = then.into_iter().rev();
 
                 quote! {
-                    if bump![input, #descr] {
-                        call_then![input, #( #then ),* ]
-                    } else {
-                        error![input]
-                    }
+                    input.bump_expect(#descr, &[ #( (#then, stringify!(#then)) ),* ])
                 }
             }
 
@@ -195,11 +191,7 @@ impl Production {
                 let then = then.into_iter().rev();
 
                 quote! {
-                    if bump![input] {
-                        call_then![input, #( #then ),* ]
-                    } else {
-                        error![input]
-                    }
+                    input.bump_noexpect(&[ #( #then ),* ])
                 }
             }
 
@@ -207,28 +199,28 @@ impl Production {
                 let then = then.into_iter().rev();
 
                 quote! {
-                    call_now![input, #( #then ),* ]
+                    input.call_now( &[ #( (#then, stringify!(#then)) ),* ])
                 }
             }
 
-            ProductionKind::Error => quote! { error![input] },
+            ProductionKind::Error => quote! { input.error() },
 
             ProductionKind::Cond {
                 builtins,
                 cons,
                 alt,
             } => {
-                let builtin_calls = builtins
+                let builtins = builtins
                     .into_iter()
                     .map(|(b, p)| codegen_builtin_call(b, p));
                 let cons = cons.into_iter().rev();
                 let alt = alt.into_iter().rev();
 
                 quote! {
-                    if #( #builtin_calls )||* {
-                        call_now![input, #( #cons ),* ]
+                    if #( input.#builtins )||* {
+                        input.call_now(&[ #( (#cons, stringify!(#cons)) ),* ])
                     } else {
-                        call_now![input, #( #alt ),* ]
+                        input.call_now(&[ #( (#alt, stringify!(#alt)) ),* ])
                     }
                 }
             }
@@ -254,22 +246,27 @@ impl Production {
     }
 }
 
-fn codegen_builtin_call(builtin: Builtin, descr: Option<Ident>) -> TokenStream {
-    let builtin = match builtin {
-        Builtin::Bump => quote! { bump },
-        Builtin::Read => quote! { read },
-        Builtin::Peek => quote! { peek },
-        Builtin::Peek2 => quote! { peek2 },
-        Builtin::Peek3 => quote! { peek3 },
-        Builtin::Error => quote! { error },
+fn codegen_builtin_call(builtin: Builtin, expect: Option<Ident>) -> TokenStream {
+    let builtin = match (builtin, expect.is_some()) {
+        (Builtin::Bump, true) => quote! { bump_expect },
+        (Builtin::Read, true) => quote! { bump_expect },
+        (Builtin::Peek, true) => quote! { peek_expect },
+        (Builtin::Peek2, true) => quote! { peek2_expect },
+        (Builtin::Peek3, true) => quote! { peek3_expect },
+        (Builtin::Error, true) => quote! { error_expect },
+
+        (Builtin::Bump, false) => quote! { bump_noexpect },
+        (Builtin::Read, false) => quote! { bump_noexpect },
+        (Builtin::Peek, false) => quote! { peek_noexpect },
+        (Builtin::Peek2, false) => quote! { peek2_noexpect },
+        (Builtin::Peek3, false) => quote! { peek3_noexpect },
+        (Builtin::Error, false) => quote! { error_noexpect },
     };
 
-    // It turns out Option<_> does not implement quote's internal iterator
-    // trait. I'm sad we have to allocate here, but I see no better solution.
-    let descr = descr.into_iter().collect::<Vec<_>>();
+    let expect = expect.into_iter().collect::<Vec<_>>();
 
     quote! {
-        cond![input, #builtin #( , #descr )* ]
+        #builtin(#( #expect, )*)
     }
 }
 
