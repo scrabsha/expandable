@@ -21,7 +21,6 @@ macro_rules! check_parse {
             };
 
             for (idx, token) in input.into_iter().enumerate() {
-                dbg!(token);
                 match parser.step(token, idx) {
                     Ok(_) => {},
 
@@ -248,6 +247,24 @@ check_parse! {
             {
                 let [head, tail @ ..] = ();
             }
+        }
+    }
+}
+
+check_parse! {
+    fn weird_path_error() {
+        expr,
+        {
+            (0..10).collect::<Vec<_>>()
+        }
+    }
+}
+
+check_parse! {
+    fn path_starting_with_crate() {
+        expr,
+        {
+            self::foo()
         }
     }
 }
