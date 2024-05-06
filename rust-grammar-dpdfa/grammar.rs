@@ -78,13 +78,116 @@ fn stmt_inner() {
 }
 
 pub fn ty() {
-    // TODO(scrabsha): this parses only identifier-ish type
-    if peek(Ident) {
-        bump();
-    } else if peek(FragmentTy) {
-        bump();
+    // TODO(scrabsha): this parses only identifier-ish type and paths
+
+    if peek(FragmentTy) {
+        bump(FragmentTy);
+    } else if peek(Underscore) {
+        bump(Underscore);
+    } else if peek(Ident)
+        || peek(FragmentIdent)
+        || peek(Self_)
+        || peek(SelfUpper)
+        || peek(Super)
+        || peek(FragmentIdent)
+    {
+        ty_path();
     } else {
         error();
+    }
+}
+
+fn ty_no_bounds() {
+    // TODO:
+    ty();
+}
+
+fn ty_path() {
+    if peek(ColonColon) {
+        bump(ColonColon);
+    }
+
+    ty_path_segment();
+
+    if peek(ColonColon) {
+        bump(ColonColon);
+        ty_path_segment();
+
+        ty_path_();
+    }
+}
+
+fn ty_path_() {
+    if peek(ColonColon) {
+        bump(ColonColon);
+
+        ty_path_segment();
+        ty_path_();
+    }
+}
+
+fn ty_path_segment() {
+    path_ident_segment();
+
+    if peek(ColonColon) {
+        bump(ColonColon);
+
+        if peek(LessThan) {
+            // TODO: rename this to generic_args or sth.
+            expr_angle_bracketed_generic_arguments();
+        } else if peek(LParen) {
+            ty_path_fn();
+        }
+    } else if peek(LessThan) {
+        // TODO: rename this to generic_args or sth.
+        expr_angle_bracketed_generic_arguments();
+    } else if peek(LParen) {
+        ty_path_fn();
+    }
+}
+
+fn ty_path_fn() {
+    bump(LParen);
+    if peek(RParen) {
+        bump(RParen);
+    } else {
+        ty_path_fn_inputs();
+        bump(RParen);
+    }
+
+    if peek(RightArrow) {
+        bump(RightArrow);
+        ty_no_bounds();
+    }
+}
+
+fn ty_path_fn_inputs() {
+    ty();
+
+    if peek(Comma) {
+        bump(Comma);
+
+        if peek(RParen) {
+            bump(RParen);
+        } else {
+            ty_path_fn_inputs_();
+        }
+    }
+}
+
+fn ty_path_fn_inputs_() {
+    ty();
+
+    if peek(Comma) {
+        bump(Comma);
+
+        if peek(RParen) {
+            bump(RParen);
+        } else {
+            ty_path_fn_inputs_();
+        }
+    } else {
+        bump(RParen);
     }
 }
 
@@ -475,7 +578,15 @@ fn expr_after_atom() {
 fn expr_atom() {
     if peek(Return) || peek(Break) {
         expr_return_or_break();
-    } else if peek(Ident) || peek(FragmentIdent) || peek(ColonColon) {
+    } else if peek(Ident)
+        || peek(Self_)
+        || peek(SelfUpper)
+        || peek(Super)
+        || peek(Crate)
+        || peek(FragmentIdent)
+        || peek(ColonColon)
+        || peek(LessThan)
+    {
         expr_path();
     } else if peek(FragmentExpr) || peek(Literal) {
         bump();
@@ -548,6 +659,40 @@ fn expr_return_or_break() {
 }
 
 fn expr_path() {
+    if peek(FragmentPath) {
+        bump(FragmentPath);
+    } else if peek(LessThan) {
+        expr_qualified_path();
+    } else if peek(Ident)
+        || peek(FragmentIdent)
+        || peek(Super)
+        || peek(Self_)
+        || peek(SelfUpper)
+        || peek(Crate)
+        || peek(ColonColon)
+    {
+        expr_path_in();
+    } else {
+        error();
+    }
+}
+
+fn expr_qualified_path() {
+    bump(LessThan);
+    ty();
+
+    if peek(As) {
+        bump(As);
+        ty_path();
+    }
+
+    bump(GreaterThan);
+    bump(ColonColon);
+
+    expr_path_segment();
+}
+
+fn expr_path_in() {
     if peek(ColonColon) {
         bump(ColonColon);
     }
@@ -568,7 +713,7 @@ fn expr_path_() {
 }
 
 fn expr_path_segment() {
-    path_segment();
+    path_ident_segment();
 
     if peek(ColonColon) {
         if peek2(LessThan) {
@@ -578,8 +723,14 @@ fn expr_path_segment() {
     }
 }
 
-fn path_segment() {
-    if peek(Ident) || peek(FragmentIdent) || peek(SelfUpper) {
+fn path_ident_segment() {
+    if peek(Ident)
+        || peek(FragmentIdent)
+        || peek(SelfUpper)
+        || peek(Self_)
+        || peek(Super)
+        || peek(Crate)
+    {
         bump();
     } else {
         error();
@@ -719,19 +870,20 @@ fn expr_angle_bracketed_generic_arguments_() {
 }
 
 fn expr_generic_argument() {
-    if peek(Literal) {
-        bump(Literal);
-    } else if peek(FragmentLiteral) {
-        bump(FragmentLiteral);
-    } else if peek(Ident) {
-        bump(Ident);
-    } else if peek(FragmentIdent) {
-        bump(FragmentIdent);
-    } else if peek(LBrace) {
-        block();
+    if peek(Literal) || peek(FragmentLiteral) {
+        bump();
     } else if peek(Minus) {
         // Sorry
         minus_prefixed_literal();
+    } else if peek(FragmentIdent) || peek(Ident) {
+        if peek2(Equals) {
+            // Iterator<Item = Foo>.
+            bump();
+            bump(Equals);
+        }
+        ty();
+    } else if peek(LBrace) {
+        block();
     } else {
         ty();
     }
