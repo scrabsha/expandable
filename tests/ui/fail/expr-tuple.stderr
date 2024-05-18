@@ -10,7 +10,7 @@ error: Potentially invalid expansion. Expected an expression, an identifier, `::
 13 |         (42,, 42)
    |             ^
 
-error: Potentially invalid expansion. Expected `!=`, `%`, `&&`, `&`, `*`, `+` or 20 others.
+error: Potentially invalid expansion. Expected `!=`, `!`, `%`, `&&`, `&`, `*` or 21 others.
   --> tests/ui/fail/expr-tuple.rs:20:12
    |
 20 |         (a b)
