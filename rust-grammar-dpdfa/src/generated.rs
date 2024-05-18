@@ -854,11 +854,11 @@ fn stmt_inner_0<Span: Copy>(
 ) -> Result<Transition<Span>, Option<Span>> {
     input.call_now(&[expr])
 }
-fn stmt_inner_5<Span: Copy>(
+fn stmt_inner_9<Span: Copy>(
     input: &mut RustParser<Span>,
 ) -> Result<Transition<Span>, Option<Span>> {
     if input.peek_expect(Let) {
-        input.call_now(&[stmt_inner_4])
+        input.call_now(&[stmt_inner_8])
     } else {
         input.call_now(&[])
     }
@@ -868,28 +868,52 @@ fn stmt_inner_1<Span: Copy>(
 ) -> Result<Transition<Span>, Option<Span>> {
     input.bump_expect(Equals, &[])
 }
+fn stmt_inner_5<Span: Copy>(
+    input: &mut RustParser<Span>,
+) -> Result<Transition<Span>, Option<Span>> {
+    if input.peek_expect(Colon) {
+        input.call_now(&[stmt_inner_4])
+    } else {
+        input.call_now(&[])
+    }
+}
 fn stmt_inner_2<Span: Copy>(
     input: &mut RustParser<Span>,
 ) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[pat])
+    input.call_now(&[ty])
 }
 fn stmt_inner_3<Span: Copy>(
     input: &mut RustParser<Span>,
 ) -> Result<Transition<Span>, Option<Span>> {
-    input.bump_expect(Let, &[])
+    input.bump_expect(Colon, &[])
 }
 fn stmt_inner_4<Span: Copy>(
     input: &mut RustParser<Span>,
 ) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[stmt_inner_1, stmt_inner_2, stmt_inner_3])
+    input.call_now(&[stmt_inner_2, stmt_inner_3])
 }
 fn stmt_inner_6<Span: Copy>(
     input: &mut RustParser<Span>,
 ) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[stmt_inner_0, stmt_inner_5])
+    input.call_now(&[pat])
+}
+fn stmt_inner_7<Span: Copy>(
+    input: &mut RustParser<Span>,
+) -> Result<Transition<Span>, Option<Span>> {
+    input.bump_expect(Let, &[])
+}
+fn stmt_inner_8<Span: Copy>(
+    input: &mut RustParser<Span>,
+) -> Result<Transition<Span>, Option<Span>> {
+    input.call_now(&[stmt_inner_1, stmt_inner_5, stmt_inner_6, stmt_inner_7])
+}
+fn stmt_inner_10<Span: Copy>(
+    input: &mut RustParser<Span>,
+) -> Result<Transition<Span>, Option<Span>> {
+    input.call_now(&[stmt_inner_0, stmt_inner_9])
 }
 fn stmt_inner<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[stmt_inner_6])
+    input.call_now(&[stmt_inner_10])
 }
 fn ty_10<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
     if input.peek_expect(FragmentTy) {
@@ -963,46 +987,59 @@ fn ty_no_bounds<Span: Copy>(
 ) -> Result<Transition<Span>, Option<Span>> {
     input.call_now(&[ty_no_bounds_1])
 }
-fn ty_path_4<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    if input.peek_expect(ColonColon) {
-        input.call_now(&[ty_path_3])
+fn ty_path_2<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
+    if input.peek_expect(Not) {
+        input.call_now(&[ty_path_1])
     } else {
         input.call_now(&[])
     }
 }
 fn ty_path_0<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[ty_path_])
+    input.call_now(&[macro_call_tail])
 }
 fn ty_path_1<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[ty_path_segment])
+    input.call_now(&[ty_path_0])
 }
-fn ty_path_2<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.bump_expect(ColonColon, &[])
-}
-fn ty_path_3<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[ty_path_0, ty_path_1, ty_path_2])
-}
-fn ty_path_5<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[ty_path_segment])
-}
-fn ty_path_8<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
+fn ty_path_7<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
     if input.peek_expect(ColonColon) {
-        input.call_now(&[ty_path_7])
+        input.call_now(&[ty_path_6])
     } else {
         input.call_now(&[])
     }
 }
-fn ty_path_6<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
+fn ty_path_3<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
+    input.call_now(&[ty_path_])
+}
+fn ty_path_4<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
+    input.call_now(&[ty_path_segment])
+}
+fn ty_path_5<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
     input.bump_expect(ColonColon, &[])
 }
-fn ty_path_7<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[ty_path_6])
+fn ty_path_6<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
+    input.call_now(&[ty_path_3, ty_path_4, ty_path_5])
+}
+fn ty_path_8<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
+    input.call_now(&[ty_path_segment])
+}
+fn ty_path_11<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
+    if input.peek_expect(ColonColon) {
+        input.call_now(&[ty_path_10])
+    } else {
+        input.call_now(&[])
+    }
 }
 fn ty_path_9<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[ty_path_4, ty_path_5, ty_path_8])
+    input.bump_expect(ColonColon, &[])
+}
+fn ty_path_10<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
+    input.call_now(&[ty_path_9])
+}
+fn ty_path_12<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
+    input.call_now(&[ty_path_2, ty_path_7, ty_path_8, ty_path_11])
 }
 fn ty_path<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[ty_path_9])
+    input.call_now(&[ty_path_12])
 }
 fn ty_path__4<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
     if input.peek_expect(ColonColon) {
@@ -1488,13 +1525,14 @@ fn pat__5<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, 
 fn pat_<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
     input.call_now(&[pat__5])
 }
-fn pat_no_top_alt_49<Span: Copy>(
+fn pat_no_top_alt_38<Span: Copy>(
     input: &mut RustParser<Span>,
 ) -> Result<Transition<Span>, Option<Span>> {
-    if input.peek_expect(FragmentPat) {
+    if input.peek_expect(FragmentPat) || input.peek_expect(Underscore) || input.peek_expect(DotDot)
+    {
         input.call_now(&[pat_no_top_alt_1])
     } else {
-        input.call_now(&[pat_no_top_alt_48])
+        input.call_now(&[pat_no_top_alt_37])
     }
 }
 fn pat_no_top_alt_0<Span: Copy>(
@@ -1507,13 +1545,13 @@ fn pat_no_top_alt_1<Span: Copy>(
 ) -> Result<Transition<Span>, Option<Span>> {
     input.call_now(&[pat_no_top_alt_0])
 }
-fn pat_no_top_alt_48<Span: Copy>(
+fn pat_no_top_alt_37<Span: Copy>(
     input: &mut RustParser<Span>,
 ) -> Result<Transition<Span>, Option<Span>> {
     if input.peek_expect(Ref) || input.peek_expect(Mut) {
         input.call_now(&[pat_no_top_alt_3])
     } else {
-        input.call_now(&[pat_no_top_alt_47])
+        input.call_now(&[pat_no_top_alt_36])
     }
 }
 fn pat_no_top_alt_2<Span: Copy>(
@@ -1526,7 +1564,7 @@ fn pat_no_top_alt_3<Span: Copy>(
 ) -> Result<Transition<Span>, Option<Span>> {
     input.call_now(&[pat_no_top_alt_2])
 }
-fn pat_no_top_alt_47<Span: Copy>(
+fn pat_no_top_alt_36<Span: Copy>(
     input: &mut RustParser<Span>,
 ) -> Result<Transition<Span>, Option<Span>> {
     if input.peek_expect(Literal)
@@ -1537,7 +1575,7 @@ fn pat_no_top_alt_47<Span: Copy>(
     {
         input.call_now(&[pat_no_top_alt_6])
     } else {
-        input.call_now(&[pat_no_top_alt_46])
+        input.call_now(&[pat_no_top_alt_35])
     }
 }
 fn pat_no_top_alt_4<Span: Copy>(
@@ -1555,13 +1593,13 @@ fn pat_no_top_alt_6<Span: Copy>(
 ) -> Result<Transition<Span>, Option<Span>> {
     input.call_now(&[pat_no_top_alt_4, pat_no_top_alt_5])
 }
-fn pat_no_top_alt_46<Span: Copy>(
+fn pat_no_top_alt_35<Span: Copy>(
     input: &mut RustParser<Span>,
 ) -> Result<Transition<Span>, Option<Span>> {
     if input.peek_expect(DotDotEquals) {
         input.call_now(&[pat_no_top_alt_9])
     } else {
-        input.call_now(&[pat_no_top_alt_45])
+        input.call_now(&[pat_no_top_alt_34])
     }
 }
 fn pat_no_top_alt_7<Span: Copy>(
@@ -1579,536 +1617,255 @@ fn pat_no_top_alt_9<Span: Copy>(
 ) -> Result<Transition<Span>, Option<Span>> {
     input.call_now(&[pat_no_top_alt_7, pat_no_top_alt_8])
 }
-fn pat_no_top_alt_45<Span: Copy>(
+fn pat_no_top_alt_34<Span: Copy>(
     input: &mut RustParser<Span>,
 ) -> Result<Transition<Span>, Option<Span>> {
-    if input.peek_expect(Ident) || input.peek_expect(FragmentIdent) {
-        input.call_now(&[pat_no_top_alt_22])
-    } else {
-        input.call_now(&[pat_no_top_alt_44])
-    }
-}
-fn pat_no_top_alt_15<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    if input.peek_expect(LBrace) {
+    if input.peek_expect(ColonColon) || input.peek_expect(FragmentPath) {
         input.call_now(&[pat_no_top_alt_11])
     } else {
-        input.call_now(&[pat_no_top_alt_14])
+        input.call_now(&[pat_no_top_alt_33])
     }
 }
 fn pat_no_top_alt_10<Span: Copy>(
     input: &mut RustParser<Span>,
 ) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[pat_struct_tail])
+    input.call_now(&[pat_starting_with_path])
 }
 fn pat_no_top_alt_11<Span: Copy>(
     input: &mut RustParser<Span>,
 ) -> Result<Transition<Span>, Option<Span>> {
     input.call_now(&[pat_no_top_alt_10])
 }
-fn pat_no_top_alt_14<Span: Copy>(
+fn pat_no_top_alt_33<Span: Copy>(
     input: &mut RustParser<Span>,
 ) -> Result<Transition<Span>, Option<Span>> {
-    if input.peek_expect(LParen) {
+    if input.peek_expect(Ident) || input.peek_expect(FragmentIdent) {
+        input.call_now(&[pat_no_top_alt_17])
+    } else {
+        input.call_now(&[pat_no_top_alt_32])
+    }
+}
+fn pat_no_top_alt_16<Span: Copy>(
+    input: &mut RustParser<Span>,
+) -> Result<Transition<Span>, Option<Span>> {
+    if input.peek2_expect(At) {
         input.call_now(&[pat_no_top_alt_13])
     } else {
-        input.call_now(&[])
+        input.call_now(&[pat_no_top_alt_15])
     }
 }
 fn pat_no_top_alt_12<Span: Copy>(
     input: &mut RustParser<Span>,
 ) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[pat_tuple])
+    input.call_now(&[pat_ident])
 }
 fn pat_no_top_alt_13<Span: Copy>(
     input: &mut RustParser<Span>,
 ) -> Result<Transition<Span>, Option<Span>> {
     input.call_now(&[pat_no_top_alt_12])
 }
-fn pat_no_top_alt_21<Span: Copy>(
+fn pat_no_top_alt_14<Span: Copy>(
     input: &mut RustParser<Span>,
 ) -> Result<Transition<Span>, Option<Span>> {
-    if input.peek2_expect(ColonColon) {
-        input.call_now(&[pat_no_top_alt_17])
-    } else {
-        input.call_now(&[pat_no_top_alt_20])
-    }
+    input.call_now(&[pat_starting_with_path])
 }
-fn pat_no_top_alt_16<Span: Copy>(
+fn pat_no_top_alt_15<Span: Copy>(
     input: &mut RustParser<Span>,
 ) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[expr_path])
+    input.call_now(&[pat_no_top_alt_14])
 }
 fn pat_no_top_alt_17<Span: Copy>(
     input: &mut RustParser<Span>,
 ) -> Result<Transition<Span>, Option<Span>> {
     input.call_now(&[pat_no_top_alt_16])
 }
+fn pat_no_top_alt_32<Span: Copy>(
+    input: &mut RustParser<Span>,
+) -> Result<Transition<Span>, Option<Span>> {
+    if input.peek_expect(And) {
+        input.call_now(&[pat_no_top_alt_23])
+    } else {
+        input.call_now(&[pat_no_top_alt_31])
+    }
+}
 fn pat_no_top_alt_18<Span: Copy>(
     input: &mut RustParser<Span>,
 ) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[pat_maybe_range_tail])
+    input.call_now(&[pat_no_top_alt])
+}
+fn pat_no_top_alt_21<Span: Copy>(
+    input: &mut RustParser<Span>,
+) -> Result<Transition<Span>, Option<Span>> {
+    if input.peek_expect(And) {
+        input.call_now(&[pat_no_top_alt_20])
+    } else {
+        input.call_now(&[])
+    }
 }
 fn pat_no_top_alt_19<Span: Copy>(
     input: &mut RustParser<Span>,
 ) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[pat_ident])
+    input.bump_expect(And, &[])
 }
 fn pat_no_top_alt_20<Span: Copy>(
     input: &mut RustParser<Span>,
 ) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[pat_no_top_alt_18, pat_no_top_alt_19])
+    input.call_now(&[pat_no_top_alt_19])
 }
 fn pat_no_top_alt_22<Span: Copy>(
     input: &mut RustParser<Span>,
 ) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[pat_no_top_alt_15, pat_no_top_alt_21])
-}
-fn pat_no_top_alt_44<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    if input.peek_expect(FragmentPath) {
-        input.call_now(&[pat_no_top_alt_25])
-    } else {
-        input.call_now(&[pat_no_top_alt_43])
-    }
+    input.bump_expect(And, &[])
 }
 fn pat_no_top_alt_23<Span: Copy>(
     input: &mut RustParser<Span>,
 ) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[pat_maybe_range_tail])
+    input.call_now(&[pat_no_top_alt_18, pat_no_top_alt_21, pat_no_top_alt_22])
+}
+fn pat_no_top_alt_31<Span: Copy>(
+    input: &mut RustParser<Span>,
+) -> Result<Transition<Span>, Option<Span>> {
+    if input.peek_expect(LParen) {
+        input.call_now(&[pat_no_top_alt_25])
+    } else {
+        input.call_now(&[pat_no_top_alt_30])
+    }
 }
 fn pat_no_top_alt_24<Span: Copy>(
     input: &mut RustParser<Span>,
 ) -> Result<Transition<Span>, Option<Span>> {
-    input.bump_expect(FragmentPath, &[])
+    input.call_now(&[pat_tuple])
 }
 fn pat_no_top_alt_25<Span: Copy>(
     input: &mut RustParser<Span>,
 ) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[pat_no_top_alt_23, pat_no_top_alt_24])
+    input.call_now(&[pat_no_top_alt_24])
 }
-fn pat_no_top_alt_43<Span: Copy>(
+fn pat_no_top_alt_30<Span: Copy>(
     input: &mut RustParser<Span>,
 ) -> Result<Transition<Span>, Option<Span>> {
-    if input.peek_expect(Underscore) || input.peek_expect(DotDot) {
+    if input.peek_expect(LBracket) {
         input.call_now(&[pat_no_top_alt_27])
     } else {
-        input.call_now(&[pat_no_top_alt_42])
+        input.call_now(&[pat_no_top_alt_29])
     }
 }
 fn pat_no_top_alt_26<Span: Copy>(
     input: &mut RustParser<Span>,
 ) -> Result<Transition<Span>, Option<Span>> {
-    input.bump_noexpect(&[])
+    input.call_now(&[pat_slice])
 }
 fn pat_no_top_alt_27<Span: Copy>(
     input: &mut RustParser<Span>,
 ) -> Result<Transition<Span>, Option<Span>> {
     input.call_now(&[pat_no_top_alt_26])
 }
-fn pat_no_top_alt_42<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    if input.peek_expect(And) {
-        input.call_now(&[pat_no_top_alt_33])
-    } else {
-        input.call_now(&[pat_no_top_alt_41])
-    }
-}
 fn pat_no_top_alt_28<Span: Copy>(
     input: &mut RustParser<Span>,
 ) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[pat_without_range])
-}
-fn pat_no_top_alt_31<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    if input.peek_expect(And) {
-        input.call_now(&[pat_no_top_alt_30])
-    } else {
-        input.call_now(&[])
-    }
+    input.error()
 }
 fn pat_no_top_alt_29<Span: Copy>(
     input: &mut RustParser<Span>,
 ) -> Result<Transition<Span>, Option<Span>> {
-    input.bump_expect(And, &[])
-}
-fn pat_no_top_alt_30<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[pat_no_top_alt_29])
-}
-fn pat_no_top_alt_32<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.bump_expect(And, &[])
-}
-fn pat_no_top_alt_33<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[pat_no_top_alt_28, pat_no_top_alt_31, pat_no_top_alt_32])
-}
-fn pat_no_top_alt_41<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    if input.peek_expect(LParen) {
-        input.call_now(&[pat_no_top_alt_35])
-    } else {
-        input.call_now(&[pat_no_top_alt_40])
-    }
-}
-fn pat_no_top_alt_34<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[pat_tuple])
-}
-fn pat_no_top_alt_35<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[pat_no_top_alt_34])
-}
-fn pat_no_top_alt_40<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    if input.peek_expect(LBracket) {
-        input.call_now(&[pat_no_top_alt_37])
-    } else {
-        input.call_now(&[pat_no_top_alt_39])
-    }
-}
-fn pat_no_top_alt_36<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[pat_slice])
-}
-fn pat_no_top_alt_37<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[pat_no_top_alt_36])
-}
-fn pat_no_top_alt_38<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.error()
+    input.call_now(&[pat_no_top_alt_28])
 }
 fn pat_no_top_alt_39<Span: Copy>(
     input: &mut RustParser<Span>,
 ) -> Result<Transition<Span>, Option<Span>> {
     input.call_now(&[pat_no_top_alt_38])
 }
-fn pat_no_top_alt_50<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[pat_no_top_alt_49])
-}
 fn pat_no_top_alt<Span: Copy>(
     input: &mut RustParser<Span>,
 ) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[pat_no_top_alt_50])
+    input.call_now(&[pat_no_top_alt_39])
 }
-fn pat_without_range_45<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    if input.peek_expect(FragmentPat) {
-        input.call_now(&[pat_without_range_1])
-    } else {
-        input.call_now(&[pat_without_range_44])
-    }
-}
-fn pat_without_range_0<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.bump_noexpect(&[])
-}
-fn pat_without_range_1<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[pat_without_range_0])
-}
-fn pat_without_range_44<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    if input.peek_expect(Ref) || input.peek_expect(Mut) {
-        input.call_now(&[pat_without_range_3])
-    } else {
-        input.call_now(&[pat_without_range_43])
-    }
-}
-fn pat_without_range_2<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[pat_ident])
-}
-fn pat_without_range_3<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[pat_without_range_2])
-}
-fn pat_without_range_43<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    if input.peek_expect(Literal)
-        || input.peek_expect(FragmentLiteral)
-        || input.peek_expect(True)
-        || input.peek_expect(False)
-        || input.peek_expect(Minus)
-    {
-        input.call_now(&[pat_without_range_5])
-    } else {
-        input.call_now(&[pat_without_range_42])
-    }
-}
-fn pat_without_range_4<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[pat_literal])
-}
-fn pat_without_range_5<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[pat_without_range_4])
-}
-fn pat_without_range_42<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    if input.peek_expect(DotDotEquals) {
-        input.call_now(&[pat_without_range_8])
-    } else {
-        input.call_now(&[pat_without_range_41])
-    }
-}
-fn pat_without_range_6<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[pat_literal])
-}
-fn pat_without_range_7<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.bump_expect(DotDotEquals, &[])
-}
-fn pat_without_range_8<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[pat_without_range_6, pat_without_range_7])
-}
-fn pat_without_range_41<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    if input.peek_expect(Ident) || input.peek_expect(FragmentIdent) {
-        input.call_now(&[pat_without_range_20])
-    } else {
-        input.call_now(&[pat_without_range_40])
-    }
-}
-fn pat_without_range_14<Span: Copy>(
+fn pat_starting_with_path_11<Span: Copy>(
     input: &mut RustParser<Span>,
 ) -> Result<Transition<Span>, Option<Span>> {
     if input.peek_expect(LBrace) {
-        input.call_now(&[pat_without_range_10])
+        input.call_now(&[pat_starting_with_path_1])
     } else {
-        input.call_now(&[pat_without_range_13])
+        input.call_now(&[pat_starting_with_path_10])
     }
 }
-fn pat_without_range_9<Span: Copy>(
+fn pat_starting_with_path_0<Span: Copy>(
     input: &mut RustParser<Span>,
 ) -> Result<Transition<Span>, Option<Span>> {
     input.call_now(&[pat_struct_tail])
 }
-fn pat_without_range_10<Span: Copy>(
+fn pat_starting_with_path_1<Span: Copy>(
     input: &mut RustParser<Span>,
 ) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[pat_without_range_9])
+    input.call_now(&[pat_starting_with_path_0])
 }
-fn pat_without_range_13<Span: Copy>(
+fn pat_starting_with_path_10<Span: Copy>(
     input: &mut RustParser<Span>,
 ) -> Result<Transition<Span>, Option<Span>> {
     if input.peek_expect(LParen) {
-        input.call_now(&[pat_without_range_12])
+        input.call_now(&[pat_starting_with_path_3])
     } else {
-        input.call_now(&[])
+        input.call_now(&[pat_starting_with_path_9])
     }
 }
-fn pat_without_range_11<Span: Copy>(
+fn pat_starting_with_path_2<Span: Copy>(
     input: &mut RustParser<Span>,
 ) -> Result<Transition<Span>, Option<Span>> {
     input.call_now(&[pat_tuple])
 }
-fn pat_without_range_12<Span: Copy>(
+fn pat_starting_with_path_3<Span: Copy>(
     input: &mut RustParser<Span>,
 ) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[pat_without_range_11])
+    input.call_now(&[pat_starting_with_path_2])
 }
-fn pat_without_range_19<Span: Copy>(
+fn pat_starting_with_path_9<Span: Copy>(
     input: &mut RustParser<Span>,
 ) -> Result<Transition<Span>, Option<Span>> {
-    if input.peek2_expect(ColonColon) {
-        input.call_now(&[pat_without_range_16])
+    if input.peek_expect(Not) {
+        input.call_now(&[pat_starting_with_path_6])
     } else {
-        input.call_now(&[pat_without_range_18])
+        input.call_now(&[pat_starting_with_path_8])
     }
 }
-fn pat_without_range_15<Span: Copy>(
+fn pat_starting_with_path_4<Span: Copy>(
+    input: &mut RustParser<Span>,
+) -> Result<Transition<Span>, Option<Span>> {
+    input.call_now(&[pat_maybe_range_tail])
+}
+fn pat_starting_with_path_5<Span: Copy>(
+    input: &mut RustParser<Span>,
+) -> Result<Transition<Span>, Option<Span>> {
+    input.call_now(&[macro_call_tail])
+}
+fn pat_starting_with_path_6<Span: Copy>(
+    input: &mut RustParser<Span>,
+) -> Result<Transition<Span>, Option<Span>> {
+    input.call_now(&[pat_starting_with_path_4, pat_starting_with_path_5])
+}
+fn pat_starting_with_path_7<Span: Copy>(
+    input: &mut RustParser<Span>,
+) -> Result<Transition<Span>, Option<Span>> {
+    input.call_now(&[pat_maybe_range_tail])
+}
+fn pat_starting_with_path_8<Span: Copy>(
+    input: &mut RustParser<Span>,
+) -> Result<Transition<Span>, Option<Span>> {
+    input.call_now(&[pat_starting_with_path_7])
+}
+fn pat_starting_with_path_12<Span: Copy>(
     input: &mut RustParser<Span>,
 ) -> Result<Transition<Span>, Option<Span>> {
     input.call_now(&[expr_path])
 }
-fn pat_without_range_16<Span: Copy>(
+fn pat_starting_with_path_13<Span: Copy>(
     input: &mut RustParser<Span>,
 ) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[pat_without_range_15])
+    input.call_now(&[pat_starting_with_path_11, pat_starting_with_path_12])
 }
-fn pat_without_range_17<Span: Copy>(
+fn pat_starting_with_path<Span: Copy>(
     input: &mut RustParser<Span>,
 ) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[pat_ident])
-}
-fn pat_without_range_18<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[pat_without_range_17])
-}
-fn pat_without_range_20<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[pat_without_range_14, pat_without_range_19])
-}
-fn pat_without_range_40<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    if input.peek_expect(FragmentPath) {
-        input.call_now(&[pat_without_range_22])
-    } else {
-        input.call_now(&[pat_without_range_39])
-    }
-}
-fn pat_without_range_21<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.bump_expect(FragmentPath, &[])
-}
-fn pat_without_range_22<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[pat_without_range_21])
-}
-fn pat_without_range_39<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    if input.peek_expect(Underscore) || input.peek_expect(DotDot) {
-        input.call_now(&[pat_without_range_24])
-    } else {
-        input.call_now(&[pat_without_range_38])
-    }
-}
-fn pat_without_range_23<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.bump_noexpect(&[])
-}
-fn pat_without_range_24<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[pat_without_range_23])
-}
-fn pat_without_range_38<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    if input.peek_expect(And) {
-        input.call_now(&[pat_without_range_29])
-    } else {
-        input.call_now(&[pat_without_range_37])
-    }
-}
-fn pat_without_range_27<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    if input.peek_expect(And) {
-        input.call_now(&[pat_without_range_26])
-    } else {
-        input.call_now(&[])
-    }
-}
-fn pat_without_range_25<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.bump_expect(And, &[])
-}
-fn pat_without_range_26<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[pat_without_range_25])
-}
-fn pat_without_range_28<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.bump_expect(And, &[])
-}
-fn pat_without_range_29<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[pat_without_range_27, pat_without_range_28])
-}
-fn pat_without_range_37<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    if input.peek_expect(LParen) {
-        input.call_now(&[pat_without_range_31])
-    } else {
-        input.call_now(&[pat_without_range_36])
-    }
-}
-fn pat_without_range_30<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[pat_tuple])
-}
-fn pat_without_range_31<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[pat_without_range_30])
-}
-fn pat_without_range_36<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    if input.peek_expect(LBracket) {
-        input.call_now(&[pat_without_range_33])
-    } else {
-        input.call_now(&[pat_without_range_35])
-    }
-}
-fn pat_without_range_32<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[pat_slice])
-}
-fn pat_without_range_33<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[pat_without_range_32])
-}
-fn pat_without_range_34<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.error()
-}
-fn pat_without_range_35<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[pat_without_range_34])
-}
-fn pat_without_range_46<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[pat_without_range_45])
-}
-fn pat_without_range<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[pat_without_range_46])
+    input.call_now(&[pat_starting_with_path_13])
 }
 fn pat_maybe_range_tail_10<Span: Copy>(
     input: &mut RustParser<Span>,
@@ -3631,7 +3388,7 @@ fn expr_qualified_path<Span: Copy>(
 fn expr_path_in_2<Span: Copy>(
     input: &mut RustParser<Span>,
 ) -> Result<Transition<Span>, Option<Span>> {
-    if input.peek_expect(ColonColon) {
+    if input.peek_expect(Not) {
         input.call_now(&[expr_path_in_1])
     } else {
         input.call_now(&[])
@@ -3640,83 +3397,109 @@ fn expr_path_in_2<Span: Copy>(
 fn expr_path_in_0<Span: Copy>(
     input: &mut RustParser<Span>,
 ) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[expr_path_])
+    input.call_now(&[macro_call_tail])
 }
 fn expr_path_in_1<Span: Copy>(
     input: &mut RustParser<Span>,
 ) -> Result<Transition<Span>, Option<Span>> {
     input.call_now(&[expr_path_in_0])
 }
-fn expr_path_in_3<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[expr_path_segment])
-}
-fn expr_path_in_6<Span: Copy>(
+fn expr_path_in_5<Span: Copy>(
     input: &mut RustParser<Span>,
 ) -> Result<Transition<Span>, Option<Span>> {
     if input.peek_expect(ColonColon) {
-        input.call_now(&[expr_path_in_5])
+        input.call_now(&[expr_path_in_4])
     } else {
         input.call_now(&[])
     }
+}
+fn expr_path_in_3<Span: Copy>(
+    input: &mut RustParser<Span>,
+) -> Result<Transition<Span>, Option<Span>> {
+    input.call_now(&[expr_path_in_])
 }
 fn expr_path_in_4<Span: Copy>(
     input: &mut RustParser<Span>,
 ) -> Result<Transition<Span>, Option<Span>> {
-    input.bump_expect(ColonColon, &[])
+    input.call_now(&[expr_path_in_3])
 }
-fn expr_path_in_5<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[expr_path_in_4])
-}
-fn expr_path_in_7<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[expr_path_in_2, expr_path_in_3, expr_path_in_6])
-}
-fn expr_path_in<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[expr_path_in_7])
-}
-fn expr_path__2<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    if input.peek_expect(ColonColon) {
-        input.call_now(&[expr_path__1])
-    } else {
-        input.call_now(&[])
-    }
-}
-fn expr_path__0<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[expr_path_])
-}
-fn expr_path__1<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[expr_path__0])
-}
-fn expr_path__3<Span: Copy>(
+fn expr_path_in_6<Span: Copy>(
     input: &mut RustParser<Span>,
 ) -> Result<Transition<Span>, Option<Span>> {
     input.call_now(&[expr_path_segment])
 }
-fn expr_path__4<Span: Copy>(
+fn expr_path_in_9<Span: Copy>(
+    input: &mut RustParser<Span>,
+) -> Result<Transition<Span>, Option<Span>> {
+    if input.peek_expect(ColonColon) {
+        input.call_now(&[expr_path_in_8])
+    } else {
+        input.call_now(&[])
+    }
+}
+fn expr_path_in_7<Span: Copy>(
     input: &mut RustParser<Span>,
 ) -> Result<Transition<Span>, Option<Span>> {
     input.bump_expect(ColonColon, &[])
 }
-fn expr_path__5<Span: Copy>(
+fn expr_path_in_8<Span: Copy>(
     input: &mut RustParser<Span>,
 ) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[expr_path__2, expr_path__3, expr_path__4])
+    input.call_now(&[expr_path_in_7])
 }
-fn expr_path_<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[expr_path__5])
+fn expr_path_in_10<Span: Copy>(
+    input: &mut RustParser<Span>,
+) -> Result<Transition<Span>, Option<Span>> {
+    input.call_now(&[
+        expr_path_in_2,
+        expr_path_in_5,
+        expr_path_in_6,
+        expr_path_in_9,
+    ])
+}
+fn expr_path_in<Span: Copy>(
+    input: &mut RustParser<Span>,
+) -> Result<Transition<Span>, Option<Span>> {
+    input.call_now(&[expr_path_in_10])
+}
+fn expr_path_in__2<Span: Copy>(
+    input: &mut RustParser<Span>,
+) -> Result<Transition<Span>, Option<Span>> {
+    if input.peek_expect(ColonColon) {
+        input.call_now(&[expr_path_in__1])
+    } else {
+        input.call_now(&[])
+    }
+}
+fn expr_path_in__0<Span: Copy>(
+    input: &mut RustParser<Span>,
+) -> Result<Transition<Span>, Option<Span>> {
+    input.call_now(&[expr_path_in_])
+}
+fn expr_path_in__1<Span: Copy>(
+    input: &mut RustParser<Span>,
+) -> Result<Transition<Span>, Option<Span>> {
+    input.call_now(&[expr_path_in__0])
+}
+fn expr_path_in__3<Span: Copy>(
+    input: &mut RustParser<Span>,
+) -> Result<Transition<Span>, Option<Span>> {
+    input.call_now(&[expr_path_segment])
+}
+fn expr_path_in__4<Span: Copy>(
+    input: &mut RustParser<Span>,
+) -> Result<Transition<Span>, Option<Span>> {
+    input.bump_expect(ColonColon, &[])
+}
+fn expr_path_in__5<Span: Copy>(
+    input: &mut RustParser<Span>,
+) -> Result<Transition<Span>, Option<Span>> {
+    input.call_now(&[expr_path_in__2, expr_path_in__3, expr_path_in__4])
+}
+fn expr_path_in_<Span: Copy>(
+    input: &mut RustParser<Span>,
+) -> Result<Transition<Span>, Option<Span>> {
+    input.call_now(&[expr_path_in__5])
 }
 fn expr_path_segment_5<Span: Copy>(
     input: &mut RustParser<Span>,
@@ -4844,4 +4627,351 @@ fn expr_for_5<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Spa
 }
 fn expr_for<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
     input.call_now(&[expr_for_5])
+}
+fn macro_call_tail_0<Span: Copy>(
+    input: &mut RustParser<Span>,
+) -> Result<Transition<Span>, Option<Span>> {
+    input.call_now(&[token_stream_group])
+}
+fn macro_call_tail_1<Span: Copy>(
+    input: &mut RustParser<Span>,
+) -> Result<Transition<Span>, Option<Span>> {
+    input.bump_expect(Not, &[])
+}
+fn macro_call_tail_2<Span: Copy>(
+    input: &mut RustParser<Span>,
+) -> Result<Transition<Span>, Option<Span>> {
+    input.call_now(&[macro_call_tail_0, macro_call_tail_1])
+}
+fn macro_call_tail<Span: Copy>(
+    input: &mut RustParser<Span>,
+) -> Result<Transition<Span>, Option<Span>> {
+    input.call_now(&[macro_call_tail_2])
+}
+fn token_stream_group_10<Span: Copy>(
+    input: &mut RustParser<Span>,
+) -> Result<Transition<Span>, Option<Span>> {
+    if input.peek_expect(LParen) {
+        input.call_now(&[token_stream_group_1])
+    } else {
+        input.call_now(&[token_stream_group_9])
+    }
+}
+fn token_stream_group_0<Span: Copy>(
+    input: &mut RustParser<Span>,
+) -> Result<Transition<Span>, Option<Span>> {
+    input.call_now(&[token_stream_group_paren])
+}
+fn token_stream_group_1<Span: Copy>(
+    input: &mut RustParser<Span>,
+) -> Result<Transition<Span>, Option<Span>> {
+    input.call_now(&[token_stream_group_0])
+}
+fn token_stream_group_9<Span: Copy>(
+    input: &mut RustParser<Span>,
+) -> Result<Transition<Span>, Option<Span>> {
+    if input.peek_expect(LBracket) {
+        input.call_now(&[token_stream_group_3])
+    } else {
+        input.call_now(&[token_stream_group_8])
+    }
+}
+fn token_stream_group_2<Span: Copy>(
+    input: &mut RustParser<Span>,
+) -> Result<Transition<Span>, Option<Span>> {
+    input.call_now(&[token_stream_group_bracket])
+}
+fn token_stream_group_3<Span: Copy>(
+    input: &mut RustParser<Span>,
+) -> Result<Transition<Span>, Option<Span>> {
+    input.call_now(&[token_stream_group_2])
+}
+fn token_stream_group_8<Span: Copy>(
+    input: &mut RustParser<Span>,
+) -> Result<Transition<Span>, Option<Span>> {
+    if input.peek_expect(LBrace) {
+        input.call_now(&[token_stream_group_5])
+    } else {
+        input.call_now(&[token_stream_group_7])
+    }
+}
+fn token_stream_group_4<Span: Copy>(
+    input: &mut RustParser<Span>,
+) -> Result<Transition<Span>, Option<Span>> {
+    input.call_now(&[token_stream_group_brace])
+}
+fn token_stream_group_5<Span: Copy>(
+    input: &mut RustParser<Span>,
+) -> Result<Transition<Span>, Option<Span>> {
+    input.call_now(&[token_stream_group_4])
+}
+fn token_stream_group_6<Span: Copy>(
+    input: &mut RustParser<Span>,
+) -> Result<Transition<Span>, Option<Span>> {
+    input.error()
+}
+fn token_stream_group_7<Span: Copy>(
+    input: &mut RustParser<Span>,
+) -> Result<Transition<Span>, Option<Span>> {
+    input.call_now(&[token_stream_group_6])
+}
+fn token_stream_group_11<Span: Copy>(
+    input: &mut RustParser<Span>,
+) -> Result<Transition<Span>, Option<Span>> {
+    input.call_now(&[token_stream_group_10])
+}
+fn token_stream_group<Span: Copy>(
+    input: &mut RustParser<Span>,
+) -> Result<Transition<Span>, Option<Span>> {
+    input.call_now(&[token_stream_group_11])
+}
+fn token_stream_group_or_token_7<Span: Copy>(
+    input: &mut RustParser<Span>,
+) -> Result<Transition<Span>, Option<Span>> {
+    if input.peek_expect(LParen) || input.peek_expect(LBracket) || input.peek_expect(LBrace) {
+        input.call_now(&[token_stream_group_or_token_1])
+    } else {
+        input.call_now(&[token_stream_group_or_token_6])
+    }
+}
+fn token_stream_group_or_token_0<Span: Copy>(
+    input: &mut RustParser<Span>,
+) -> Result<Transition<Span>, Option<Span>> {
+    input.call_now(&[token_stream_group])
+}
+fn token_stream_group_or_token_1<Span: Copy>(
+    input: &mut RustParser<Span>,
+) -> Result<Transition<Span>, Option<Span>> {
+    input.call_now(&[token_stream_group_or_token_0])
+}
+fn token_stream_group_or_token_6<Span: Copy>(
+    input: &mut RustParser<Span>,
+) -> Result<Transition<Span>, Option<Span>> {
+    if input.peek_expect(RParen) || input.peek_expect(RBracket) || input.peek_expect(RBrace) {
+        input.call_now(&[token_stream_group_or_token_3])
+    } else {
+        input.call_now(&[token_stream_group_or_token_5])
+    }
+}
+fn token_stream_group_or_token_2<Span: Copy>(
+    input: &mut RustParser<Span>,
+) -> Result<Transition<Span>, Option<Span>> {
+    input.error()
+}
+fn token_stream_group_or_token_3<Span: Copy>(
+    input: &mut RustParser<Span>,
+) -> Result<Transition<Span>, Option<Span>> {
+    input.call_now(&[token_stream_group_or_token_2])
+}
+fn token_stream_group_or_token_4<Span: Copy>(
+    input: &mut RustParser<Span>,
+) -> Result<Transition<Span>, Option<Span>> {
+    input.bump_noexpect(&[])
+}
+fn token_stream_group_or_token_5<Span: Copy>(
+    input: &mut RustParser<Span>,
+) -> Result<Transition<Span>, Option<Span>> {
+    input.call_now(&[token_stream_group_or_token_4])
+}
+fn token_stream_group_or_token_8<Span: Copy>(
+    input: &mut RustParser<Span>,
+) -> Result<Transition<Span>, Option<Span>> {
+    input.call_now(&[token_stream_group_or_token_7])
+}
+fn token_stream_group_or_token<Span: Copy>(
+    input: &mut RustParser<Span>,
+) -> Result<Transition<Span>, Option<Span>> {
+    input.call_now(&[token_stream_group_or_token_8])
+}
+fn token_stream_group_paren_0<Span: Copy>(
+    input: &mut RustParser<Span>,
+) -> Result<Transition<Span>, Option<Span>> {
+    input.call_now(&[token_stream_group_paren_])
+}
+fn token_stream_group_paren_1<Span: Copy>(
+    input: &mut RustParser<Span>,
+) -> Result<Transition<Span>, Option<Span>> {
+    input.bump_expect(LParen, &[])
+}
+fn token_stream_group_paren_2<Span: Copy>(
+    input: &mut RustParser<Span>,
+) -> Result<Transition<Span>, Option<Span>> {
+    input.call_now(&[token_stream_group_paren_0, token_stream_group_paren_1])
+}
+fn token_stream_group_paren<Span: Copy>(
+    input: &mut RustParser<Span>,
+) -> Result<Transition<Span>, Option<Span>> {
+    input.call_now(&[token_stream_group_paren_2])
+}
+fn token_stream_group_paren__5<Span: Copy>(
+    input: &mut RustParser<Span>,
+) -> Result<Transition<Span>, Option<Span>> {
+    if input.peek_expect(RParen) {
+        input.call_now(&[token_stream_group_paren__1])
+    } else {
+        input.call_now(&[token_stream_group_paren__4])
+    }
+}
+fn token_stream_group_paren__0<Span: Copy>(
+    input: &mut RustParser<Span>,
+) -> Result<Transition<Span>, Option<Span>> {
+    input.bump_expect(RParen, &[])
+}
+fn token_stream_group_paren__1<Span: Copy>(
+    input: &mut RustParser<Span>,
+) -> Result<Transition<Span>, Option<Span>> {
+    input.call_now(&[token_stream_group_paren__0])
+}
+fn token_stream_group_paren__2<Span: Copy>(
+    input: &mut RustParser<Span>,
+) -> Result<Transition<Span>, Option<Span>> {
+    input.call_now(&[token_stream_group_paren_])
+}
+fn token_stream_group_paren__3<Span: Copy>(
+    input: &mut RustParser<Span>,
+) -> Result<Transition<Span>, Option<Span>> {
+    input.call_now(&[token_stream_group_or_token])
+}
+fn token_stream_group_paren__4<Span: Copy>(
+    input: &mut RustParser<Span>,
+) -> Result<Transition<Span>, Option<Span>> {
+    input.call_now(&[token_stream_group_paren__2, token_stream_group_paren__3])
+}
+fn token_stream_group_paren__6<Span: Copy>(
+    input: &mut RustParser<Span>,
+) -> Result<Transition<Span>, Option<Span>> {
+    input.call_now(&[token_stream_group_paren__5])
+}
+fn token_stream_group_paren_<Span: Copy>(
+    input: &mut RustParser<Span>,
+) -> Result<Transition<Span>, Option<Span>> {
+    input.call_now(&[token_stream_group_paren__6])
+}
+fn token_stream_group_bracket_0<Span: Copy>(
+    input: &mut RustParser<Span>,
+) -> Result<Transition<Span>, Option<Span>> {
+    input.call_now(&[token_stream_group_bracket_])
+}
+fn token_stream_group_bracket_1<Span: Copy>(
+    input: &mut RustParser<Span>,
+) -> Result<Transition<Span>, Option<Span>> {
+    input.bump_expect(LBracket, &[])
+}
+fn token_stream_group_bracket_2<Span: Copy>(
+    input: &mut RustParser<Span>,
+) -> Result<Transition<Span>, Option<Span>> {
+    input.call_now(&[token_stream_group_bracket_0, token_stream_group_bracket_1])
+}
+fn token_stream_group_bracket<Span: Copy>(
+    input: &mut RustParser<Span>,
+) -> Result<Transition<Span>, Option<Span>> {
+    input.call_now(&[token_stream_group_bracket_2])
+}
+fn token_stream_group_bracket__5<Span: Copy>(
+    input: &mut RustParser<Span>,
+) -> Result<Transition<Span>, Option<Span>> {
+    if input.peek_expect(RBracket) {
+        input.call_now(&[token_stream_group_bracket__1])
+    } else {
+        input.call_now(&[token_stream_group_bracket__4])
+    }
+}
+fn token_stream_group_bracket__0<Span: Copy>(
+    input: &mut RustParser<Span>,
+) -> Result<Transition<Span>, Option<Span>> {
+    input.bump_expect(RBracket, &[])
+}
+fn token_stream_group_bracket__1<Span: Copy>(
+    input: &mut RustParser<Span>,
+) -> Result<Transition<Span>, Option<Span>> {
+    input.call_now(&[token_stream_group_bracket__0])
+}
+fn token_stream_group_bracket__2<Span: Copy>(
+    input: &mut RustParser<Span>,
+) -> Result<Transition<Span>, Option<Span>> {
+    input.call_now(&[token_stream_group_bracket_])
+}
+fn token_stream_group_bracket__3<Span: Copy>(
+    input: &mut RustParser<Span>,
+) -> Result<Transition<Span>, Option<Span>> {
+    input.call_now(&[token_stream_group_or_token])
+}
+fn token_stream_group_bracket__4<Span: Copy>(
+    input: &mut RustParser<Span>,
+) -> Result<Transition<Span>, Option<Span>> {
+    input.call_now(&[token_stream_group_bracket__2, token_stream_group_bracket__3])
+}
+fn token_stream_group_bracket__6<Span: Copy>(
+    input: &mut RustParser<Span>,
+) -> Result<Transition<Span>, Option<Span>> {
+    input.call_now(&[token_stream_group_bracket__5])
+}
+fn token_stream_group_bracket_<Span: Copy>(
+    input: &mut RustParser<Span>,
+) -> Result<Transition<Span>, Option<Span>> {
+    input.call_now(&[token_stream_group_bracket__6])
+}
+fn token_stream_group_brace_0<Span: Copy>(
+    input: &mut RustParser<Span>,
+) -> Result<Transition<Span>, Option<Span>> {
+    input.call_now(&[token_stream_group_brace_])
+}
+fn token_stream_group_brace_1<Span: Copy>(
+    input: &mut RustParser<Span>,
+) -> Result<Transition<Span>, Option<Span>> {
+    input.bump_expect(LBrace, &[])
+}
+fn token_stream_group_brace_2<Span: Copy>(
+    input: &mut RustParser<Span>,
+) -> Result<Transition<Span>, Option<Span>> {
+    input.call_now(&[token_stream_group_brace_0, token_stream_group_brace_1])
+}
+fn token_stream_group_brace<Span: Copy>(
+    input: &mut RustParser<Span>,
+) -> Result<Transition<Span>, Option<Span>> {
+    input.call_now(&[token_stream_group_brace_2])
+}
+fn token_stream_group_brace__5<Span: Copy>(
+    input: &mut RustParser<Span>,
+) -> Result<Transition<Span>, Option<Span>> {
+    if input.peek_expect(RBrace) {
+        input.call_now(&[token_stream_group_brace__1])
+    } else {
+        input.call_now(&[token_stream_group_brace__4])
+    }
+}
+fn token_stream_group_brace__0<Span: Copy>(
+    input: &mut RustParser<Span>,
+) -> Result<Transition<Span>, Option<Span>> {
+    input.bump_expect(RBrace, &[])
+}
+fn token_stream_group_brace__1<Span: Copy>(
+    input: &mut RustParser<Span>,
+) -> Result<Transition<Span>, Option<Span>> {
+    input.call_now(&[token_stream_group_brace__0])
+}
+fn token_stream_group_brace__2<Span: Copy>(
+    input: &mut RustParser<Span>,
+) -> Result<Transition<Span>, Option<Span>> {
+    input.call_now(&[token_stream_group_brace_])
+}
+fn token_stream_group_brace__3<Span: Copy>(
+    input: &mut RustParser<Span>,
+) -> Result<Transition<Span>, Option<Span>> {
+    input.call_now(&[token_stream_group_or_token])
+}
+fn token_stream_group_brace__4<Span: Copy>(
+    input: &mut RustParser<Span>,
+) -> Result<Transition<Span>, Option<Span>> {
+    input.call_now(&[token_stream_group_brace__2, token_stream_group_brace__3])
+}
+fn token_stream_group_brace__6<Span: Copy>(
+    input: &mut RustParser<Span>,
+) -> Result<Transition<Span>, Option<Span>> {
+    input.call_now(&[token_stream_group_brace__5])
+}
+fn token_stream_group_brace_<Span: Copy>(
+    input: &mut RustParser<Span>,
+) -> Result<Transition<Span>, Option<Span>> {
+    input.call_now(&[token_stream_group_brace__6])
 }
