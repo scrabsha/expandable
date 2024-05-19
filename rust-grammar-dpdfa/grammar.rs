@@ -11,14 +11,33 @@ fn vis() {
 }
 
 pub fn item() {
-    if peek(Pub) {
-        vis();
-    }
+    if peek(ColonColon)
+        || peek(Ident)
+        || peek(FragmentIdent)
+        || peek(Super)
+        || peek(Self_)
+        || peek(Crate)
+        || peek(FragmentPath)
+    {
+        // Macro calls.
+        expr_path();
 
-    if peek(Fn) {
-        fn_item();
+        if peek2(LBrace) {
+            macro_call_tail();
+        } else {
+            macro_call_tail();
+            bump(Semicolon);
+        }
     } else {
-        error();
+        if peek(Pub) {
+            vis();
+        }
+
+        if peek(Fn) {
+            fn_item();
+        } else {
+            error();
+        }
     }
 }
 
@@ -68,6 +87,27 @@ fn block_() {
 }
 
 fn stmt_inner() {
+    if peek(ColonColon)
+        || peek(Ident)
+        || peek(FragmentIdent)
+        || peek(Super)
+        || peek(Self_)
+        || peek(Crate)
+        || peek(FragmentPath)
+    {
+        // Maybe the statement is a macro invocation?
+        expr_path();
+        if peek(Not) {
+            if peek2(LBrace) {
+                todo!();
+            }
+        } else {
+            // Not a macro - that was just an expression.
+            //
+            // TODO: add struct creation here.
+            expr_after_atom();
+        }
+    }
     if peek(Let) {
         bump(Let);
         pat();
@@ -77,6 +117,8 @@ fn stmt_inner() {
         }
         bump(Equals);
     }
+
+    // TODO: macro calls
 
     expr();
 }
@@ -929,6 +971,17 @@ fn expr_for() {
 }
 
 fn macro_call_tail() {
+    // TODO(hypothesis): all paths are path expressions.
+    //
+    // This is technically incorrect because macro calls must use SimplePaths
+    // (which does not include generics).
+    //
+    // We do it that way because we have no way to detect ahead of time that a
+    // path is a SimplePath or an ExprPath, and doing a state machine that
+    // transitions from SimplePath to ExprPath when a generic is reached looks
+    // slightly too overkill.
+    //
+    // THIS MUST BE DOCUMENTED.
     bump(Not);
 
     token_stream_group();

@@ -670,43 +670,88 @@ fn vis_8<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, O
 fn vis<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
     input.call_now(&[vis_8])
 }
-fn item_4<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    if input.peek_expect(Fn) {
+fn item_17<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
+    if input.peek_expect(ColonColon)
+        || input.peek_expect(Ident)
+        || input.peek_expect(FragmentIdent)
+        || input.peek_expect(Super)
+        || input.peek_expect(Self_)
+        || input.peek_expect(Crate)
+        || input.peek_expect(FragmentPath)
+    {
+        input.call_now(&[item_7])
+    } else {
+        input.call_now(&[item_16])
+    }
+}
+fn item_5<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
+    if input.peek2_expect(LBrace) {
         input.call_now(&[item_1])
     } else {
-        input.call_now(&[item_3])
+        input.call_now(&[item_4])
     }
 }
 fn item_0<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[fn_item])
+    input.call_now(&[macro_call_tail])
 }
 fn item_1<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
     input.call_now(&[item_0])
 }
 fn item_2<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.error()
+    input.bump_expect(Semicolon, &[])
 }
 fn item_3<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[item_2])
+    input.call_now(&[macro_call_tail])
+}
+fn item_4<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
+    input.call_now(&[item_2, item_3])
+}
+fn item_6<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
+    input.call_now(&[expr_path])
 }
 fn item_7<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
+    input.call_now(&[item_5, item_6])
+}
+fn item_12<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
+    if input.peek_expect(Fn) {
+        input.call_now(&[item_9])
+    } else {
+        input.call_now(&[item_11])
+    }
+}
+fn item_8<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
+    input.call_now(&[fn_item])
+}
+fn item_9<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
+    input.call_now(&[item_8])
+}
+fn item_10<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
+    input.error()
+}
+fn item_11<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
+    input.call_now(&[item_10])
+}
+fn item_15<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
     if input.peek_expect(Pub) {
-        input.call_now(&[item_6])
+        input.call_now(&[item_14])
     } else {
         input.call_now(&[])
     }
 }
-fn item_5<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
+fn item_13<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
     input.call_now(&[vis])
 }
-fn item_6<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[item_5])
+fn item_14<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
+    input.call_now(&[item_13])
 }
-fn item_8<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[item_4, item_7])
+fn item_16<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
+    input.call_now(&[item_12, item_15])
+}
+fn item_18<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
+    input.call_now(&[item_17])
 }
 fn item<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[item_8])
+    input.call_now(&[item_18])
 }
 fn fn_item_0<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
     input.call_now(&[block])
