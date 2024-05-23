@@ -780,8 +780,6 @@ mod tests {
                 [
                     Literal,
                     Plus,
-                    Literal,
-                    Plus,
                     Plus,
                     Ident,
                 ]
