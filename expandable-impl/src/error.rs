@@ -55,7 +55,9 @@ pub enum Error<Span> {
         span: Span,
         /// What tokens are expected here.
         expected: Vec<TokenDescription>,
-        /// Counterexample!!!
+        /// A possible expansion of the macro that exhibits a parsing error.
+        ///
+        /// The expansion may contain fragments.
         counter_example: Vec<(TokenDescription, Span)>,
     },
 
