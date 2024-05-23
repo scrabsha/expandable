@@ -18,6 +18,7 @@ where
     Span: 'static + Copy,
 {
     pub(crate) state: RustParser<Span>,
+    pub(crate) eaten: Vec<(TokenDescription, Span)>,
 }
 
 impl<Span> PartialEq for DynamicState<Span>
@@ -65,18 +66,21 @@ where
     pub(crate) fn item() -> DynamicState<Span> {
         DynamicState {
             state: RustParser::item(),
+            eaten: Vec::new(),
         }
     }
 
     pub(crate) fn expr() -> DynamicState<Span> {
         DynamicState {
             state: RustParser::expr(),
+            eaten: Vec::new(),
         }
     }
 
     pub(crate) fn pat() -> DynamicState<Span> {
         DynamicState {
             state: RustParser::pat(),
+            eaten: Vec::new(),
         }
     }
 
@@ -84,7 +88,14 @@ where
         self,
         fragment: FragmentKind,
         span: Span,
-    ) -> Result<(DynamicState<Span>, Transition), (Span, Vec<TokenDescription>)> {
+    ) -> Result<
+        (DynamicState<Span>, Transition),
+        (
+            Span,
+            /* expected */ Vec<TokenDescription>,
+            /* cex */ Vec<(TokenDescription, Span)>,
+        ),
+    > {
         self.accept(TokenDescription::Fragment(fragment), span)
     }
 
@@ -92,21 +103,38 @@ where
         mut self,
         descr: TokenDescription,
         span: Span,
-    ) -> Result<(DynamicState<Span>, Transition), (Span, Vec<TokenDescription>)> {
+    ) -> Result<
+        (DynamicState<Span>, Transition),
+        (
+            Span,
+            /* expected */ Vec<TokenDescription>,
+            /* cex */ Vec<(TokenDescription, Span)>,
+        ),
+    > {
+        self.eaten.push((descr, span));
         let descr = rust_grammar_dpdfa::TokenDescription::from(descr);
         let trans = self.state.step(descr, span).map_err(|(s, e)| {
             let e = e.into_iter().flat_map(TokenDescription::try_from).collect();
-            (s, e)
+            (s, e, self.eaten.clone())
         })?;
 
         Ok((self, trans))
     }
 
-    pub(crate) fn is_accepting(&mut self) -> Result<(), Option<(Span, Vec<TokenDescription>)>> {
+    pub(crate) fn is_accepting(
+        &mut self,
+    ) -> Result<
+        (),
+        Option<(
+            Span,
+            /* expected */ Vec<TokenDescription>,
+            /* cex */ Vec<(TokenDescription, Span)>,
+        )>,
+    > {
         self.state.finish().map_err(|e| {
             e.map(|(s, e)| {
                 let e = e.into_iter().flat_map(TokenDescription::try_from).collect();
-                (s, e)
+                (s, e, self.eaten.clone())
             })
         })
     }

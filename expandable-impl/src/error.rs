@@ -55,6 +55,8 @@ pub enum Error<Span> {
         span: Span,
         /// What tokens are expected here.
         expected: Vec<TokenDescription>,
+        /// Counterexample!!!
+        counter_example: Vec<(TokenDescription, Span)>,
     },
 
     /// A macro expansion refers to a metavariable that is not defined in the
