@@ -59,6 +59,13 @@ where
     }
 }
 
+#[derive(Clone, Debug, PartialEq)]
+pub(crate) struct ParsingError<Span> {
+    pub(crate) err_span: Span,
+    pub(crate) expected: Vec<TokenDescription>,
+    pub(crate) cex: Vec<(TokenDescription, Span)>,
+}
+
 impl<Span> DynamicState<Span>
 where
     Span: Copy + 'static,
@@ -88,14 +95,7 @@ where
         self,
         fragment: FragmentKind,
         span: Span,
-    ) -> Result<
-        (DynamicState<Span>, Transition),
-        (
-            Span,
-            /* expected */ Vec<TokenDescription>,
-            /* cex */ Vec<(TokenDescription, Span)>,
-        ),
-    > {
+    ) -> Result<(DynamicState<Span>, Transition), ParsingError<Span>> {
         self.accept(TokenDescription::Fragment(fragment), span)
     }
 
@@ -103,38 +103,34 @@ where
         mut self,
         descr: TokenDescription,
         span: Span,
-    ) -> Result<
-        (DynamicState<Span>, Transition),
-        (
-            Span,
-            /* expected */ Vec<TokenDescription>,
-            /* cex */ Vec<(TokenDescription, Span)>,
-        ),
-    > {
+    ) -> Result<(DynamicState<Span>, Transition), ParsingError<Span>> {
         self.eaten.push((descr, span));
         let descr = rust_grammar_dpdfa::TokenDescription::from(descr);
-        let trans = self.state.step(descr, span).map_err(|(s, e)| {
-            let e = e.into_iter().flat_map(TokenDescription::try_from).collect();
-            (s, e, self.eaten.clone())
+        let trans = self.state.step(descr, span).map_err(|(err_span, e)| {
+            let expected = e.into_iter().flat_map(TokenDescription::try_from).collect();
+            let cex = self.eaten.clone();
+
+            ParsingError {
+                err_span,
+                expected,
+                cex,
+            }
         })?;
 
         Ok((self, trans))
     }
 
-    pub(crate) fn is_accepting(
-        &mut self,
-    ) -> Result<
-        (),
-        Option<(
-            Span,
-            /* expected */ Vec<TokenDescription>,
-            /* cex */ Vec<(TokenDescription, Span)>,
-        )>,
-    > {
+    pub(crate) fn is_accepting(&mut self) -> Result<(), Option<ParsingError<Span>>> {
         self.state.finish().map_err(|e| {
-            e.map(|(s, e)| {
-                let e = e.into_iter().flat_map(TokenDescription::try_from).collect();
-                (s, e, self.eaten.clone())
+            e.map(|(err_span, e)| {
+                let expected = e.into_iter().flat_map(TokenDescription::try_from).collect();
+                let cex = self.eaten.clone();
+
+                ParsingError {
+                    err_span,
+                    expected,
+                    cex,
+                }
             })
         })
     }

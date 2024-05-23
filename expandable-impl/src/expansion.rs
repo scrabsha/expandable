@@ -10,7 +10,7 @@ use std::{
 
 use crate::{
     error::Error,
-    grammar::{DynamicState, Transition},
+    grammar::{DynamicState, ParsingError, Transition},
     matcher::{BindingData, Matcher},
     substitution::{TokenTree, TokenTreeKind},
     RepetitionQuantifier, RepetitionQuantifierKind, TokenDescription,
@@ -61,8 +61,12 @@ where
             .into_iter()
             .try_for_each(|(mut state, _, _)| state.is_accepting())
             .map_err(|e| match e {
-                Some((span, expected, cex)) => Error::InvalidProducedAst {
-                    span,
+                Some(ParsingError {
+                    err_span,
+                    expected,
+                    cex,
+                }) => Error::InvalidProducedAst {
+                    span: err_span,
                     expected,
                     counter_example: cex,
                 },
@@ -130,7 +134,13 @@ where
         match &tree.kind {
             TokenTreeKind::Terminal(_, descr) => state
                 .accept(*descr, tree.span)
-                .map_err(|(span, expected, cex)| CounterExamplePrefix::new(span, expected, cex))
+                .map_err(
+                    |ParsingError {
+                         err_span,
+                         expected,
+                         cex,
+                     }| CounterExamplePrefix::new(err_span, expected, cex),
+                )
                 .map(|(s, t)| (s, t, id))
                 .map(singleton),
 
@@ -169,7 +179,15 @@ where
                     .accept_fragment(kind, tree.span)
                     .map(|(s, t)| (s, t, id))
                     .map(singleton)
-                    .map_err(|(span, expected, cex)| CounterExamplePrefix::new(span, expected, cex))
+                    .map_err(
+                        |ParsingError {
+                             err_span,
+                             expected,
+                             cex,
+                         }| {
+                            CounterExamplePrefix::new(err_span, expected, cex)
+                        },
+                    )
             }
 
             TokenTreeKind::Repetition { .. } => {
@@ -191,16 +209,20 @@ where
         Id: Clone + Ord,
     {
         // Parse open delimiter
-        let (s_after_open_delim, t_after_open_delim) = initial_state
-            .clone()
-            .accept(open, span)
-            .map_err(|(span, expected, cex)| {
-                let mut cex = CounterExamplePrefix::new(span, expected, cex);
-                cex.push_stream(inner);
-                cex.push(close, span);
+        let (s_after_open_delim, t_after_open_delim) =
+            initial_state.clone().accept(open, span).map_err(
+                |ParsingError {
+                     err_span,
+                     expected,
+                     cex,
+                 }| {
+                    let mut cex = CounterExamplePrefix::new(err_span, expected, cex);
+                    cex.push_stream(inner);
+                    cex.push(close, span);
 
-                cex
-            })?;
+                    cex
+                },
+            )?;
 
         let states = self
             .parse_stream(singleton((s_after_open_delim, id)), inner)
@@ -223,7 +245,15 @@ where
                         let trans = trans.combine_chasles(new_trans);
                         (state, trans, id)
                     })
-                    .map_err(|(span, expected, cex)| CounterExamplePrefix::new(span, expected, cex))
+                    .map_err(
+                        |ParsingError {
+                             err_span,
+                             expected,
+                             cex,
+                         }| {
+                            CounterExamplePrefix::new(err_span, expected, cex)
+                        },
+                    )
             })
             .collect::<Result<_, _>>()?;
 
@@ -243,7 +273,7 @@ where
             .map(|(s, id)| (s, (Transition::empty(), id)))
             .collect();
 
-        for (idx, tree) in stream.into_iter().enumerate() {
+        for (idx, tree) in stream.iter().enumerate() {
             states = self
                 .apply(states, |this, states| this.parse_single_tree(states, tree))
                 .map_err(|mut cex| {
@@ -255,7 +285,7 @@ where
                         // However this is not an issue here. We found an
                         // invalid expansion, and it will stay invalid no
                         // matter what comes after it. Sweet!
-                        cex.push_stream(&stream[(idx + 1)..])
+                        cex.push_stream(&stream[(idx + 1)..]);
                     }
 
                     cex
@@ -482,7 +512,7 @@ where
 impl<Span> From<CounterExamplePrefix<Span>> for Error<Span> {
     fn from(cex: CounterExamplePrefix<Span>) -> Error<Span> {
         Error::InvalidProducedAst {
-            span: cex.exact_error_span,
+            span: cex.err_span,
             expected: cex.expected,
             counter_example: cex.prefix,
         }
@@ -498,7 +528,7 @@ where
 
 #[derive(Clone, PartialEq)]
 struct CounterExamplePrefix<Span> {
-    exact_error_span: Span,
+    err_span: Span,
     expected: Vec<TokenDescription>,
     prefix: Vec<(TokenDescription, Span)>,
 }
@@ -508,12 +538,12 @@ where
     Span: Copy,
 {
     fn new(
-        exact_error_span: Span,
+        err_span: Span,
         expected: Vec<TokenDescription>,
         prefix: Vec<(TokenDescription, Span)>,
     ) -> CounterExamplePrefix<Span> {
         CounterExamplePrefix {
-            exact_error_span,
+            err_span,
             expected,
             prefix,
         }
