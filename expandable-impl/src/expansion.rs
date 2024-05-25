@@ -3,7 +3,8 @@
 
 use std::{
     cell::RefCell,
-    collections::{HashMap, HashSet},
+    cmp::Ord,
+    collections::{BTreeSet, HashMap},
     hash::Hash,
     iter,
 };
@@ -17,7 +18,7 @@ use crate::{
 };
 
 type Cursor<'ast, Span> = &'ast [TokenTree<Span>];
-type Set<T> = HashSet<T>;
+type Set<T> = BTreeSet<T>;
 
 pub(crate) fn check_arm<Span>(
     init_state: DynamicState<Span>,
@@ -90,7 +91,7 @@ where
         tree: &TokenTree<Span>,
     ) -> Result<Set<(DynamicState<Span>, Transition, Id)>, Error<Span>>
     where
-        Id: Clone + Eq + Hash,
+        Id: Clone + Eq + Hash + Ord,
     {
         match &tree.kind {
             TokenTreeKind::Repetition {
@@ -121,7 +122,7 @@ where
         id: Id,
     ) -> Result<Set<(DynamicState<Span>, Transition, Id)>, Error<Span>>
     where
-        Id: Clone + Eq + Hash,
+        Id: Clone + Eq + Hash + Ord,
     {
         match &tree.kind {
             TokenTreeKind::Terminal(_, descr) => state
@@ -184,7 +185,7 @@ where
         id: Id,
     ) -> Result<Set<(DynamicState<Span>, Transition, Id)>, Error<Span>>
     where
-        Id: Clone + Eq + Hash,
+        Id: Clone + Eq + Hash + Ord,
     {
         // Parse open delimiter
         let (s_after_open_delim, t_after_open_delim) = initial_state
@@ -220,7 +221,7 @@ where
         stream: Cursor<Span>,
     ) -> Result<Set<(DynamicState<Span>, Transition, Id)>, Error<Span>>
     where
-        Id: Clone + Eq + Hash,
+        Id: Clone + Eq + Hash + Ord,
     {
         let mut states: Set<(DynamicState<Span>, (Transition, Id))> = states
             .into_iter()
@@ -248,7 +249,7 @@ where
         quantifier: RepetitionQuantifier<Span>,
     ) -> Result<Set<(DynamicState<Span>, Transition, Id)>, Error<Span>>
     where
-        Id: Clone + Eq + Hash,
+        Id: Clone + Eq + Hash + Ord,
     {
         match quantifier.kind {
             RepetitionQuantifierKind::ZeroOrOne => {
@@ -272,7 +273,7 @@ where
         stream: Cursor<Span>,
     ) -> Result<Set<(DynamicState<Span>, Transition, Id)>, Error<Span>>
     where
-        Id: Clone + Eq + Hash,
+        Id: Clone + Eq + Hash + Ord,
     {
         let mut candidates = states
             .into_iter()
@@ -301,7 +302,7 @@ where
         sep: Option<&TokenTree<Span>>,
     ) -> Result<Set<(DynamicState<Span>, Transition, Id)>, Error<Span>>
     where
-        Id: Clone + Eq + Hash,
+        Id: Clone + Eq + Hash + Ord,
     {
         self.parse_zero_or_more_repetitions_inner(states, stream, sep, true)
     }
@@ -314,7 +315,7 @@ where
         mut first: bool,
     ) -> Result<Set<(DynamicState<Span>, Transition, Id)>, Error<Span>>
     where
-        Id: Clone + Eq + Hash,
+        Id: Clone + Eq + Hash + Ord,
     {
         // Values accumulated during the previous iterations.
         let mut outcomes = Set::new();
@@ -365,7 +366,7 @@ where
         sep: Option<&TokenTree<Span>>,
     ) -> Result<Set<(DynamicState<Span>, Transition, Id)>, Error<Span>>
     where
-        Id: Clone + Eq + Hash,
+        Id: Clone + Eq + Hash + Ord,
     {
         let states = self
             .parse_single_repetition(states, None, stream)?
@@ -387,7 +388,7 @@ where
         stream: Cursor<Span>,
     ) -> Result<Set<(DynamicState<Span>, Transition, Id)>, Error<Span>>
     where
-        Id: Eq + Hash + Clone,
+        Id: Eq + Hash + Clone + Ord,
     {
         let states = match sep {
             Some(sep) => {
@@ -429,8 +430,8 @@ where
             &Self,
             Set<(DynamicState<Span>, usize)>,
         ) -> Result<Set<(DynamicState<Span>, Id_, usize)>, Error<Span>>,
-        Id: Clone + Eq + Hash,
-        Id_: Clone + Eq + Hash,
+        Id: Clone + Eq + Hash + Ord,
+        Id_: Clone + Eq + Hash + Ord,
     {
         // Let's use usize as new id :)
         let (states, joint) = states
@@ -450,7 +451,7 @@ where
 
 fn singleton<T>(t: T) -> Set<T>
 where
-    T: Eq + Hash,
+    T: Eq + Hash + Ord,
 {
     iter::once(t).collect()
 }
