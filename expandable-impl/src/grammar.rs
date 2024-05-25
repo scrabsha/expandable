@@ -2,6 +2,7 @@
 // the Rust language.
 
 use std::{
+    cmp::Ordering,
     hash::{Hash, Hasher},
     ptr,
 };
@@ -14,25 +15,46 @@ use crate::{FragmentKind, Terminal};
 #[derive(Clone, Debug)]
 pub(crate) struct DynamicState<Span>
 where
-    Span: 'static,
+    Span: 'static + Copy,
 {
     pub(crate) state: RustParser<Span>,
 }
 
 impl<Span> PartialEq for DynamicState<Span>
 where
-    Span: 'static,
+    Span: 'static + Copy,
 {
     fn eq(&self, other: &Self) -> bool {
         ptr::eq(self, other) || self.state == other.state
     }
 }
 
-impl<Span> Eq for DynamicState<Span> {}
+impl<Span: 'static + Copy> Eq for DynamicState<Span> {}
 
-impl<Span> Hash for DynamicState<Span> {
+impl<Span> Hash for DynamicState<Span>
+where
+    Span: 'static + Copy,
+{
     fn hash<H: Hasher>(&self, state: &mut H) {
         self.state.hash(state);
+    }
+}
+
+impl<Span> PartialOrd for DynamicState<Span>
+where
+    Span: Copy,
+{
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl<Span> Ord for DynamicState<Span>
+where
+    Span: Copy,
+{
+    fn cmp(&self, other: &Self) -> Ordering {
+        self.state.cmp(&other.state)
     }
 }
 
