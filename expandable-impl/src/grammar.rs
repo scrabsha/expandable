@@ -15,23 +15,26 @@ use crate::{FragmentKind, Terminal};
 #[derive(Clone, Debug)]
 pub(crate) struct DynamicState<Span>
 where
-    Span: 'static,
+    Span: 'static + Copy,
 {
     pub(crate) state: RustParser<Span>,
 }
 
 impl<Span> PartialEq for DynamicState<Span>
 where
-    Span: 'static,
+    Span: 'static + Copy,
 {
     fn eq(&self, other: &Self) -> bool {
         ptr::eq(self, other) || self.state == other.state
     }
 }
 
-impl<Span> Eq for DynamicState<Span> {}
+impl<Span: 'static + Copy> Eq for DynamicState<Span> {}
 
-impl<Span> Hash for DynamicState<Span> {
+impl<Span> Hash for DynamicState<Span>
+where
+    Span: 'static + Copy,
+{
     fn hash<H: Hasher>(&self, state: &mut H) {
         self.state.hash(state);
     }

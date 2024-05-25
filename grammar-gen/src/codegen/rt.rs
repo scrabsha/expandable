@@ -191,23 +191,32 @@ pub(crate) fn runtime_base(entry_points: impl IntoIterator<Item = Ident>) -> Tok
         }
 
         #[derive(Clone, Debug)]
-        pub struct RustParser<Span: 'static> {
+        pub struct RustParser<Span>
+        where
+            Span: 'static + Copy,
+        {
             buffer: TokenBuffer<Span>,
             stack: Vec<State<Span>>,
             // TODO: is this appropriate?
             tried: SmallVec<[TokenDescription; 10]>,
         }
 
-        impl<Span> PartialEq for RustParser<Span> {
+        impl<Span> PartialEq for RustParser<Span>
+        where
+            Span: Copy + 'static
+        {
             fn eq(&self, other: &RustParser<Span>) -> bool {
                 std::ptr::eq(self, other)
                 || (self.buffer == other.buffer && self.stack == other.stack)
             }
         }
 
-        impl<Span> Eq for RustParser<Span> {}
+        impl<Span: Copy + 'static> Eq for RustParser<Span> {}
 
-        impl<Span> Hash for RustParser<Span> where Span: 'static {
+        impl<Span> Hash for RustParser<Span>
+        where
+            Span: 'static + Copy
+        {
             fn hash<H: Hasher>(&self, state: &mut H) {
                 self.buffer.hash(state);
                 self.stack.hash(state);
@@ -478,51 +487,40 @@ pub(crate) fn runtime_base(entry_points: impl IntoIterator<Item = Ident>) -> Tok
         }
 
         #[derive(Clone, Debug)]
-        enum TokenBuffer<Span> {
+        enum TokenBuffer<Span>
+        where
+            Span: Copy + 'static,
+        {
             Empty([(TokenDescription, Span); 0]),
             Single([(TokenDescription, Span); 1]),
             Double([(TokenDescription, Span); 2]),
             Triple([(TokenDescription, Span); 3]),
         }
 
-        impl<Span> Hash for TokenBuffer<Span> {
+        impl<Span> Hash for TokenBuffer<Span>
+        where
+            Span: Copy + 'static,
+        {
             fn hash<H: Hasher>(&self, state: &mut H) {
                 let discriminant = mem::discriminant(self);
                 discriminant.hash(state);
-                match self {
-                    TokenBuffer::Empty([]) => <[TokenDescription; 0] as Hash>::hash(&[], state),
-                    TokenBuffer::Single([(a, _)]) => [a].hash(state),
-                    TokenBuffer::Double([(a, _), (b, _)]) => [a, b].hash(state),
-                    TokenBuffer::Triple([(a, _), (b, _), (c, _)]) => [a, b, c].hash(state),
-                }
+                self.tokens().for_each(|t| t.hash(state));
             }
         }
 
-        impl<Span> PartialEq for TokenBuffer<Span> {
+        impl<Span> PartialEq for TokenBuffer<Span>
+        where
+            Span: Copy + 'static
+        {
             fn eq(&self, other: &TokenBuffer<Span>) -> bool {
                 let self_tag = mem::discriminant(self);
                 let arg1_tag = mem::discriminant(other);
-                self_tag == arg1_tag &&
-                match (self, other) {
-                    (TokenBuffer::Empty([]), TokenBuffer::Empty([])) => true,
-
-                    (TokenBuffer::Single([(a, _)]), TokenBuffer::Single([(a_, _)]))
-                        => [a] == [a_],
-                    (TokenBuffer::Double([(a, _), (b, _)]), TokenBuffer::Double([(a_, _), (b_, _)]))
-                        => [a, b] == [a_, b_],
-
-                    (
-                        TokenBuffer::Triple([(a, _), (b, _), (c, _)]),
-                        TokenBuffer::Triple([(a_, _), (b_, _), (c_, _)])
-                    ) => [a, b, c] == [a_, b_, c_],
-
-                    _ => unreachable!(),
-                }
+                self_tag == arg1_tag && self.tokens().eq(other.tokens())
             }
         }
 
 
-        impl<Span> Eq for TokenBuffer<Span> {}
+        impl<Span: Copy> Eq for TokenBuffer<Span> {}
 
         impl<Span> Ord for TokenBuffer<Span>
         where
@@ -532,13 +530,7 @@ pub(crate) fn runtime_base(entry_points: impl IntoIterator<Item = Ident>) -> Tok
                 self
                     .len()
                     .cmp(&other.len())
-                    .then_with(||
-                        self
-                            .as_slice()
-                            .iter()
-                            .map(|(t, _)| t)
-                            .cmp(other.as_slice().iter().map(|(t, _)| t))
-                    )
+                    .then_with(|| self.tokens().cmp(other.tokens()))
             }
         }
 
@@ -554,7 +546,10 @@ pub(crate) fn runtime_base(entry_points: impl IntoIterator<Item = Ident>) -> Tok
         type State<Span> = fn(&mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>>;
 
         #[derive(Clone, Copy, Debug, PartialEq)]
-        enum Transition<Span: 'static> {
+        enum Transition<Span>
+        where
+            Span: Copy + 'static
+        {
             // No token has been consumed
             CallNow(&'static [State<Span>]),
             // Exactly one token has been consumed
@@ -656,6 +651,10 @@ pub(crate) fn runtime_base(entry_points: impl IntoIterator<Item = Ident>) -> Tok
                 }
             }
 
+            fn tokens(&self) -> impl Iterator<Item = TokenDescription> + '_ {
+                self.as_slice().iter().map(|(descr, _)| descr).copied()
+            }
+
             fn as_slice(&self) -> &[(TokenDescription, Span)] {
                 match self {
                     TokenBuffer::Empty(b) => b,
@@ -704,22 +703,6 @@ pub(crate) fn runtime_base(entry_points: impl IntoIterator<Item = Ident>) -> Tok
             fn log_push(&mut self, state: TypeErasedState) {
                 self.pushed.push(state);
             }
-        }
-
-        macro_rules! call_now {
-            ($_input:expr $( , $arg:expr )* $(,)? ) => {
-                return Ok({
-                    Transition::CallNow(&[ $( ($arg, stringify!($arg)) ),* ])
-                })
-            };
-        }
-
-        macro_rules! call_then {
-            ($input:expr $(,  $arg:expr )* $(,)? ) => {
-                Ok({
-                    Transition::CallThen(&[$( ($arg, stringify!($arg)) ),*])
-                })
-            };
         }
     }
 }
