@@ -632,8 +632,6 @@ impl TransitionData {
         self.pushed.push(state);
     }
 }
-macro_rules ! call_now { ($ _input : expr $ (, $ arg : expr) * $ (,) ?) => { return Ok ({ Transition :: CallNow (& [$ (($ arg , stringify ! ($ arg))) , *]) }) } ; }
-macro_rules ! call_then { ($ input : expr $ (, $ arg : expr) * $ (,) ?) => { Ok ({ Transition :: CallThen (& [$ (($ arg , stringify ! ($ arg))) , *]) }) } ; }
 fn vis_6<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
     if input.peek_expect(LParen) {
         input.call_now(&[vis_5])
