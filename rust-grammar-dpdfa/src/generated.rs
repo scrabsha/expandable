@@ -5,12 +5,13 @@
 
 #![allow(unused, non_snake_case)]
 use std::{
+    cmp::Ordering,
     hash::{Hash, Hasher},
     mem,
 };
 
 use smallvec::SmallVec;
-#[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
+#[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
 pub enum TokenDescription {
     Ident,
     As,
@@ -167,6 +168,7 @@ impl<Span> PartialEq for RustParser<Span> {
         std::ptr::eq(self, other) || (self.buffer == other.buffer && self.stack == other.stack)
     }
 }
+impl<Span> Eq for RustParser<Span> {}
 impl<Span> Hash for RustParser<Span>
 where
     Span: 'static,
@@ -176,13 +178,33 @@ where
         self.stack.hash(state);
     }
 }
-#[derive(Clone, Debug, Eq, Hash, PartialEq)]
+impl<Span> Ord for RustParser<Span>
+where
+    Span: Copy,
+{
+    fn cmp(&self, other: &RustParser<Span>) -> Ordering {
+        self.stack
+            .len()
+            .cmp(&other.stack.len())
+            .then_with(|| self.stack.iter().rev().cmp(other.stack.iter().rev()))
+            .then_with(|| self.buffer.cmp(&other.buffer))
+    }
+}
+impl<Span> PartialOrd for RustParser<Span>
+where
+    Span: Copy + 'static,
+{
+    fn partial_cmp(&self, other: &RustParser<Span>) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
+}
+#[derive(Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
 pub struct TransitionData {
     pub popped: usize,
     pub buf_size: usize,
     pub pushed: Vec<TypeErasedState>,
 }
-#[derive(Clone, Debug, Eq, Hash, PartialEq)]
+#[derive(Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
 pub struct TypeErasedState {
     inner: *const (),
 }
@@ -449,6 +471,27 @@ impl<Span> PartialEq for TokenBuffer<Span> {
     }
 }
 impl<Span> Eq for TokenBuffer<Span> {}
+impl<Span> Ord for TokenBuffer<Span>
+where
+    Span: Copy + 'static,
+{
+    fn cmp(&self, other: &TokenBuffer<Span>) -> Ordering {
+        self.len().cmp(&other.len()).then_with(|| {
+            self.as_slice()
+                .iter()
+                .map(|(t, _)| t)
+                .cmp(other.as_slice().iter().map(|(t, _)| t))
+        })
+    }
+}
+impl<Span> PartialOrd for TokenBuffer<Span>
+where
+    Span: Copy + 'static,
+{
+    fn partial_cmp(&self, other: &TokenBuffer<Span>) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
+}
 type State<Span> = fn(&mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>>;
 #[derive(Clone, Copy, Debug, PartialEq)]
 enum Transition<Span: 'static> {
@@ -539,6 +582,15 @@ where
             TokenBuffer::Single([(a, _)])
             | TokenBuffer::Double([(a, _), _])
             | TokenBuffer::Triple([(a, _), _, _]) => *a = descr,
+        }
+    }
+
+    fn as_slice(&self) -> &[(TokenDescription, Span)] {
+        match self {
+            TokenBuffer::Empty(b) => b,
+            TokenBuffer::Single(b) => b,
+            TokenBuffer::Double(b) => b,
+            TokenBuffer::Triple(b) => b,
         }
     }
 }
