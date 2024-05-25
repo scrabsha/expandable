@@ -2,6 +2,7 @@
 // the Rust language.
 
 use std::{
+    cmp::Ordering,
     hash::{Hash, Hasher},
     ptr,
 };
@@ -33,6 +34,24 @@ impl<Span> Eq for DynamicState<Span> {}
 impl<Span> Hash for DynamicState<Span> {
     fn hash<H: Hasher>(&self, state: &mut H) {
         self.state.hash(state);
+    }
+}
+
+impl<Span> PartialOrd for DynamicState<Span>
+where
+    Span: Copy,
+{
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl<Span> Ord for DynamicState<Span>
+where
+    Span: Copy,
+{
+    fn cmp(&self, other: &Self) -> Ordering {
+        self.state.cmp(&other.state)
     }
 }
 
