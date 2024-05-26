@@ -61,15 +61,7 @@ where
             .into_iter()
             .try_for_each(|(mut state, _, _)| state.is_accepting())
             .map_err(|e| match e {
-                Some(ParsingError {
-                    err_span,
-                    expected,
-                    cex,
-                }) => Error::InvalidProducedAst {
-                    span: err_span,
-                    expected,
-                    counter_example: cex,
-                },
+                Some(parsing_error) => CounterExamplePrefix::from(parsing_error).into(),
                 None => Error::UnexpectedEnd {
                     last_token: subst.last().map(|t| t.span),
                 },
@@ -134,13 +126,7 @@ where
         match &tree.kind {
             TokenTreeKind::Terminal(_, descr) => state
                 .accept(*descr, tree.span)
-                .map_err(
-                    |ParsingError {
-                         err_span,
-                         expected,
-                         cex,
-                     }| CounterExamplePrefix::new(err_span, expected, cex),
-                )
+                .map_err(CounterExamplePrefix::from)
                 .map(|(s, t)| (s, t, id))
                 .map(singleton),
 
@@ -179,15 +165,7 @@ where
                     .accept_fragment(kind, tree.span)
                     .map(|(s, t)| (s, t, id))
                     .map(singleton)
-                    .map_err(
-                        |ParsingError {
-                             err_span,
-                             expected,
-                             cex,
-                         }| {
-                            CounterExamplePrefix::new(err_span, expected, cex)
-                        },
-                    )
+                    .map_err(CounterExamplePrefix::from)
             }
 
             TokenTreeKind::Repetition { .. } => {
@@ -209,20 +187,16 @@ where
         Id: Clone + Ord,
     {
         // Parse open delimiter
-        let (s_after_open_delim, t_after_open_delim) =
-            initial_state.clone().accept(open, span).map_err(
-                |ParsingError {
-                     err_span,
-                     expected,
-                     cex,
-                 }| {
-                    let mut cex = CounterExamplePrefix::new(err_span, expected, cex);
-                    cex.push_stream(inner);
-                    cex.push(close, span);
+        let (s_after_open_delim, t_after_open_delim) = initial_state
+            .clone()
+            .accept(open, span)
+            .map_err(|parsing_error| {
+                let mut cex = CounterExamplePrefix::from(parsing_error);
+                cex.push_stream(inner);
+                cex.push(close, span);
 
-                    cex
-                },
-            )?;
+                cex
+            })?;
 
         let states = self
             .parse_stream(singleton((s_after_open_delim, id)), inner)
@@ -245,15 +219,7 @@ where
                         let trans = trans.combine_chasles(new_trans);
                         (state, trans, id)
                     })
-                    .map_err(
-                        |ParsingError {
-                             err_span,
-                             expected,
-                             cex,
-                         }| {
-                            CounterExamplePrefix::new(err_span, expected, cex)
-                        },
-                    )
+                    .map_err(CounterExamplePrefix::from)
             })
             .collect::<Result<_, _>>()?;
 
@@ -533,14 +499,13 @@ struct CounterExamplePrefix<Span> {
     prefix: Vec<(TokenDescription, Span)>,
 }
 
-impl<Span> CounterExamplePrefix<Span>
-where
-    Span: Copy,
-{
-    fn new(
-        err_span: Span,
-        expected: Vec<TokenDescription>,
-        prefix: Vec<(TokenDescription, Span)>,
+impl<Span> From<ParsingError<Span>> for CounterExamplePrefix<Span> {
+    fn from(
+        ParsingError {
+            err_span,
+            expected,
+            cex: prefix,
+        }: ParsingError<Span>,
     ) -> CounterExamplePrefix<Span> {
         CounterExamplePrefix {
             err_span,
@@ -548,7 +513,12 @@ where
             prefix,
         }
     }
+}
 
+impl<Span> CounterExamplePrefix<Span>
+where
+    Span: Copy,
+{
     fn push(&mut self, descr: TokenDescription, span: Span) {
         self.prefix.push((descr, span));
     }
