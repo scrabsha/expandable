@@ -55,7 +55,11 @@ where
     Span: Copy,
 {
     fn cmp(&self, other: &Self) -> Ordering {
-        self.state.cmp(&other.state)
+        self.eaten
+            .len()
+            .cmp(&other.eaten.len())
+            .reverse() // TODO: this rev seem to be necessary. Otherwise, ExpCtx::parse_stream starts with the longest traces first, which is bad.
+            .then_with(|| self.state.cmp(&other.state))
     }
 }
 
@@ -466,5 +470,33 @@ token_description! {
         Terminal::Dollar => Dollar,
         /// A question mark (`?`).
         Terminal::QuestionMark => QuestionMark,
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn stupid_ordering_question() {
+        use TokenDescription::*;
+
+        let mut state_1 = DynamicState::expr();
+        // 42 + 42 +
+        let tokens = [Literal, Plus, Literal, Plus];
+
+        for token in tokens {
+            state_1 = state_1.accept(token, 0).unwrap().0;
+        }
+
+        let mut state_2 = DynamicState::expr();
+        // 42 +
+        let tokens = [Literal, Plus];
+
+        for token in tokens {
+            state_2 = state_2.accept(token, 0).unwrap().0;
+        }
+
+        assert!(state_1 < state_2);
     }
 }
