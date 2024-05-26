@@ -58,7 +58,8 @@ where
         self.eaten
             .len()
             .cmp(&other.eaten.len())
-            .reverse() // TODO: this rev seem to be necessary. Otherwise, ExpCtx::parse_stream starts with the longest traces first, which is bad.
+            .reverse() // TODO: this rev seem to be necessary. Otherwise, ExpCtx::parse_stream starts with the
+            // longest traces first, which is bad.
             .then_with(|| self.state.cmp(&other.state))
     }
 }
