@@ -9,7 +9,7 @@ fmt:
     rustfmt rust-grammar-dpdfa/grammar.rs
 
 msrv:
-    cargo +1.65.0 test --workspace
+    cargo +1.70.0 test --workspace
 
 readme:
     cargo rustdoc -- --output-format json -Zunstable-options

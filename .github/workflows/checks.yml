@@ -15,7 +15,7 @@ jobs:
 
     strategy:
       matrix:
-        version: [ "1.65","stable", "nightly" ]
+        version: [ "1.70","stable", "nightly" ]
 
     env:
       CARGO_TERM_COLOR: always
@@ -64,7 +64,7 @@ jobs:
 
     strategy:
       matrix:
-        version: [ "1.65","stable", "nightly" ]
+        version: [ "1.70","stable", "nightly" ]
 
     env:
       CARGO_TERM_COLOR: always
