@@ -487,7 +487,7 @@ mod tests {
         let tokens = [Literal, Plus, Literal, Plus];
 
         for token in tokens {
-            state_1 = state_1.accept(token, 0).unwrap().0;
+            state_1 = state_1.accept(token, ()).unwrap().0;
         }
 
         let mut state_2 = DynamicState::expr();
@@ -495,7 +495,7 @@ mod tests {
         let tokens = [Literal, Plus];
 
         for token in tokens {
-            state_2 = state_2.accept(token, 0).unwrap().0;
+            state_2 = state_2.accept(token, ()).unwrap().0;
         }
 
         assert!(state_1 < state_2);
