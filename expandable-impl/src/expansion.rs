@@ -10,7 +10,7 @@ use std::{
 
 use crate::{
     error::Error,
-    grammar::{DynamicState, Transition},
+    grammar::{DynamicState, ParsingError, Transition},
     matcher::{BindingData, Matcher},
     substitution::{TokenTree, TokenTreeKind},
     RepetitionQuantifier, RepetitionQuantifierKind, TokenDescription,
@@ -61,7 +61,7 @@ where
             .into_iter()
             .try_for_each(|(mut state, _, _)| state.is_accepting())
             .map_err(|e| match e {
-                Some((span, expected)) => Error::InvalidProducedAst { span, expected },
+                Some(parsing_error) => CounterExamplePrefix::from(parsing_error).into(),
                 None => Error::UnexpectedEnd {
                     last_token: subst.last().map(|t| t.span),
                 },
@@ -88,7 +88,7 @@ where
         &self,
         states: Set<(DynamicState<Span>, Id)>,
         tree: &TokenTree<Span>,
-    ) -> Result<Set<(DynamicState<Span>, Transition, Id)>, Error<Span>>
+    ) -> Result<Set<(DynamicState<Span>, Transition, Id)>, CounterExamplePrefix<Span>>
     where
         Id: Clone + Ord,
     {
@@ -119,14 +119,14 @@ where
         state: DynamicState<Span>,
         tree: &TokenTree<Span>,
         id: Id,
-    ) -> Result<Set<(DynamicState<Span>, Transition, Id)>, Error<Span>>
+    ) -> Result<Set<(DynamicState<Span>, Transition, Id)>, CounterExamplePrefix<Span>>
     where
         Id: Clone + Ord,
     {
         match &tree.kind {
             TokenTreeKind::Terminal(_, descr) => state
                 .accept(*descr, tree.span)
-                .map_err(|(span, expected)| Error::InvalidProducedAst { span, expected })
+                .map_err(CounterExamplePrefix::from)
                 .map(|(s, t)| (s, t, id))
                 .map(singleton),
 
@@ -165,7 +165,7 @@ where
                     .accept_fragment(kind, tree.span)
                     .map(|(s, t)| (s, t, id))
                     .map(singleton)
-                    .map_err(|(span, expected)| Error::InvalidProducedAst { span, expected })
+                    .map_err(CounterExamplePrefix::from)
             }
 
             TokenTreeKind::Repetition { .. } => {
@@ -182,7 +182,7 @@ where
         span: Span,
         initial_state: DynamicState<Span>,
         id: Id,
-    ) -> Result<Set<(DynamicState<Span>, Transition, Id)>, Error<Span>>
+    ) -> Result<Set<(DynamicState<Span>, Transition, Id)>, CounterExamplePrefix<Span>>
     where
         Id: Clone + Ord,
     {
@@ -190,9 +190,21 @@ where
         let (s_after_open_delim, t_after_open_delim) = initial_state
             .clone()
             .accept(open, span)
-            .map_err(|(span, expected)| Error::InvalidProducedAst { span, expected })?;
+            .map_err(|parsing_error| {
+                let mut cex = CounterExamplePrefix::from(parsing_error);
+                cex.push_stream(inner);
+                cex.push(close, span);
 
-        let states = self.parse_stream(singleton((s_after_open_delim, id)), inner)?;
+                cex
+            })?;
+
+        let states = self
+            .parse_stream(singleton((s_after_open_delim, id)), inner)
+            .map_err(|mut cex| {
+                cex.push(close, span);
+                cex
+            })?;
+
         let states = states
             .into_iter()
             .map(|(s, t, id)| (s, t_after_open_delim.clone().combine_chasles(t), id));
@@ -207,7 +219,7 @@ where
                         let trans = trans.combine_chasles(new_trans);
                         (state, trans, id)
                     })
-                    .map_err(|(span, expected)| Error::InvalidProducedAst { span, expected })
+                    .map_err(CounterExamplePrefix::from)
             })
             .collect::<Result<_, _>>()?;
 
@@ -218,7 +230,7 @@ where
         &self,
         states: Set<(DynamicState<Span>, Id)>,
         stream: Cursor<Span>,
-    ) -> Result<Set<(DynamicState<Span>, Transition, Id)>, Error<Span>>
+    ) -> Result<Set<(DynamicState<Span>, Transition, Id)>, CounterExamplePrefix<Span>>
     where
         Id: Clone + Ord,
     {
@@ -227,9 +239,23 @@ where
             .map(|(s, id)| (s, (Transition::empty(), id)))
             .collect();
 
-        for tree in stream {
+        for (idx, tree) in stream.iter().enumerate() {
             states = self
-                .apply(states, |this, states| this.parse_single_tree(states, tree))?
+                .apply(states, |this, states| this.parse_single_tree(states, tree))
+                .map_err(|mut cex| {
+                    if idx < stream.len() {
+                        // SUBTLE: the pushdown automaton has a lookhead of 2
+                        // tokens. This means the error is always detected
+                        // "two tokens after" it actually occurs.
+                        //
+                        // However this is not an issue here. We found an
+                        // invalid expansion, and it will stay invalid no
+                        // matter what comes after it. Sweet!
+                        cex.push_stream(&stream[(idx + 1)..]);
+                    }
+
+                    cex
+                })?
                 .into_iter()
                 .map(|(state, trans_, (trans, id))| (state, (trans.combine_chasles(trans_), id)))
                 .collect();
@@ -246,7 +272,7 @@ where
         stream: Cursor<Span>,
         sep: Option<&TokenTree<Span>>,
         quantifier: RepetitionQuantifier<Span>,
-    ) -> Result<Set<(DynamicState<Span>, Transition, Id)>, Error<Span>>
+    ) -> Result<Set<(DynamicState<Span>, Transition, Id)>, CounterExamplePrefix<Span>>
     where
         Id: Clone + Ord,
     {
@@ -270,7 +296,7 @@ where
         &self,
         states: Set<(DynamicState<Span>, Id)>,
         stream: Cursor<Span>,
-    ) -> Result<Set<(DynamicState<Span>, Transition, Id)>, Error<Span>>
+    ) -> Result<Set<(DynamicState<Span>, Transition, Id)>, CounterExamplePrefix<Span>>
     where
         Id: Clone + Ord,
     {
@@ -299,7 +325,7 @@ where
         states: Set<(DynamicState<Span>, Id)>,
         stream: Cursor<Span>,
         sep: Option<&TokenTree<Span>>,
-    ) -> Result<Set<(DynamicState<Span>, Transition, Id)>, Error<Span>>
+    ) -> Result<Set<(DynamicState<Span>, Transition, Id)>, CounterExamplePrefix<Span>>
     where
         Id: Clone + Ord,
     {
@@ -312,7 +338,7 @@ where
         stream: Cursor<Span>,
         sep: Option<&TokenTree<Span>>,
         mut first: bool,
-    ) -> Result<Set<(DynamicState<Span>, Transition, Id)>, Error<Span>>
+    ) -> Result<Set<(DynamicState<Span>, Transition, Id)>, CounterExamplePrefix<Span>>
     where
         Id: Clone + Ord,
     {
@@ -363,7 +389,7 @@ where
         states: Set<(DynamicState<Span>, Id)>,
         stream: Cursor<Span>,
         sep: Option<&TokenTree<Span>>,
-    ) -> Result<Set<(DynamicState<Span>, Transition, Id)>, Error<Span>>
+    ) -> Result<Set<(DynamicState<Span>, Transition, Id)>, CounterExamplePrefix<Span>>
     where
         Id: Clone + Ord,
     {
@@ -385,7 +411,7 @@ where
         states: Set<(DynamicState<Span>, Id)>,
         sep: Option<&TokenTree<Span>>,
         stream: Cursor<Span>,
-    ) -> Result<Set<(DynamicState<Span>, Transition, Id)>, Error<Span>>
+    ) -> Result<Set<(DynamicState<Span>, Transition, Id)>, CounterExamplePrefix<Span>>
     where
         Id: Clone + Ord,
     {
@@ -423,12 +449,13 @@ where
         &self,
         states: Set<(DynamicState<Span>, Id)>,
         mut f: F,
-    ) -> Result<Set<(DynamicState<Span>, Id_, Id)>, Error<Span>>
+    ) -> Result<Set<(DynamicState<Span>, Id_, Id)>, CounterExamplePrefix<Span>>
     where
         F: FnMut(
             &Self,
             Set<(DynamicState<Span>, usize)>,
-        ) -> Result<Set<(DynamicState<Span>, Id_, usize)>, Error<Span>>,
+        )
+            -> Result<Set<(DynamicState<Span>, Id_, usize)>, CounterExamplePrefix<Span>>,
         Id: Clone + Ord,
         Id_: Clone + Ord,
     {
@@ -448,11 +475,121 @@ where
     }
 }
 
+impl<Span> From<CounterExamplePrefix<Span>> for Error<Span> {
+    fn from(cex: CounterExamplePrefix<Span>) -> Error<Span> {
+        Error::InvalidProducedAst {
+            span: cex.err_span,
+            expected: cex.expected,
+            counter_example: cex.prefix,
+        }
+    }
+}
+
 fn singleton<T>(t: T) -> Set<T>
 where
     T: Ord,
 {
     iter::once(t).collect()
+}
+
+#[derive(Clone, PartialEq)]
+struct CounterExamplePrefix<Span> {
+    err_span: Span,
+    expected: Vec<TokenDescription>,
+    prefix: Vec<(TokenDescription, Span)>,
+}
+
+impl<Span> From<ParsingError<Span>> for CounterExamplePrefix<Span> {
+    fn from(
+        ParsingError {
+            err_span,
+            expected,
+            cex: prefix,
+        }: ParsingError<Span>,
+    ) -> CounterExamplePrefix<Span> {
+        CounterExamplePrefix {
+            err_span,
+            expected,
+            prefix,
+        }
+    }
+}
+
+impl<Span> CounterExamplePrefix<Span>
+where
+    Span: Copy,
+{
+    fn push(&mut self, descr: TokenDescription, span: Span) {
+        self.prefix.push((descr, span));
+    }
+
+    fn push_stream(&mut self, stream: &[TokenTree<Span>]) {
+        for tree in stream {
+            let span = tree.span;
+            match &tree.kind {
+                TokenTreeKind::Terminal(_, descr) => self.push(*descr, tree.span),
+                TokenTreeKind::Parenthesed(inner) => self.push_delimited_stream(
+                    TokenDescription::LParen,
+                    span,
+                    inner,
+                    TokenDescription::RParen,
+                    span,
+                ),
+
+                TokenTreeKind::CurlyBraced(inner) => self.push_delimited_stream(
+                    TokenDescription::LBrace,
+                    span,
+                    inner,
+                    TokenDescription::RBrace,
+                    span,
+                ),
+
+                TokenTreeKind::Bracketed(inner) => self.push_delimited_stream(
+                    TokenDescription::LBracket,
+                    span,
+                    inner,
+                    TokenDescription::RBracket,
+                    span,
+                ),
+
+                TokenTreeKind::Fragment(_f) => todo!(),
+
+                TokenTreeKind::Repetition {
+                    quantifier:
+                        RepetitionQuantifier {
+                            kind:
+                                RepetitionQuantifierKind::ZeroOrOne
+                                | RepetitionQuantifierKind::ZeroOrMore,
+                            ..
+                        },
+                    ..
+                } => {}
+
+                TokenTreeKind::Repetition {
+                    inner,
+                    quantifier:
+                        RepetitionQuantifier {
+                            kind: RepetitionQuantifierKind::OneOrMore,
+                            ..
+                        },
+                    ..
+                } => self.push_stream(inner),
+            }
+        }
+    }
+
+    fn push_delimited_stream(
+        &mut self,
+        open_descr: TokenDescription,
+        open_span: Span,
+        inner: &[TokenTree<Span>],
+        close_descr: TokenDescription,
+        close_span: Span,
+    ) {
+        self.push(open_descr, open_span);
+        self.push_stream(inner);
+        self.push(close_descr, close_span);
+    }
 }
 
 #[cfg(test)]
@@ -553,6 +690,110 @@ mod tests {
             ( #ident:ident ) => {
                 #( :: #ident )*
             }
+        }
+    }
+
+    macro_rules! assert_cex {
+        ( $test_name:ident { #[$kind:ident]( $( $matcher:tt )* ) => { $( $substitution:tt )* }; $expect:expr }) => {
+            #[test]
+            fn $test_name() {
+                let matcher: Vec<crate::TokenTree<_>> = quote! { $( $matcher )* };
+                let matcher = crate::matcher::TokenTree::from_generic(matcher).expect("Failed to generate `matcher::TokenTree`");
+                let bindings = crate::matcher::Matcher::from_generic(&matcher).expect("Failed to generate `matcher::Bindings`");
+
+                let subst = quote! { $( $substitution )* };
+                let subst = crate::substitution::TokenTree::from_generic(subst).expect("Failed to generate `substitution::TokenTree`");
+
+                let state = stringify!($kind).parse::<crate::InvocationContext>().expect("Failed to generate `FragmentKind`");
+                let state = state.to_state();
+
+                let e = check_arm(state, bindings, &subst).unwrap_err();
+
+                let left = match e {
+                    Error::InvalidProducedAst { counter_example, .. } => counter_example,
+                    _ => panic!("Unexpected error variant: {:?}", e),
+                };
+
+                let left = left.into_iter().map(|(tok, _)| tok).collect::<Vec<_>>();
+
+                let right = $expect;
+
+                right.assert_debug_eq(&left);
+            }
+        }
+    }
+
+    assert_cex! {
+        cex_simple_plusplus {
+            #[expr]
+            () => {
+                4 ++ 5
+            };
+            expect_test::expect![[r#"
+                [
+                    Literal,
+                    Plus,
+                    Plus,
+                    Literal,
+                ]
+            "#]]
+        }
+    }
+
+    assert_cex! {
+        cex_with_repetition {
+            #[expr]
+            () => {
+                #( 42 + )* + a
+            };
+            expect_test::expect![[r#"
+                [
+                    Literal,
+                    Plus,
+                    Plus,
+                    Ident,
+                ]
+            "#]]
+        }
+    }
+
+    assert_cex! {
+        // Performs an expansion check of the following macro:
+        //
+        // ```rust
+        // macro_rules! cex_with_fragment {
+        //     ($a:ident) => {
+        //         $( $a ++ )*
+        //     }
+        // }
+        // ```
+        //
+        // This macro expands may expand to invalid code, because Rust has no
+        // `++` operator. A possible expansion of this macro that exhibits this
+        // error is the following:
+        //
+        // ```
+        // a ++ b ++
+        // ```
+        cex_with_fragment {
+            #[expr]
+            (#a:ident) => {
+                #( #a ++ )*
+            };
+            expect_test::expect![[r#"
+                [
+                    Fragment(
+                        Ident,
+                    ),
+                    Plus,
+                    Plus,
+                    Fragment(
+                        Ident,
+                    ),
+                    Plus,
+                    Plus,
+                ]
+            "#]]
         }
     }
 }

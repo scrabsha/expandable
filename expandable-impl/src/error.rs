@@ -55,6 +55,10 @@ pub enum Error<Span> {
         span: Span,
         /// What tokens are expected here.
         expected: Vec<TokenDescription>,
+        /// A possible expansion of the macro that exhibits a parsing error.
+        ///
+        /// The expansion may contain fragments.
+        counter_example: Vec<(TokenDescription, Span)>,
     },
 
     /// A macro expansion refers to a metavariable that is not defined in the

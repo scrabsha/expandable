@@ -18,6 +18,7 @@ where
     Span: 'static + Copy,
 {
     pub(crate) state: RustParser<Span>,
+    pub(crate) eaten: Vec<(TokenDescription, Span)>,
 }
 
 impl<Span> PartialEq for DynamicState<Span>
@@ -54,8 +55,20 @@ where
     Span: Copy,
 {
     fn cmp(&self, other: &Self) -> Ordering {
-        self.state.cmp(&other.state)
+        self.eaten
+            .len()
+            .cmp(&other.eaten.len())
+            .reverse() // TODO: this rev seem to be necessary. Otherwise, ExpCtx::parse_stream starts with the
+            // longest traces first, which is bad.
+            .then_with(|| self.state.cmp(&other.state))
     }
+}
+
+#[derive(Clone, Debug, PartialEq)]
+pub(crate) struct ParsingError<Span> {
+    pub(crate) err_span: Span,
+    pub(crate) expected: Vec<TokenDescription>,
+    pub(crate) cex: Vec<(TokenDescription, Span)>,
 }
 
 impl<Span> DynamicState<Span>
@@ -65,18 +78,21 @@ where
     pub(crate) fn item() -> DynamicState<Span> {
         DynamicState {
             state: RustParser::item(),
+            eaten: Vec::new(),
         }
     }
 
     pub(crate) fn expr() -> DynamicState<Span> {
         DynamicState {
             state: RustParser::expr(),
+            eaten: Vec::new(),
         }
     }
 
     pub(crate) fn pat() -> DynamicState<Span> {
         DynamicState {
             state: RustParser::pat(),
+            eaten: Vec::new(),
         }
     }
 
@@ -84,7 +100,7 @@ where
         self,
         fragment: FragmentKind,
         span: Span,
-    ) -> Result<(DynamicState<Span>, Transition), (Span, Vec<TokenDescription>)> {
+    ) -> Result<(DynamicState<Span>, Transition), ParsingError<Span>> {
         self.accept(TokenDescription::Fragment(fragment), span)
     }
 
@@ -92,21 +108,34 @@ where
         mut self,
         descr: TokenDescription,
         span: Span,
-    ) -> Result<(DynamicState<Span>, Transition), (Span, Vec<TokenDescription>)> {
+    ) -> Result<(DynamicState<Span>, Transition), ParsingError<Span>> {
+        self.eaten.push((descr, span));
         let descr = rust_grammar_dpdfa::TokenDescription::from(descr);
-        let trans = self.state.step(descr, span).map_err(|(s, e)| {
-            let e = e.into_iter().flat_map(TokenDescription::try_from).collect();
-            (s, e)
+        let trans = self.state.step(descr, span).map_err(|(err_span, e)| {
+            let expected = e.into_iter().flat_map(TokenDescription::try_from).collect();
+            let cex = self.eaten.clone();
+
+            ParsingError {
+                err_span,
+                expected,
+                cex,
+            }
         })?;
 
         Ok((self, trans))
     }
 
-    pub(crate) fn is_accepting(&mut self) -> Result<(), Option<(Span, Vec<TokenDescription>)>> {
+    pub(crate) fn is_accepting(&mut self) -> Result<(), Option<ParsingError<Span>>> {
         self.state.finish().map_err(|e| {
-            e.map(|(s, e)| {
-                let e = e.into_iter().flat_map(TokenDescription::try_from).collect();
-                (s, e)
+            e.map(|(err_span, e)| {
+                let expected = e.into_iter().flat_map(TokenDescription::try_from).collect();
+                let cex = self.eaten.clone();
+
+                ParsingError {
+                    err_span,
+                    expected,
+                    cex,
+                }
             })
         })
     }
@@ -442,5 +471,33 @@ token_description! {
         Terminal::Dollar => Dollar,
         /// A question mark (`?`).
         Terminal::QuestionMark => QuestionMark,
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn stupid_ordering_question() {
+        use TokenDescription::*;
+
+        let mut state_1 = DynamicState::expr();
+        // 42 + 42 +
+        let tokens = [Literal, Plus, Literal, Plus];
+
+        for token in tokens {
+            state_1 = state_1.accept(token, ()).unwrap().0;
+        }
+
+        let mut state_2 = DynamicState::expr();
+        // 42 +
+        let tokens = [Literal, Plus];
+
+        for token in tokens {
+            state_2 = state_2.accept(token, ()).unwrap().0;
+        }
+
+        assert!(state_1 < state_2);
     }
 }
