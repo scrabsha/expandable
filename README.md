@@ -180,11 +180,13 @@ macro_rules! fns {
 
 ## Minimal Supported Rust Version (MSRV), syntax support and stability
 
-_`expandable` supports Rust 1.65 and above. Bumping the MSRV is
-considered a breaking change._
+_`expandable` currently supports Rust 1.70 and above. Bumping the MSRV is not
+considered a breaking change. If you believe this is an issue, then consider
+funding this crate's development and maintenance. Send a mail to sasha `dot`
+pourcelot `at` protonmail `dot` com for more info._
 
 Note that the embedded parser will support syntax that was introduced
-_after_ Rust 1.65.
+_after_ Rust 1.70.
 
 Adding support for newer syntax is _not_ considered a breaking change.
 
