@@ -64,51 +64,18 @@ fn fn_item() {
 
 fn block() {
     bump(LBrace);
-    if peek(RBrace) {
-        bump(RBrace);
-    } else {
-        stmt_inner();
-        block_();
-    }
+
+    stmt_tail();
 }
 
-fn block_() {
+// Parses stmts until the end of the block
+fn stmt_tail() {
     if peek(RBrace) {
         bump(RBrace);
-    } else {
+    } else if peek(Semicolon) {
         bump(Semicolon);
-        if peek(RBrace) {
-            bump(RBrace);
-        } else {
-            stmt_inner();
-            block_();
-        }
-    }
-}
-
-fn stmt_inner() {
-    if peek(ColonColon)
-        || peek(Ident)
-        || peek(FragmentIdent)
-        || peek(Super)
-        || peek(Self_)
-        || peek(Crate)
-        || peek(FragmentPath)
-    {
-        // Maybe the statement is a macro invocation?
-        expr_path();
-        if peek(Not) {
-            if peek2(LBrace) {
-                todo!();
-            }
-        } else {
-            // Not a macro - that was just an expression.
-            //
-            // TODO: add struct creation here.
-            expr_after_atom();
-        }
-    }
-    if peek(Let) {
+        stmt_tail();
+    } else if peek(Let) {
         bump(Let);
         pat();
         if peek(Colon) {
@@ -116,11 +83,91 @@ fn stmt_inner() {
             ty();
         }
         bump(Equals);
+        expr();
+
+        // Let statements are always ended by semicolons.
+        bump(Semicolon);
+
+        stmt_tail();
+    } else if peek(ColonColon)
+        || peek(Ident)
+        || peek(FragmentIdent)
+        || peek(Super)
+        || peek(Self_)
+        || peek(Crate)
+        || peek(FragmentPath)
+    {
+        // Potential macro/struct expression
+        expr_path();
+        if peek(Not) {
+            if peek2(LBrace) {
+                macro_call_tail();
+
+                // TODO: make sure this is the FIRST set of macro_call_tail
+                if peek(Plus)
+                    || peek(Minus)
+                    || peek(Star)
+                    || peek(Slash)
+                    || peek(Percent)
+                    || peek(And)
+                    || peek(Or)
+                    || peek(Caret)
+                    || peek(Shl)
+                    || peek(Shr)
+                    || peek(EqualsEquals)
+                    || peek(NotEquals)
+                    || peek(GreaterThan)
+                    || peek(LessThan)
+                    || peek(GreaterThanEquals)
+                    || peek(LessThanEquals)
+                    || peek(OrOr)
+                    || peek(AndAnd)
+                    || peek(DotDot)
+                    || peek(DotDotEquals)
+                    || peek(LParen)
+                    || peek(LBracket)
+                    || peek(Dot)
+                {
+                    expr_after_atom();
+                    stmt_end_semi();
+                } else {
+                    stmt_end_nosemi();
+                }
+            } else {
+                macro_call_tail();
+                expr_after_atom();
+                stmt_end_semi();
+            }
+        } else {
+            // Not a macro - that was just an expression.
+            //
+            // TODO: add struct creation here.
+            expr_after_atom();
+            stmt_end_semi();
+        }
+    } else {
+        expr();
+        stmt_end_semi();
     }
+}
 
-    // TODO: macro calls
+fn stmt_end_semi() {
+    if peek(Semicolon) {
+        bump(Semicolon);
+        stmt_tail();
+    } else if peek(RBrace) {
+        bump(RBrace);
+    } else {
+        error();
+    }
+}
 
-    expr();
+fn stmt_end_nosemi() {
+    if peek(RBrace) {
+        bump(RBrace);
+    } else {
+        stmt_tail();
+    }
 }
 
 pub fn ty() {
@@ -156,9 +203,6 @@ fn ty_path() {
     ty_path_segment();
 
     if peek(ColonColon) {
-        bump(ColonColon);
-        ty_path_segment();
-
         ty_path_();
     }
 
@@ -180,12 +224,12 @@ fn ty_path_segment() {
     path_ident_segment();
 
     if peek(ColonColon) {
-        bump(ColonColon);
-
-        if peek(LessThan) {
+        if peek2(LessThan) {
+            bump(ColonColon);
             // TODO: rename this to generic_args or sth.
             expr_angle_bracketed_generic_arguments();
         } else if peek(LParen) {
+            bump(ColonColon);
             ty_path_fn();
         }
     } else if peek(LessThan) {
@@ -598,6 +642,10 @@ fn expr_atom() {
         || peek(LessThan)
     {
         expr_path();
+
+        if peek(Not) {
+            macro_call_tail();
+        }
     } else if peek(FragmentExpr) || peek(Literal) {
         bump();
     } else if peek(If) {
@@ -710,10 +758,6 @@ fn expr_path_in() {
 
     if peek(ColonColon) {
         expr_path_in_();
-    }
-
-    if peek(Not) {
-        macro_call_tail();
     }
 }
 
