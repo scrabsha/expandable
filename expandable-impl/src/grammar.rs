@@ -96,6 +96,20 @@ where
         }
     }
 
+    pub(crate) fn stmt() -> DynamicState<Span> {
+        DynamicState {
+            state: RustParser::stmt(),
+            eaten: Vec::new(),
+        }
+    }
+
+    pub(crate) fn ty() -> DynamicState<Span> {
+        DynamicState {
+            state: RustParser::ty(),
+            eaten: Vec::new(),
+        }
+    }
+
     pub(crate) fn accept_fragment(
         self,
         fragment: FragmentKind,

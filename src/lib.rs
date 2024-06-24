@@ -38,10 +38,15 @@
 //! multiple macros are available:
 //! - Macros that expand to expressions are checked by [`expandable::expr`],
 //! - Macros that expand to items are checked by [`expandable::item`],
-//! - TODO: pattern, statements, type.
+//! - Macros that expand to patterns are checked by [`expandable::pat`],
+//! - Macros that expand to statements are checked by [`expandable::stmt`],
+//! - Macros that expand to types are checked by [`expandable::ty`],
 //!
 //! [`expandable::expr`]: macro@expr
 //! [`expandable::item`]: macro@item
+//! [`expandable::pat`]: macro@pat
+//! [`expandable::stmt`]: macro@stmt
+//! [`expandable::ty`]: macro@ty
 #![doc = include_str!("../doc/02-what-can-it-detect.md")]
 //!
 #![doc = include_str!("../doc/03-opinionated.md")]
@@ -79,6 +84,8 @@ macro_rules! attribute_macro {
 attribute_macro!(expr => Expr);
 attribute_macro!(item => Item);
 attribute_macro!(pat => Pat);
+attribute_macro!(stmt => Stmt);
+attribute_macro!(ty => Ty);
 
 fn expandable_inner(ctx: expandable_impl::InvocationContext, item: TokenStream1) -> TokenStream1 {
     let mut item_ = item.clone();
