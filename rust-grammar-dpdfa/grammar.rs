@@ -62,92 +62,98 @@ fn fn_item() {
     block();
 }
 
+pub fn stmt() {
+    stmt_tail();
+}
+
 fn block() {
     bump(LBrace);
-
     stmt_tail();
+    bump(RBrace);
 }
 
 // Parses stmts until the end of the block
 fn stmt_tail() {
-    if peek(RBrace) {
-        bump(RBrace);
-    } else if peek(Semicolon) {
-        bump(Semicolon);
-        stmt_tail();
-    } else if peek(Let) {
-        bump(Let);
-        pat();
-        if peek(Colon) {
-            bump(Colon);
-            ty();
-        }
-        bump(Equals);
-        expr();
+    if peek() {
+        if peek(RBrace) {
+            // return
+        } else if peek(Semicolon) {
+            bump(Semicolon);
+            stmt_tail();
+        } else if peek(Let) {
+            bump(Let);
+            pat();
+            if peek(Colon) {
+                bump(Colon);
+                ty();
+            }
+            bump(Equals);
+            expr();
 
-        // Let statements are always ended by semicolons.
-        bump(Semicolon);
+            // Let statements are always ended by semicolons.
+            bump(Semicolon);
 
-        stmt_tail();
-    } else if peek(ColonColon)
-        || peek(Ident)
-        || peek(FragmentIdent)
-        || peek(Super)
-        || peek(Self_)
-        || peek(Crate)
-        || peek(FragmentPath)
-    {
-        // Potential macro/struct expression
-        expr_path();
-        if peek(Not) {
-            if peek2(LBrace) {
-                macro_call_tail();
+            stmt_tail();
+        } else if peek(ColonColon)
+            || peek(Ident)
+            || peek(FragmentIdent)
+            || peek(Super)
+            || peek(Self_)
+            || peek(Crate)
+            || peek(FragmentPath)
+        {
+            // Potential macro/struct expression
+            expr_path();
+            if peek(Not) {
+                if peek2(LBrace) {
+                    macro_call_tail();
 
-                // TODO: make sure this is the FIRST set of macro_call_tail
-                if peek(Plus)
-                    || peek(Minus)
-                    || peek(Star)
-                    || peek(Slash)
-                    || peek(Percent)
-                    || peek(And)
-                    || peek(Or)
-                    || peek(Caret)
-                    || peek(Shl)
-                    || peek(Shr)
-                    || peek(EqualsEquals)
-                    || peek(NotEquals)
-                    || peek(GreaterThan)
-                    || peek(LessThan)
-                    || peek(GreaterThanEquals)
-                    || peek(LessThanEquals)
-                    || peek(OrOr)
-                    || peek(AndAnd)
-                    || peek(DotDot)
-                    || peek(DotDotEquals)
-                    || peek(LParen)
-                    || peek(LBracket)
-                    || peek(Dot)
-                {
+                    // TODO: make sure this is the FIRST set of macro_call_tail
+                    if peek(Plus)
+                        || peek(Minus)
+                        || peek(Star)
+                        || peek(Slash)
+                        || peek(Percent)
+                        || peek(And)
+                        || peek(Or)
+                        || peek(Caret)
+                        || peek(Shl)
+                        || peek(Shr)
+                        || peek(EqualsEquals)
+                        || peek(NotEquals)
+                        || peek(GreaterThan)
+                        || peek(LessThan)
+                        || peek(GreaterThanEquals)
+                        || peek(LessThanEquals)
+                        || peek(OrOr)
+                        || peek(AndAnd)
+                        || peek(DotDot)
+                        || peek(DotDotEquals)
+                        || peek(LParen)
+                        || peek(LBracket)
+                        || peek(Dot)
+                    {
+                        expr_after_atom();
+                        stmt_end_semi();
+                    } else {
+                        stmt_end_nosemi();
+                    }
+                } else {
+                    macro_call_tail();
                     expr_after_atom();
                     stmt_end_semi();
-                } else {
-                    stmt_end_nosemi();
                 }
             } else {
-                macro_call_tail();
+                // Not a macro - that was just an expression.
+                //
+                // TODO: add struct creation here.
                 expr_after_atom();
                 stmt_end_semi();
             }
         } else {
-            // Not a macro - that was just an expression.
-            //
-            // TODO: add struct creation here.
-            expr_after_atom();
+            expr();
             stmt_end_semi();
         }
-    } else {
-        expr();
-        stmt_end_semi();
     }
 }
 
@@ -156,7 +162,7 @@ fn stmt_end_semi() {
         bump(Semicolon);
         stmt_tail();
     } else if peek(RBrace) {
-        bump(RBrace);
+        // return
     } else {
         error();
     }
@@ -164,7 +170,7 @@ fn stmt_end_semi() {
 
 fn stmt_end_nosemi() {
     if peek(RBrace) {
-        bump(RBrace);
+        // return
     } else {
         stmt_tail();
     }
