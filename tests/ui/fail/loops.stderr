@@ -10,7 +10,7 @@ error: Potentially invalid expansion. Expected an identifier, `Self`, `_`, `self
 13 |         while < 42 {}
    |                 ^^
 
-error: Potentially invalid expansion. Expected a pattern, an identifier, `&`, `-`, `..=`, `..` or 9 others.
+error: Potentially invalid expansion. Expected a pattern, an identifier, `&`, `-`, `..=`, `..` or 10 others.
   --> tests/ui/fail/loops.rs:20:13
    |
 20 |         for ! in in {}

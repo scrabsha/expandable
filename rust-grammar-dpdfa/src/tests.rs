@@ -268,3 +268,15 @@ check_parse! {
         }
     }
 }
+
+check_parse! {
+    fn braced_macro_nosemi() {
+        expr,
+        {
+            {
+                macro_call! {}
+                42
+            }
+        }
+    }
+}
