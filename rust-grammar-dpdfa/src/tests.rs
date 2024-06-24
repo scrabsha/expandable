@@ -33,8 +33,8 @@ macro_rules! check_parse {
             match parser.finish() {
                 Ok(()) => {},
 
-                Err(_) => {
-                    panic!("Failed to finish parsing");
+                Err(e) => {
+                    panic!("Failed to finish parsing: {:?}", e);
                 }
             }
         }
@@ -277,6 +277,15 @@ check_parse! {
                 macro_call! {}
                 42
             }
+        }
+    }
+}
+
+check_parse! {
+    fn stmt_entry_point() {
+        stmt,
+        {
+            let _ = 42;
         }
     }
 }

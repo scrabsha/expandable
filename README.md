@@ -61,10 +61,15 @@ As a result, `expandable` must know what the macro expands to. To do so,
 multiple macros are available:
 - Macros that expand to expressions are checked by [`expandable::expr`],
 - Macros that expand to items are checked by [`expandable::item`],
-- TODO: pattern, statements, type.
+- Macros that expand to patterns are checked by [`expandable::pat`],
+- Macros that expand to statements are checked by [`expandable::stmt`],
+- Macros that expand to types are checked by [`expandable::ty`],
 
 [`expandable::expr`]: macro@expr
 [`expandable::item`]: macro@item
+[`expandable::pat`]: macro@pat
+[`expandable::stmt`]: macro@stmt
+[`expandable::ty`]: macro@ty
 ## What can it detect?
 
 This section briefly describes what the macros can detect and what they

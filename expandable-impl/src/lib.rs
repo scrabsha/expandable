@@ -486,6 +486,10 @@ pub enum InvocationContext {
     Item,
     /// The macro expands to a pattern.
     Pat,
+    /// The macro expands to any number of statement.
+    Stmt,
+    /// The macro expands to a type.
+    Ty,
 }
 
 impl InvocationContext {
@@ -497,6 +501,8 @@ impl InvocationContext {
             InvocationContext::Expr => DynamicState::expr(),
             InvocationContext::Item => DynamicState::item(),
             InvocationContext::Pat => DynamicState::pat(),
+            InvocationContext::Stmt => DynamicState::stmt(),
+            InvocationContext::Ty => DynamicState::ty(),
         }
     }
 }
