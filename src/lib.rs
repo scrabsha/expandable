@@ -49,6 +49,7 @@
 #![doc = include_str!("../doc/98-msrv.md")]
 //!
 #![doc = include_str!("../doc/99-license.md")]
+#![feature(proc_macro_diagnostic, proc_macro_span)]
 
 extern crate proc_macro;
 
@@ -62,6 +63,7 @@ use proc_macro::TokenStream as TokenStream1;
 use proc_macro2::{Delimiter, Spacing, Span, TokenStream, TokenTree};
 use syn_shim::ItemMacroRules;
 
+mod rustc_diagnostic;
 mod syn_shim;
 
 macro_rules! attribute_macro {
@@ -90,14 +92,20 @@ fn expandable_inner(ctx: expandable_impl::InvocationContext, item: TokenStream1)
     let input = parse_macro_stream(macro_.tokens);
 
     if let Err(e) = expandable_impl::check_macro(ctx, input) {
-        item_.extend(TokenStream1::from(mk_error_msg(e).into_compile_error()));
+        match mk_error_msg(e) {
+            SynErrorOrRustcDiagnostic::Syn(e) => {
+                item_.extend(TokenStream1::from(e.into_compile_error()))
+            }
+            SynErrorOrRustcDiagnostic::Rustc(d) => d.emit(),
+        }
+
         return item_;
     }
 
     item_
 }
 
-fn mk_error_msg(error: expandable_impl::Error<Span>) -> syn::Error {
+fn mk_error_msg(error: expandable_impl::Error<Span>) -> SynErrorOrRustcDiagnostic {
     let (message, span) = match error {
         expandable_impl::Error::ParsingFailed { where_, .. } => (
             "Failed to parse `macro_rules` body".to_string(),
@@ -108,7 +116,16 @@ fn mk_error_msg(error: expandable_impl::Error<Span>) -> syn::Error {
             ("Unexpected end of macro invocation".to_string(), last_token)
         }
 
-        expandable_impl::Error::InvalidProducedAst { span, expected, .. } => {
+        expandable_impl::Error::InvalidProducedAst {
+            span,
+            expected,
+            counter_example,
+            ..
+        } => {
+            if let Some(diagnostic) = rustc_diagnostic::get(counter_example) {
+                return SynErrorOrRustcDiagnostic::Rustc(diagnostic);
+            }
+
             let expected = rassemble_expected_descrs(expected);
             (
                 format!("Potentially invalid expansion. Expected {expected}."),
@@ -146,7 +163,12 @@ fn mk_error_msg(error: expandable_impl::Error<Span>) -> syn::Error {
     };
 
     let span = span.unwrap_or_else(Span::call_site);
-    syn::Error::new(span, message)
+    SynErrorOrRustcDiagnostic::Syn(syn::Error::new(span, message))
+}
+
+enum SynErrorOrRustcDiagnostic {
+    Syn(syn::Error),
+    Rustc(proc_macro::Diagnostic),
 }
 
 const MAX_EXPECTED_NUM: usize = 6;

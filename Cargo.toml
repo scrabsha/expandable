@@ -26,6 +26,7 @@ proc-macro2 = "1.0"
 quote = "1.0"
 # MSRV: 1.56 (README)
 syn = { version = "2.0", default-features = false, features = ["parsing"] }
+serde_json = "1.0"
 
 [dev-dependencies]
 # MSRV: 1.70 (README)
