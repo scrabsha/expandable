@@ -1,12 +1,18 @@
 fn vis() {
     bump(Pub);
     if peek(LParen) {
-        bump();
+        bump(LParen);
 
-        if peek(Crate) {
+        if peek(Crate) || peek(Self_) || peek(Super) {
             bump();
-            bump(RParen);
+        } else if peek(In) {
+            bump(In);
+            expr_path();
+        } else {
+            error();
         }
+
+        bump(RParen);
     }
 }
 
@@ -38,6 +44,10 @@ pub fn item() {
         } else {
             error();
         }
+    }
+
+    if peek() {
+        item();
     }
 }
 
