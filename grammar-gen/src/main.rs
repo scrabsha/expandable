@@ -21,7 +21,6 @@ fn main() {
         }
     };
 
-    //.expect("failed to parse grammar file");
     let productions = mir::productions_from_document(grammar);
     let productions = opt::optimize_grammar(productions);
 
