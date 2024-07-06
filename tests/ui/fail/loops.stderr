@@ -4,7 +4,7 @@ error: Potentially invalid expansion. Expected a `{`.
 6 |         loop loop {}
   |              ^^^^
 
-error: Potentially invalid expansion. Expected an identifier, `Self`, `_`, `self`, `super`.
+error: Potentially invalid expansion. Expected an identifier, `Self`, `_`, `self`, `super`, a `(`.
   --> tests/ui/fail/loops.rs:13:17
    |
 13 |         while < 42 {}
