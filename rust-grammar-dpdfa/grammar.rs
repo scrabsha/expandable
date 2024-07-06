@@ -1,18 +1,18 @@
 fn vis() {
     bump(Pub);
     if peek(LParen) {
-        bump(LParen);
-
-        if peek(Crate) || peek(Self_) || peek(Super) {
+        // We must avoid bumping the left paren because we need to handle
+        // eg `struct Foo(pub (u32));`
+        if peek2(Crate) || peek2(Self_) || peek2(Super) {
+            bump(LParen);
             bump();
-        } else if peek(In) {
+            bump(RParen);
+        } else if peek2(In) {
+            bump(LParen);
             bump(In);
             expr_path();
-        } else {
-            error();
+            bump(RParen);
         }
-
-        bump(RParen);
     }
 }
 
