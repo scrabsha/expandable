@@ -1,12 +1,24 @@
 fn vis() {
     bump(Pub);
     if peek(LParen) {
-        bump();
-
-        if peek(Crate) {
+        // Avoid bumping the left paren too early because we need to handle eg
+        // `struct Foo(pub (u32));`
+        if peek2(Crate) || peek2(Self_) || peek2(Super) {
+            bump(LParen);
             bump();
             bump(RParen);
+        } else if peek2(In) {
+            bump(LParen);
+            bump(In);
+            expr_path();
+            bump(RParen);
         }
+    }
+}
+
+fn vis_opt() {
+    if peek(Pub) {
+        vis();
     }
 }
 
@@ -29,16 +41,105 @@ pub fn item() {
             bump(Semicolon);
         }
     } else {
-        if peek(Pub) {
-            vis();
-        }
+        vis_opt();
 
         if peek(Fn) {
             fn_item();
+        } else if peek(Struct) {
+            struct_item();
         } else {
             error();
         }
     }
+
+    if peek() {
+        item();
+    }
+}
+
+fn struct_item() {
+    vis_opt();
+    bump(Struct);
+
+    if peek(Ident) || peek(FragmentIdent) {
+        bump();
+    } else {
+        error();
+    }
+
+    // TODO: where clause (warning: position changes depending on the kind of
+    // struct).
+
+    if peek(LParen) {
+        bump(LParen);
+        tuple_struct_fields();
+        bump(RParen);
+        bump(Semicolon);
+    } else if peek(LBrace) {
+        bump(LBrace);
+        struct_fields();
+        bump(RBrace);
+    } else if peek(Semicolon) {
+        bump(Semicolon);
+    }
+}
+
+fn tuple_struct_fields() {
+    if peek(RParen) {
+    } else {
+        tuple_struct_field();
+        tuple_struct_fields_();
+    }
+}
+
+fn tuple_struct_fields_() {
+    if peek(RParen) {
+    } else {
+        bump(Comma);
+
+        if peek(RParen) {
+        } else {
+            tuple_struct_field();
+            tuple_struct_fields_();
+        }
+    }
+}
+
+fn struct_fields() {
+    if peek(RBrace) {
+    } else {
+        struct_field();
+        struct_fields_();
+    }
+}
+
+fn struct_fields_() {
+    if peek(RBrace) {
+    } else {
+        bump(Comma);
+
+        if peek(RBrace) {
+        } else {
+            struct_field();
+            struct_fields_();
+        }
+    }
+}
+
+fn tuple_struct_field() {
+    vis_opt();
+    ty();
+}
+
+fn struct_field() {
+    vis_opt();
+    if peek(Ident) || peek(FragmentIdent) {
+        bump();
+    } else {
+        error();
+    }
+    bump(Colon);
+    ty();
 }
 
 fn fn_item() {
@@ -51,6 +152,8 @@ fn fn_item() {
     } else {
         error();
     }
+
+    // TODO: generic type parameters
 
     fn_args();
 
@@ -191,6 +294,11 @@ pub fn ty() {
         || peek(FragmentIdent)
     {
         ty_path();
+    } else if peek(LParen) {
+        // TODO: rework tuple type handling - this is terribly bad.
+        bump(LParen);
+        ty();
+        bump(RParen);
     } else {
         error();
     }

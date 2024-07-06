@@ -4,7 +4,7 @@ error: Potentially invalid expansion. Expected an identifier, `Self`, `crate`, `
 6 |         path:::<foo>
   |               ^
 
-error: Potentially invalid expansion. Expected an identifier, `-`, `>`, `Self`, `_`, `self` or 3 others.
+error: Potentially invalid expansion. Expected an identifier, `-`, `>`, `Self`, `_`, `self` or 4 others.
   --> tests/ui/fail/path.rs:13:17
    |
 13 |         path::< <foo> >
