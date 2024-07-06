@@ -16,6 +16,12 @@ fn vis() {
     }
 }
 
+fn vis_opt() {
+    if peek(Pub) {
+        vis();
+    }
+}
+
 pub fn item() {
     if peek(ColonColon)
         || peek(Ident)
@@ -35,9 +41,7 @@ pub fn item() {
             bump(Semicolon);
         }
     } else {
-        if peek(Pub) {
-            vis();
-        }
+        vis_opt();
 
         if peek(Fn) {
             fn_item();
@@ -54,10 +58,7 @@ pub fn item() {
 }
 
 fn struct_item() {
-    if peek(Pub) {
-        vis();
-    }
-
+    vis_opt();
     bump(Struct);
 
     if peek(Ident) || peek(FragmentIdent) {
@@ -126,18 +127,12 @@ fn struct_fields_() {
 }
 
 fn tuple_struct_field() {
-    if peek(Pub) {
-        vis();
-    }
-
+    vis_opt();
     ty();
 }
 
 fn struct_field() {
-    if peek(Pub) {
-        vis();
-    }
-
+    vis_opt();
     if peek(Ident) || peek(FragmentIdent) {
         bump();
     } else {
