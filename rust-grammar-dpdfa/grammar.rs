@@ -1,8 +1,8 @@
 fn vis() {
     bump(Pub);
     if peek(LParen) {
-        // We must avoid bumping the left paren because we need to handle
-        // eg `struct Foo(pub (u32));`
+        // Avoid bumping the left paren too early because we need to handle eg
+        // `struct Foo(pub (u32));`
         if peek2(Crate) || peek2(Self_) || peek2(Super) {
             bump(LParen);
             bump();
@@ -299,6 +299,11 @@ pub fn ty() {
         || peek(FragmentIdent)
     {
         ty_path();
+    } else if peek(LParen) {
+        // TODO: rework tuple type handling - this is terribly bad.
+        bump(LParen);
+        ty();
+        bump(RParen);
     } else {
         error();
     }
