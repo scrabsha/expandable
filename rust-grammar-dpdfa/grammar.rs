@@ -41,6 +41,8 @@ pub fn item() {
 
         if peek(Fn) {
             fn_item();
+        } else if peek(Struct) {
+            struct_item();
         } else {
             error();
         }
@@ -49,6 +51,100 @@ pub fn item() {
     if peek() {
         item();
     }
+}
+
+fn struct_item() {
+    if peek(Pub) {
+        vis();
+    }
+
+    bump(Struct);
+
+    if peek(Ident) || peek(FragmentIdent) {
+        bump();
+    } else {
+        error();
+    }
+
+    // TODO: where clause (warning: position changes depending on the kind of
+    // struct).
+
+    if peek(LParen) {
+        bump(LParen);
+        tuple_struct_fields();
+        bump(RParen);
+        bump(Semicolon);
+    } else if peek(LBrace) {
+        bump(LBrace);
+        struct_fields();
+        bump(RBrace);
+    } else if peek(Semicolon) {
+        bump(Semicolon);
+    }
+}
+
+fn tuple_struct_fields() {
+    if peek(RParen) {
+    } else {
+        tuple_struct_field();
+        tuple_struct_fields_();
+    }
+}
+
+fn tuple_struct_fields_() {
+    if peek(RParen) {
+    } else {
+        bump(Comma);
+
+        if peek(RParen) {
+        } else {
+            tuple_struct_field();
+            tuple_struct_fields_();
+        }
+    }
+}
+
+fn struct_fields() {
+    if peek(RBrace) {
+    } else {
+        struct_field();
+        struct_fields_();
+    }
+}
+
+fn struct_fields_() {
+    if peek(RBrace) {
+    } else {
+        bump(Comma);
+
+        if peek(RBrace) {
+        } else {
+            struct_field();
+            struct_fields_();
+        }
+    }
+}
+
+fn tuple_struct_field() {
+    if peek(Pub) {
+        vis();
+    }
+
+    ty();
+}
+
+fn struct_field() {
+    if peek(Pub) {
+        vis();
+    }
+
+    if peek(Ident) || peek(FragmentIdent) {
+        bump();
+    } else {
+        error();
+    }
+    bump(Colon);
+    ty();
 }
 
 fn fn_item() {
@@ -61,6 +157,8 @@ fn fn_item() {
     } else {
         error();
     }
+
+    // TODO: generic type parameters
 
     fn_args();
 
