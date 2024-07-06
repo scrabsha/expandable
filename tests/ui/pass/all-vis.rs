@@ -1,5 +1,6 @@
 #[allow(unused)]
 #[expandable::item]
+#[rustfmt::skip]
 macro_rules! test {
     (p: path) => {
         fn foo() {}
