@@ -1,12 +1,12 @@
 use std::{cell::RefCell, iter};
 
-use proc_macro2::TokenStream;
-use quote::{format_ident, quote};
-use syn::Ident;
+use proc_macro2::{Span, TokenStream};
+use quote::{format_ident, quote, ToTokens};
+use syn::{Ident, LitStr};
 
 use crate::{
     codegen::rt,
-    parse::{Block, Builtin, Document, Expr, Function},
+    parse::{Block, Builtin, Document, Expr, Function, Return},
 };
 
 pub(crate) fn productions_from_document(doc: Document) -> Vec<Production> {
@@ -41,6 +41,9 @@ pub(crate) enum ProductionKind {
         cons: Vec<Ident>,
         alt: Vec<Ident>,
     },
+    Ret {
+        val: Ident,
+    },
 }
 
 impl Production {
@@ -63,7 +66,7 @@ impl Production {
     }
 
     fn for_block(block: &Block, ctxt: &GenCtxt) -> (Vec<Production>, Ident) {
-        let (mut intermediates, entry_points) = block.stmts.iter().rev().fold(
+        let (subcall_intermediates, entry_points) = block.stmts.iter().rev().fold(
             (Vec::new(), Vec::new()),
             |(mut intermediates, mut names), stmt| {
                 let (new_intermediates, name) = Production::for_expr(&stmt.expr, ctxt);
@@ -73,16 +76,34 @@ impl Production {
             },
         );
 
-        let then = entry_points.into_iter().rev().collect();
+        let (ret_intermediates, ret_entry_point) = block
+            .ret
+            .as_ref()
+            .map(|ret| {
+                let intermediate = Production::for_ret(ret, ctxt);
+                let name = intermediate.name.clone();
+                (intermediate, name)
+            })
+            .unzip();
 
-        let production = Production {
+        let then = ret_entry_point
+            .into_iter()
+            .chain(entry_points)
+            .rev()
+            .collect();
+
+        let current = Production {
             name: ctxt.gensym(),
             vis: Vis::Private,
             kind: ProductionKind::CallNow { then },
         };
-        let name = production.name.clone();
+        let name = current.name.clone();
 
-        intermediates.push(production);
+        let intermediates = subcall_intermediates
+            .into_iter()
+            .chain(ret_intermediates)
+            .chain(iter::once(current))
+            .collect();
 
         (intermediates, name)
     }
@@ -224,11 +245,23 @@ impl Production {
                     }
                 }
             }
+
+            ProductionKind::Ret { val } => {
+                let val = LitStr::new(val.to_string().as_str(), Span::call_site());
+                quote! {
+                    input.set_retval(#val)
+                }
+            }
         };
 
         quote! {
             fn #name<#generic>(input: #input_ty) -> #output_ty {
-                // eprintln!("{}: {:?}", stringify!(#name), input.buffer.peek().map(|(k, _)| k));
+                // eprintln!(
+                //     "{}: {:?} {:?}",
+                //     stringify!(#name),
+                //     input.buffer.peek().map(|(k, _)| k),
+                //     input.ret.as_ref(),
+                // );
                 #body
             }
         }
@@ -244,16 +277,29 @@ impl Production {
             },
         }
     }
+
+    fn for_ret(ret: &Return, ctxt: &GenCtxt) -> Production {
+        let name = ctxt.gensym();
+
+        Production {
+            name,
+            vis: Vis::Private,
+            kind: ProductionKind::Ret {
+                val: ret.symbol.clone(),
+            },
+        }
+    }
 }
 
 fn codegen_builtin_call(builtin: Builtin, expect: Option<Ident>) -> TokenStream {
-    let builtin = match (builtin, expect.is_some()) {
+    let builtin_ = match (builtin, expect.is_some()) {
         (Builtin::Bump, true) => quote! { bump_expect },
         (Builtin::Read, true) => quote! { bump_expect },
         (Builtin::Peek, true) => quote! { peek_expect },
         (Builtin::Peek2, true) => quote! { peek2_expect },
         (Builtin::Peek3, true) => quote! { peek3_expect },
         (Builtin::Error, true) => quote! { error_expect },
+        (Builtin::Returned, true) => quote! { returned },
 
         (Builtin::Bump, false) => quote! { bump_noexpect },
         (Builtin::Read, false) => quote! { bump_noexpect },
@@ -261,12 +307,22 @@ fn codegen_builtin_call(builtin: Builtin, expect: Option<Ident>) -> TokenStream 
         (Builtin::Peek2, false) => quote! { peek2_noexpect },
         (Builtin::Peek3, false) => quote! { peek3_noexpect },
         (Builtin::Error, false) => quote! { error_noexpect },
+        (Builtin::Returned, false) => unreachable!(),
     };
 
-    let expect = expect.into_iter().collect::<Vec<_>>();
+    let expect = if builtin == Builtin::Returned {
+        let expect = expect.unwrap().to_string();
+        let expect = LitStr::new(&expect, Span::call_site());
+        vec![quote! { #expect }]
+    } else {
+        expect
+            .into_iter()
+            .map(ToTokens::into_token_stream)
+            .collect::<Vec<_>>()
+    };
 
     quote! {
-        #builtin(#( #expect, )*)
+        #builtin_(#( #expect, )*)
     }
 }
 

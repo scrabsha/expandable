@@ -34,12 +34,20 @@ pub(crate) struct Signature {
 pub(crate) struct Block {
     pub(crate) brace_token: syn::token::Brace,
     pub(crate) stmts: Vec<Stmt>,
+    pub(crate) ret: Option<Return>,
 }
 
 #[derive(Clone, Debug, PartialEq)]
 pub(crate) struct Stmt {
     pub(crate) expr: Expr,
     pub(crate) semi: Option<Token![;]>,
+}
+
+#[derive(Clone, Debug, PartialEq)]
+pub(crate) struct Return {
+    pub(crate) ret: Token![return],
+    pub(crate) symbol: Ident,
+    pub(crate) semi: Token![;],
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -71,7 +79,7 @@ pub(crate) struct BuiltinExpr {
     pub(crate) predicate: Option<Predicate>,
 }
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 pub(crate) enum Builtin {
     Bump,
     Read,
@@ -79,6 +87,7 @@ pub(crate) enum Builtin {
     Peek2,
     Peek3,
     Error,
+    Returned,
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -124,10 +133,23 @@ impl Parse for Block {
             brace_token: syn::braced!(content in input),
             stmts: {
                 let mut stmts = Vec::new();
-                while !content.is_empty() {
+                while !content.is_empty() && !content.peek(Token![return]) {
                     stmts.push(content.parse()?);
                 }
                 stmts
+            },
+            ret: {
+                let ret = if content.peek(Token![return]) {
+                    Some(content.parse()?)
+                } else {
+                    None
+                };
+
+                if !content.is_empty() {
+                    return Err(content.error("Expected end of block"));
+                }
+
+                ret
             },
         })
     }
@@ -145,6 +167,16 @@ impl Parse for Stmt {
     }
 }
 
+impl Parse for Return {
+    fn parse(input: syn::parse::ParseStream) -> syn::Result<Self> {
+        Ok(Return {
+            ret: input.parse()?,
+            symbol: input.parse()?,
+            semi: input.parse()?,
+        })
+    }
+}
+
 impl Parse for Expr {
     fn parse(input: syn::parse::ParseStream) -> syn::Result<Self> {
         let lookahead = input.lookahead1();
@@ -156,6 +188,7 @@ impl Parse for Expr {
             || lookahead.peek(kw::peek2)
             || lookahead.peek(kw::peek3)
             || lookahead.peek(kw::error)
+            || lookahead.peek(kw::returned)
         {
             Ok(Expr::Builtin(input.parse()?))
         } else if lookahead.peek(Token![if]) {
@@ -221,9 +254,10 @@ impl Parse for Builtin {
             "peek2" => Ok(Builtin::Peek2),
             "peek3" => Ok(Builtin::Peek3),
             "error" => Ok(Builtin::Error),
+            "returned" => Ok(Builtin::Returned),
             _ => Err(Error::new(
                 ident.span(),
-                "expected one of `bump`, `read`, `peek`, `peek2`, `peek3`, `error`",
+                "expected one of `bump`, `read`, `peek`, `peek2`, `peek3`, `error`, `returned`",
             )),
         }
     }
@@ -244,4 +278,5 @@ mod kw {
     syn::custom_keyword!(peek2);
     syn::custom_keyword!(peek3);
     syn::custom_keyword!(error);
+    syn::custom_keyword!(returned);
 }

@@ -136,9 +136,10 @@ pub(crate) fn runtime_base(entry_points: impl IntoIterator<Item = Ident>) -> Tok
             FragmentLiteral,
             FragmentMeta,
             FragmentPat,
+            FragmentPatParam,
             FragmentPath,
             FragmentStmt,
-            FragmentTT,
+            FragmentTt,
             FragmentTy,
             FragmentVis,
         }
@@ -199,6 +200,7 @@ pub(crate) fn runtime_base(entry_points: impl IntoIterator<Item = Ident>) -> Tok
             stack: Vec<State<Span>>,
             // TODO: is this appropriate?
             tried: SmallVec<[TokenDescription; 10]>,
+            ret: Option<&'static str>,
         }
 
         impl<Span> PartialEq for RustParser<Span>
@@ -252,6 +254,14 @@ pub(crate) fn runtime_base(entry_points: impl IntoIterator<Item = Ident>) -> Tok
             pub buf_size: usize,
             // TODO: wrap this in an opaque type.
             pub pushed: Vec<TypeErasedState>,
+            pub retval: RetVal,
+        }
+
+        #[derive(Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+        pub enum RetVal {
+            Unchanged,
+            Set(&'static str),
+            Unset,
         }
 
         #[derive(Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
@@ -269,6 +279,7 @@ pub(crate) fn runtime_base(entry_points: impl IntoIterator<Item = Ident>) -> Tok
                         buffer: TokenBuffer::Empty([]),
                         stack: vec![#entry_points],
                         tried: SmallVec::new(),
+                        ret: None,
                     }
                 }
             )*
@@ -281,6 +292,7 @@ pub(crate) fn runtime_base(entry_points: impl IntoIterator<Item = Ident>) -> Tok
                             popped: 0,
                             buf_size,
                             pushed: vec![],
+                            retval: RetVal::Unchanged,
                         });
                     },
 
@@ -365,6 +377,7 @@ pub(crate) fn runtime_base(entry_points: impl IntoIterator<Item = Ident>) -> Tok
                         },
                         Transition::CallThen(states) => {
                             self.buffer.shift();
+                            self.ret = None;
                             states.iter().cloned().for_each(|f| {
                                 let state = TypeErasedState {
                                     inner: f as *const (),
@@ -374,6 +387,9 @@ pub(crate) fn runtime_base(entry_points: impl IntoIterator<Item = Ident>) -> Tok
                             self.stack.extend(states.iter().copied());
                             break Ok(trans);
                         },
+                        Transition::Ret(label) => {
+                            self.ret = Some(label);
+                        }
                     }
                 }
             }
@@ -477,6 +493,16 @@ pub(crate) fn runtime_base(entry_points: impl IntoIterator<Item = Ident>) -> Tok
 
                 Err(sp)
             }
+
+            // We return an OK because it is easier for the codegen
+            fn set_retval(&mut self, retval: &'static str) -> Result<Transition<Span>, Option<Span>> {
+                Ok(Transition::Ret(retval))
+            }
+
+            fn returned(&self, sym: &str) -> bool {
+                self.ret.map(|s| sym == s).unwrap_or_default()
+            }
+
         }
 
         #[derive(Clone, Debug, PartialEq)]
@@ -550,10 +576,12 @@ pub(crate) fn runtime_base(entry_points: impl IntoIterator<Item = Ident>) -> Tok
         where
             Span: Copy + 'static
         {
-            // No token has been consumed
+            // No token have been consumed
             CallNow(&'static [State<Span>]),
             // Exactly one token has been consumed
             CallThen(&'static [State<Span>]),
+            // No states to push, new returned value
+            Ret(&'static str),
         }
 
         impl<Span> TokenBuffer<Span>
@@ -671,6 +699,7 @@ pub(crate) fn runtime_base(entry_points: impl IntoIterator<Item = Ident>) -> Tok
                     popped: 0,
                     buf_size: 0,
                     pushed: vec![],
+                    retval: RetVal::Unchanged,
                 }
             }
 
@@ -683,6 +712,11 @@ pub(crate) fn runtime_base(entry_points: impl IntoIterator<Item = Ident>) -> Tok
                     self.log_push(pushed);
                 }
 
+                self.retval = match (self.retval, other.retval) {
+                    (anything, RetVal::Unchanged) => anything,
+                    (_, anything) => anything,
+                };
+
                 self
             }
 
@@ -691,6 +725,7 @@ pub(crate) fn runtime_base(entry_points: impl IntoIterator<Item = Ident>) -> Tok
                     popped: 0,
                     buf_size: 3,
                     pushed: vec![],
+                    retval: RetVal::Unchanged,
                 }
             }
 
@@ -702,6 +737,14 @@ pub(crate) fn runtime_base(entry_points: impl IntoIterator<Item = Ident>) -> Tok
 
             fn log_push(&mut self, state: TypeErasedState) {
                 self.pushed.push(state);
+            }
+
+            fn log_set_ret(&mut self, val: &'static str) {
+                self.retval = RetVal::Set(val);
+            }
+
+            fn log_clear_ret(&mut self) {
+                self.retval = RetVal::Unset;
             }
         }
     }
