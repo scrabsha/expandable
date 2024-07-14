@@ -510,14 +510,32 @@ impl InvocationContext {
 /// A specific kind of fragment.
 #[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
 pub enum FragmentKind {
+    /// A block (`block`).
+    Block,
     /// An expression (`expr`).
     Expr,
-    /// An identifier (`ident`).
+    /// An identifier or a raw identifier (`ident`).
     Ident,
     /// An item (`item`).
     Item,
-    /// A pattern (`pat`).
+    /// A lifetime (`lifetime`).
+    Lifetime,
+    /// An attribute content (`meta`)
+    Meta,
+    /// A pattern (including alternative) (`pat`).
     Pat,
+    /// A path (`path`).
+    Path,
+    /// A pattern (excluding alternative) (`pat_param`).
+    PatParam,
+    /// A statement (`stmt`).
+    Stmt,
+    /// A token tree (`tt`).
+    Tt,
+    /// A type (`ty`).
+    Ty,
+    /// A visibility (`vis`).
+    Vis,
 }
 
 impl FromStr for FragmentKind {
@@ -525,10 +543,19 @@ impl FromStr for FragmentKind {
 
     fn from_str(s: &str) -> Result<FragmentKind, ()> {
         Ok(match s {
+            "block" => FragmentKind::Block,
+            "expr" => FragmentKind::Expr,
             "ident" => FragmentKind::Ident,
             "item" => FragmentKind::Item,
-            "expr" => FragmentKind::Expr,
+            "lifetime" => FragmentKind::Lifetime,
+            "meta" => FragmentKind::Meta,
             "pat" => FragmentKind::Pat,
+            "path" => FragmentKind::Path,
+            "pat_param" => FragmentKind::PatParam,
+            "stmt" => FragmentKind::Stmt,
+            "tt" => FragmentKind::Tt,
+            "ty" => FragmentKind::Ty,
+            "vis" => FragmentKind::Vis,
 
             _ => return Err(()),
         })
