@@ -1,23 +1,27 @@
 fn vis() {
-    bump(Pub);
-    if peek(LParen) {
-        // Avoid bumping the left paren too early because we need to handle eg
-        // `struct Foo(pub (u32));`
-        if peek2(Crate) || peek2(Self_) || peek2(Super) {
-            bump(LParen);
-            bump();
-            bump(RParen);
-        } else if peek2(In) {
-            bump(LParen);
-            bump(In);
-            expr_path();
-            bump(RParen);
+    if peek(Pub) {
+        bump(Pub);
+        if peek(LParen) {
+            // Avoid bumping the left paren too early because we need to handle eg
+            // `struct Foo(pub (u32));`
+            if peek2(Crate) || peek2(Self_) || peek2(Super) {
+                bump(LParen);
+                bump();
+                bump(RParen);
+            } else if peek2(In) {
+                bump(LParen);
+                bump(In);
+                expr_path();
+                bump(RParen);
+            }
         }
+    } else if peek(FragmentVis) {
+        bump(FragmentVis);
     }
 }
 
 fn vis_opt() {
-    if peek(Pub) {
+    if peek(Pub) || peek(FragmentVis) {
         vis();
     }
 }
@@ -40,6 +44,8 @@ pub fn item() {
             macro_call_tail();
             bump(Semicolon);
         }
+    } else if peek(FragmentItem) {
+        bump(FragmentItem);
     } else {
         vis_opt();
 
@@ -180,6 +186,8 @@ fn stmt_tail() {
     if peek() {
         if peek(RBrace) {
             // return
+        } else if peek(FragmentStmt) {
+            bump(FragmentStmt);
         } else if peek(Semicolon) {
             bump(Semicolon);
             stmt_tail();
@@ -251,6 +259,14 @@ fn stmt_tail() {
                 //
                 // TODO: add struct creation here.
                 expr_after_atom();
+                stmt_end_semi();
+            }
+        } else if peek(Loop) || peek(FragmentLifetime) {
+            expr_loop();
+            expr_after_atom();
+            if returned(ExprAfterAtomEmpty) {
+                stmt_end_nosemi();
+            } else {
                 stmt_end_semi();
             }
         } else {
@@ -449,7 +465,7 @@ fn pat_() {
 }
 
 fn pat_no_top_alt() {
-    if peek(FragmentPat) || peek(Underscore) || peek(DotDot) {
+    if peek(FragmentPat) || peek(FragmentPatParam) || peek(Underscore) || peek(DotDot) {
         bump();
     } else if peek(Ref) || peek(Mut) {
         pat_ident();
@@ -740,6 +756,8 @@ fn expr_after_atom() {
     } else if peek(Dot) {
         expr_dot_expr();
         expr_after_atom();
+    } else {
+        return ExprAfterAtomEmpty;
     }
 }
 
@@ -760,7 +778,7 @@ fn expr_atom() {
         if peek(Not) {
             macro_call_tail();
         }
-    } else if peek(FragmentExpr) || peek(Literal) {
+    } else if peek(FragmentExpr) || peek(Literal) || peek(FragmentBlock) {
         bump();
     } else if peek(If) {
         expr_if();
@@ -770,7 +788,7 @@ fn expr_atom() {
         expr_array();
     } else if peek(LBrace) {
         block();
-    } else if peek(Loop) {
+    } else if peek(Loop) || peek(FragmentLifetime) {
         expr_loop();
     } else if peek(While) {
         expr_while();
@@ -1108,6 +1126,10 @@ fn expr_tuple_() {
 }
 
 fn expr_loop() {
+    if peek(FragmentLifetime) {
+        bump(FragmentLifetime);
+    }
+
     bump(Loop);
     block();
 }
