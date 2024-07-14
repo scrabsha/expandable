@@ -192,7 +192,7 @@ where
             .accept(open, span)
             .map_err(|parsing_error| {
                 let mut cex = CounterExamplePrefix::from(parsing_error);
-                cex.push_stream(inner);
+                cex.push_stream(&self.bindings, inner);
                 cex.push(close, span);
 
                 cex
@@ -251,7 +251,7 @@ where
                         // However this is not an issue here. We found an
                         // invalid expansion, and it will stay invalid no
                         // matter what comes after it. Sweet!
-                        cex.push_stream(&stream[(idx + 1)..]);
+                        cex.push_stream(&self.bindings, &stream[(idx + 1)..]);
                     }
 
                     cex
@@ -523,12 +523,17 @@ where
         self.prefix.push((descr, span));
     }
 
-    fn push_stream(&mut self, stream: &[TokenTree<Span>]) {
+    fn push_stream(
+        &mut self,
+        tbl: &HashMap<String, BindingData<Span>>,
+        stream: &[TokenTree<Span>],
+    ) {
         for tree in stream {
             let span = tree.span;
             match &tree.kind {
                 TokenTreeKind::Terminal(_, descr) => self.push(*descr, tree.span),
                 TokenTreeKind::Parenthesed(inner) => self.push_delimited_stream(
+                    tbl,
                     TokenDescription::LParen,
                     span,
                     inner,
@@ -537,6 +542,7 @@ where
                 ),
 
                 TokenTreeKind::CurlyBraced(inner) => self.push_delimited_stream(
+                    tbl,
                     TokenDescription::LBrace,
                     span,
                     inner,
@@ -545,6 +551,7 @@ where
                 ),
 
                 TokenTreeKind::Bracketed(inner) => self.push_delimited_stream(
+                    tbl,
                     TokenDescription::LBracket,
                     span,
                     inner,
@@ -552,7 +559,9 @@ where
                     span,
                 ),
 
-                TokenTreeKind::Fragment(_f) => todo!(),
+                TokenTreeKind::Fragment(name) => {
+                    self.push(TokenDescription::Fragment(tbl[name].kind.clone()), span)
+                }
 
                 TokenTreeKind::Repetition {
                     quantifier:
@@ -573,13 +582,14 @@ where
                             ..
                         },
                     ..
-                } => self.push_stream(inner),
+                } => self.push_stream(tbl, inner),
             }
         }
     }
 
     fn push_delimited_stream(
         &mut self,
+        tbl: &HashMap<String, BindingData<Span>>,
         open_descr: TokenDescription,
         open_span: Span,
         inner: &[TokenTree<Span>],
@@ -587,7 +597,7 @@ where
         close_span: Span,
     ) {
         self.push(open_descr, open_span);
-        self.push_stream(inner);
+        self.push_stream(tbl, inner);
         self.push(close_descr, close_span);
     }
 }
