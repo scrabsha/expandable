@@ -138,7 +138,7 @@ impl Production {
                     .iter()
                     .map(|b_e| {
                         (
-                            b_e.builtin.clone(),
+                            b_e.builtin,
                             b_e.predicate.as_ref().map(|pred| pred.ident.clone()),
                         )
                     })
