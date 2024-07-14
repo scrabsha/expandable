@@ -560,7 +560,7 @@ where
                 ),
 
                 TokenTreeKind::Fragment(name) => {
-                    self.push(TokenDescription::Fragment(tbl[name].kind.clone()), span)
+                    self.push(TokenDescription::Fragment(tbl[name].kind), span);
                 }
 
                 TokenTreeKind::Repetition {
