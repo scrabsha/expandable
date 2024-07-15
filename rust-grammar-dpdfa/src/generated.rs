@@ -211,13 +211,6 @@ pub struct TransitionData {
     pub popped: usize,
     pub buf_size: usize,
     pub pushed: Vec<TypeErasedState>,
-    pub retval: RetVal,
-}
-#[derive(Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
-pub enum RetVal {
-    Unchanged,
-    Set(&'static str),
-    Unset,
 }
 #[derive(Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
 pub struct TypeErasedState {
@@ -284,7 +277,6 @@ where
                     popped: 0,
                     buf_size,
                     pushed: vec![],
-                    retval: RetVal::Unchanged,
                 });
             }
             2 => {
@@ -637,7 +629,6 @@ impl TransitionData {
             popped: 0,
             buf_size: 0,
             pushed: vec![],
-            retval: RetVal::Unchanged,
         }
     }
 
@@ -648,10 +639,6 @@ impl TransitionData {
         for pushed in other.pushed {
             self.log_push(pushed);
         }
-        self.retval = match (self.retval, other.retval) {
-            (anything, RetVal::Unchanged) => anything,
-            (_, anything) => anything,
-        };
         self
     }
 
@@ -660,7 +647,6 @@ impl TransitionData {
             popped: 0,
             buf_size: 3,
             pushed: vec![],
-            retval: RetVal::Unchanged,
         }
     }
 
@@ -672,14 +658,6 @@ impl TransitionData {
 
     fn log_push(&mut self, state: TypeErasedState) {
         self.pushed.push(state);
-    }
-
-    fn log_set_ret(&mut self, val: &'static str) {
-        self.retval = RetVal::Set(val);
-    }
-
-    fn log_clear_ret(&mut self) {
-        self.retval = RetVal::Unset;
     }
 }
 fn vis_12<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
