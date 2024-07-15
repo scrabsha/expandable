@@ -289,3 +289,27 @@ check_parse! {
         }
     }
 }
+
+check_parse! {
+    fn stmt_without_semicolon() {
+        expr,
+        {
+            {
+                loop {}
+                42
+            }
+        }
+    }
+}
+
+check_parse! {
+    fn something_is_wrong_with_block_initialization() {
+        item,
+        {
+            fn foo() {
+                loop {}
+                42
+            }
+        }
+    }
+}

@@ -215,10 +215,19 @@ macro_rules! token_description {
                     $name::LBrace => rust_grammar_dpdfa::TokenDescription::LBrace,
                     $name::RBrace => rust_grammar_dpdfa::TokenDescription::RBrace,
 
+                    $name::Fragment(FragmentKind::Block) => rust_grammar_dpdfa::TokenDescription::FragmentBlock,
                     $name::Fragment(FragmentKind::Expr) => rust_grammar_dpdfa::TokenDescription::FragmentExpr,
                     $name::Fragment(FragmentKind::Ident) => rust_grammar_dpdfa::TokenDescription::FragmentIdent,
                     $name::Fragment(FragmentKind::Item) => rust_grammar_dpdfa::TokenDescription::FragmentItem,
+                    $name::Fragment(FragmentKind::Lifetime) => rust_grammar_dpdfa::TokenDescription::FragmentLifetime,
+                    $name::Fragment(FragmentKind::Meta) => rust_grammar_dpdfa::TokenDescription::FragmentMeta,
                     $name::Fragment(FragmentKind::Pat) => rust_grammar_dpdfa::TokenDescription::FragmentPat,
+                    $name::Fragment(FragmentKind::Path) => rust_grammar_dpdfa::TokenDescription::FragmentPath,
+                    $name::Fragment(FragmentKind::PatParam) => rust_grammar_dpdfa::TokenDescription::FragmentPatParam,
+                    $name::Fragment(FragmentKind::Stmt) => rust_grammar_dpdfa::TokenDescription::FragmentStmt,
+                    $name::Fragment(FragmentKind::Tt) => rust_grammar_dpdfa::TokenDescription::FragmentTt,
+                    $name::Fragment(FragmentKind::Ty) => rust_grammar_dpdfa::TokenDescription::FragmentTy,
+                    $name::Fragment(FragmentKind::Vis) => rust_grammar_dpdfa::TokenDescription::FragmentVis,
 
                     $name::Invalid => unreachable!(),
                 }
