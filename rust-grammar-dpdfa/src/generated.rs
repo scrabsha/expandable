@@ -126,9 +126,10 @@ pub enum TokenDescription {
     FragmentLiteral,
     FragmentMeta,
     FragmentPat,
+    FragmentPatParam,
     FragmentPath,
     FragmentStmt,
-    FragmentTT,
+    FragmentTt,
     FragmentTy,
     FragmentVis,
 }
@@ -165,6 +166,7 @@ where
     buffer: TokenBuffer<Span>,
     stack: Vec<State<Span>>,
     tried: SmallVec<[TokenDescription; 10]>,
+    ret: Option<&'static str>,
 }
 impl<Span> PartialEq for RustParser<Span>
 where
@@ -223,6 +225,7 @@ where
             buffer: TokenBuffer::Empty([]),
             stack: vec![item],
             tried: SmallVec::new(),
+            ret: None,
         }
     }
 
@@ -231,6 +234,7 @@ where
             buffer: TokenBuffer::Empty([]),
             stack: vec![stmt],
             tried: SmallVec::new(),
+            ret: None,
         }
     }
 
@@ -239,6 +243,7 @@ where
             buffer: TokenBuffer::Empty([]),
             stack: vec![ty],
             tried: SmallVec::new(),
+            ret: None,
         }
     }
 
@@ -247,6 +252,7 @@ where
             buffer: TokenBuffer::Empty([]),
             stack: vec![pat],
             tried: SmallVec::new(),
+            ret: None,
         }
     }
 
@@ -255,6 +261,7 @@ where
             buffer: TokenBuffer::Empty([]),
             stack: vec![expr],
             tried: SmallVec::new(),
+            ret: None,
         }
     }
 
@@ -338,6 +345,7 @@ where
                 }
                 Transition::CallThen(states) => {
                     self.buffer.shift();
+                    self.ret = None;
                     states.iter().cloned().for_each(|f| {
                         let state = TypeErasedState {
                             inner: f as *const (),
@@ -346,6 +354,9 @@ where
                     });
                     self.stack.extend(states.iter().copied());
                     break Ok(trans);
+                }
+                Transition::Ret(label) => {
+                    self.ret = Some(label);
                 }
             }
         }
@@ -439,6 +450,14 @@ where
         let sp = self.buffer.peek().map(|(_, sp)| sp);
         Err(sp)
     }
+
+    fn set_retval(&mut self, retval: &'static str) -> Result<Transition<Span>, Option<Span>> {
+        Ok(Transition::Ret(retval))
+    }
+
+    fn returned(&self, sym: &str) -> bool {
+        self.ret.map(|s| sym == s).unwrap_or_default()
+    }
 }
 #[derive(Clone, Debug, PartialEq)]
 enum ProgressError<Span> {
@@ -502,6 +521,7 @@ where
 {
     CallNow(&'static [State<Span>]),
     CallThen(&'static [State<Span>]),
+    Ret(&'static str),
 }
 impl<Span> TokenBuffer<Span>
 where

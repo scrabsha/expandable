@@ -36,7 +36,7 @@ fn check_all_functions_are_defined(productions: &[Production]) {
 
     for prod in productions {
         match &prod.kind {
-            ProductionKind::Bump { descr: _, then } | ProductionKind::CallNow { then } => {
+            ProductionKind::Bump { descr: _, then } | ProductionKind::CallNow { then, .. } => {
                 check_all_defined(then)
             }
 
@@ -50,6 +50,8 @@ fn check_all_functions_are_defined(productions: &[Production]) {
                 check_all_defined(cons);
                 check_all_defined(alt);
             }
+
+            ProductionKind::Ret { .. } => {}
         }
     }
 }
