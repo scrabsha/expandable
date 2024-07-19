@@ -1,4 +1,4 @@
-error: Potentially invalid expansion. Expected an expression, an identifier, `::`, `<`, `Self`, `break` or 12 others.
+error: Potentially invalid expansion. Expected an expression, an identifier, `::`, `<`, `Self`, `break` or 13 others.
  --> tests/ui/fail/missing_expr.rs:6:17
   |
 6 |         let a = ;

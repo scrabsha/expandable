@@ -24,8 +24,8 @@ macro_rules! check_parse {
                 match parser.step(token, idx) {
                     Ok(_) => {},
 
-                    Err((idx, _)) => {
-                        panic!("Failed to parse token `{:?}` at index {}", token, idx);
+                    Err((idx, expected)) => {
+                        panic!("Failed to parse token `{:?}` at index {}. Expected {:?}", token, idx, expected);
                     }
                 }
             }
@@ -309,6 +309,18 @@ check_parse! {
             fn foo() {
                 loop {}
                 42
+            }
+        }
+    }
+}
+
+check_parse! {
+    fn match_arms_are_broken() {
+        expr,
+        {
+            match () {
+                () => {},
+                () => {},
             }
         }
     }

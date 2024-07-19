@@ -794,6 +794,8 @@ fn expr_atom() {
         expr_while();
     } else if peek(For) {
         expr_for();
+    } else if peek(Match) {
+        expr_match();
     } else {
         error();
     }
@@ -1148,6 +1150,41 @@ fn expr_for() {
     // TODO: we must not allow struct expressions here
     expr();
     block();
+}
+
+fn expr_match() {
+    bump(Match);
+    // TODO(scrabsha): should be expr(no struct expression)
+    expr();
+
+    bump(LBrace);
+    match_arms();
+    bump(RBrace);
+}
+
+fn match_arms() {
+    if peek(RBrace) {
+        // return
+    } else {
+        match_arm();
+        match_arms();
+    }
+}
+
+fn match_arm() {
+    pat();
+
+    if peek(If) {
+        bump(If);
+        expr();
+    }
+
+    bump(FatArrow);
+
+    expr();
+    // TODO: commas are not mandatory if the expression is an
+    // ExpressionWithBlock.
+    bump(Comma);
 }
 
 fn macro_call_tail() {
