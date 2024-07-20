@@ -1,10 +1,10 @@
-error: Potentially invalid expansion. Expected an expression, an identifier, `::`, `<`, `Self`, `break` or 13 others.
+error: Potentially invalid expansion. Expected an expression, an identifier, `::`, `<`, `Self`, `break` or 14 others.
  --> tests/ui/fail/expr-tuple.rs:6:10
   |
 6 |         (,)
   |          ^
 
-error: Potentially invalid expansion. Expected an expression, an identifier, `::`, `<`, `Self`, `break` or 13 others.
+error: Potentially invalid expansion. Expected an expression, an identifier, `::`, `<`, `Self`, `break` or 14 others.
   --> tests/ui/fail/expr-tuple.rs:13:13
    |
 13 |         (42,, 42)
