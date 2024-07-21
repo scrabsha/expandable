@@ -1,8 +1,8 @@
 #[allow(unused)]
 #[expandable::expr]
 macro_rules! test {
-    ( $( $ident:ident )* ) => {
-        $( :: $ident )*
+    ( $( $ident:ident )+ ) => {
+        $( :: $ident )+
     };
 
     () => {
