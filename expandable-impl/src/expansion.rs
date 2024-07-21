@@ -763,8 +763,6 @@ mod tests {
             };
             expect_test::expect![[r#"
                 [
-                    Literal,
-                    Plus,
                     Plus,
                     Ident,
                 ]
