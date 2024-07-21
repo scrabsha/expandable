@@ -343,7 +343,12 @@ where
         Id: Clone + Ord,
     {
         // Values accumulated during the previous iterations.
-        let mut outcomes = Set::new();
+        let mut outcomes = states
+            .iter()
+            .cloned()
+            .map(|(s, id)| (s, Transition::empty(), id))
+            .collect::<Set<_>>();
+
         let mut reached_transitions = Set::<Transition>::new();
         // Values discovered during the current iteration.
         let mut to_test: Set<(DynamicState<_>, (Transition, Id))> = states
