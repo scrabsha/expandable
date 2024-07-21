@@ -833,7 +833,7 @@ mod tests {
             #[expr]
             {
                 () => {
-                    #( :: a )*
+                    #( :: a )+
                 }
             }
         }
@@ -843,8 +843,8 @@ mod tests {
         path_repeat_from_fragment {
             #[expr]
             {
-                ( #( #id:ident )* ) => {
-                    #( :: #id )*
+                ( #( #id:ident )+ ) => {
+                    #( :: #id )+
                 }
             }
         }

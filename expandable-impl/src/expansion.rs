@@ -703,7 +703,7 @@ mod tests {
         expr_path_full_fragment {
             #[expr]
             ( #ident:ident ) => {
-                #( :: #ident )*
+                #( :: #ident )+
             }
         }
     }
