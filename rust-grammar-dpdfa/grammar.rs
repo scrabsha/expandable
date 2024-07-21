@@ -205,73 +205,20 @@ fn stmt_tail() {
             bump(Semicolon);
 
             stmt_tail();
-        } else if peek(ColonColon)
-            || peek(Ident)
-            || peek(FragmentIdent)
-            || peek(Super)
-            || peek(Self_)
-            || peek(Crate)
-            || peek(FragmentPath)
-        {
-            // Potential macro/struct expression
-            expr_path();
-            if peek(Not) {
-                if peek2(LBrace) {
-                    macro_call_tail();
-
-                    // TODO: make sure this is the FIRST set of macro_call_tail
-                    if peek(Plus)
-                        || peek(Minus)
-                        || peek(Star)
-                        || peek(Slash)
-                        || peek(Percent)
-                        || peek(And)
-                        || peek(Or)
-                        || peek(Caret)
-                        || peek(Shl)
-                        || peek(Shr)
-                        || peek(EqualsEquals)
-                        || peek(NotEquals)
-                        || peek(GreaterThan)
-                        || peek(LessThan)
-                        || peek(GreaterThanEquals)
-                        || peek(LessThanEquals)
-                        || peek(OrOr)
-                        || peek(AndAnd)
-                        || peek(DotDot)
-                        || peek(DotDotEquals)
-                        || peek(LParen)
-                        || peek(LBracket)
-                        || peek(Dot)
-                    {
-                        expr_after_atom();
-                        stmt_end_semi();
-                    } else {
-                        stmt_end_nosemi();
-                    }
-                } else {
-                    macro_call_tail();
-                    expr_after_atom();
-                    stmt_end_semi();
-                }
-            } else {
-                // Not a macro - that was just an expression.
-                //
-                // TODO: add struct creation here.
-                expr_after_atom();
-                stmt_end_semi();
-            }
-        } else if peek(Loop) || peek(FragmentLifetime) {
-            expr_loop();
-            expr_after_atom();
-            if returned(ExprAfterAtomEmpty) {
+        } else {
+            expr();
+            if returned(ExprIf)
+                || returned(ExprBlock)
+                || returned(ExprLoop)
+                || returned(ExprFor)
+                || returned(ExprMatch)
+                || returned(MacroCallBrace)
+            {
+                // Block expressions/braced macro stmts don't need a trailing semicolon.
                 stmt_end_nosemi();
             } else {
                 stmt_end_semi();
             }
-        } else {
-            expr();
-            stmt_end_semi();
         }
     }
 }
@@ -282,7 +229,7 @@ fn stmt_end_semi() {
         stmt_tail();
     } else if peek(RBrace) {
         // return
-    } else {
+    } else if peek() {
         error();
     }
 }
@@ -725,6 +672,7 @@ fn expr_after_atom() {
         // https://doc.rust-lang.org/reference/expressions/operator-expr.html#arithmetic-and-logical-binary-operators
         bump();
         expr();
+        return ExprBinop;
     } else if peek(EqualsEquals)
         || peek(NotEquals)
         || peek(GreaterThan)
@@ -736,28 +684,31 @@ fn expr_after_atom() {
         // https://doc.rust-lang.org/reference/expressions/operator-expr.html#comparison-operators
         bump();
         expr();
+        return ExprBinop;
     } else if peek(OrOr) || peek(AndAnd) {
         // Lazy Boolean Expressions
         // https://spec.ferrocene.dev/expressions.html#lazy-boolean-expressions
         bump();
         expr();
+        return ExprBinop;
     } else if peek(DotDot) || peek(DotDotEquals) {
         bump();
         expr();
+        return ExprBinop;
     } else if peek(LParen) {
         expr_call();
         expr_after_atom();
+        return ExprCall;
     } else if peek(LBracket) {
         // Index expression:
         // https://doc.rust-lang.org/reference/expressions/array-expr.html#array-and-slice-indexing-expressions
         bump(LBracket);
         expr();
         bump(RBracket);
+        return ExprIndex;
     } else if peek(Dot) {
         expr_dot_expr();
         expr_after_atom();
-    } else {
-        return ExprAfterAtomEmpty;
     }
 }
 
@@ -772,30 +723,48 @@ fn expr_atom() {
         || peek(FragmentIdent)
         || peek(ColonColon)
         || peek(LessThan)
+        || peek(FragmentPath)
     {
         expr_path();
 
         if peek(Not) {
             macro_call_tail();
+        } else {
+            return ExprPath;
         }
-    } else if peek(FragmentExpr) || peek(Literal) || peek(FragmentBlock) {
+    } else if peek(Literal) {
         bump();
+        return ExprLit;
+    } else if peek(FragmentExpr) {
+        bump();
+        return ExprExprFragment;
+    } else if peek(FragmentBlock) {
+        bump();
+        return ExprBlockFragment;
     } else if peek(If) {
         expr_if();
+        return ExprIf;
     } else if peek(LParen) {
         expr_tuple();
+        return ExprTuple;
     } else if peek(LBracket) {
         expr_array();
+        return ExprArray;
     } else if peek(LBrace) {
         block();
+        return ExprBlock;
     } else if peek(Loop) || peek(FragmentLifetime) {
         expr_loop();
+        return ExprLoop;
     } else if peek(While) {
         expr_while();
+        return ExprWhile;
     } else if peek(For) {
         expr_for();
+        return ExprFor;
     } else if peek(Match) {
         expr_match();
+        return ExprMatch;
     } else {
         error();
     }
@@ -1202,15 +1171,25 @@ fn macro_call_tail() {
     bump(Not);
 
     token_stream_group();
+    if returned(TokenStreamGroupParen) {
+        return MacroCallParen;
+    } else if returned(TokenStreamGroupBracket) {
+        return MacroCallBracket;
+    } else if returned(TokenStreamGroupBrace) {
+        return MacroCallBrace;
+    }
 }
 
 fn token_stream_group() {
     if peek(LParen) {
         token_stream_group_paren();
+        return TokenStreamGroupParen;
     } else if peek(LBracket) {
         token_stream_group_bracket();
+        return TokenStreamGroupBracket;
     } else if peek(LBrace) {
         token_stream_group_brace();
+        return TokenStreamGroupBrace;
     } else {
         error();
     }
