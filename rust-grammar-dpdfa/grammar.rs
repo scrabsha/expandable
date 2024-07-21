@@ -205,73 +205,20 @@ fn stmt_tail() {
             bump(Semicolon);
 
             stmt_tail();
-        } else if peek(ColonColon)
-            || peek(Ident)
-            || peek(FragmentIdent)
-            || peek(Super)
-            || peek(Self_)
-            || peek(Crate)
-            || peek(FragmentPath)
-        {
-            // Potential macro/struct expression
-            expr_path();
-            if peek(Not) {
-                if peek2(LBrace) {
-                    macro_call_tail();
-
-                    // TODO: make sure this is the FIRST set of macro_call_tail
-                    if peek(Plus)
-                        || peek(Minus)
-                        || peek(Star)
-                        || peek(Slash)
-                        || peek(Percent)
-                        || peek(And)
-                        || peek(Or)
-                        || peek(Caret)
-                        || peek(Shl)
-                        || peek(Shr)
-                        || peek(EqualsEquals)
-                        || peek(NotEquals)
-                        || peek(GreaterThan)
-                        || peek(LessThan)
-                        || peek(GreaterThanEquals)
-                        || peek(LessThanEquals)
-                        || peek(OrOr)
-                        || peek(AndAnd)
-                        || peek(DotDot)
-                        || peek(DotDotEquals)
-                        || peek(LParen)
-                        || peek(LBracket)
-                        || peek(Dot)
-                    {
-                        expr_after_atom();
-                        stmt_end_semi();
-                    } else {
-                        stmt_end_nosemi();
-                    }
-                } else {
-                    macro_call_tail();
-                    expr_after_atom();
-                    stmt_end_semi();
-                }
-            } else {
-                // Not a macro - that was just an expression.
-                //
-                // TODO: add struct creation here.
-                expr_after_atom();
-                stmt_end_semi();
-            }
-        } else if peek(Loop) || peek(FragmentLifetime) {
-            expr_loop();
-            expr_after_atom();
-            if returned(ExprAfterAtomEmpty) {
+        } else {
+            expr();
+            if returned(ExprIf)
+                || returned(ExprBlock)
+                || returned(ExprLoop)
+                || returned(ExprFor)
+                || returned(ExprMatch)
+                || returned(MacroCallBrace)
+            {
+                // Block expressions/braced macro stmts don't need a trailing semicolon.
                 stmt_end_nosemi();
             } else {
                 stmt_end_semi();
             }
-        } else {
-            expr();
-            stmt_end_semi();
         }
     }
 }
@@ -282,7 +229,7 @@ fn stmt_end_semi() {
         stmt_tail();
     } else if peek(RBrace) {
         // return
-    } else {
+    } else if peek() {
         error();
     }
 }
