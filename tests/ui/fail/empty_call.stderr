@@ -1,7 +1,5 @@
-error: Unexpected end of macro invocation
- --> tests/ui/fail/empty_call.rs:4:1
+error: Potentially invalid expansion. Expected an expression, an identifier, `::`, `<`, `Self`, `break` or 13 others.
+ --> tests/ui/fail/empty_call.rs:6:11
   |
-4 | #[expandable::expr]
-  | ^^^^^^^^^^^^^^^^^^^
-  |
-  = note: this error originates in the attribute macro `expandable::expr` (in Nightly builds, run with -Z macro-backtrace for more info)
+6 |     () => {};
+  |           ^^
