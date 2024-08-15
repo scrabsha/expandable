@@ -7,6 +7,11 @@ use std::fmt::{Debug, Formatter};
 #[derive(Copy, Clone)]
 pub struct DebugSpan(pub(crate) usize);
 
+#[cfg(test)]
+impl DebugSpan {
+    pub(crate) const EOF: DebugSpan = DebugSpan(42101);
+}
+
 impl Debug for DebugSpan {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         self.0.fmt(f)

@@ -152,7 +152,7 @@ where
         let substitution = substitution::TokenTree::from_generic(substitution)?;
         repetition_stack::check(&matcher, &substitution)?;
 
-        expansion::check_arm(ctx.to_state(), matcher, &substitution)?;
+        expansion::check_arm(ctx.to_state(), matcher, &substitution, token.span)?;
 
         if let Some(semi) = iter.next() {
             let TokenTreeKind::Terminal(Terminal::Semicolon) = semi.kind else {
@@ -673,7 +673,7 @@ mod tests {
     }
 
     check_macro_test! {
-        #[should_panic = "Macro check returned error: UnexpectedEnd { last_token: None }"]
+        #[should_panic = "Macro check returned error: InvalidProducedAst { span: 2, expected: [Return, Break, Ident, Self_, SelfUpper, Super, Crate, Fragment(Ident), ColonColon, LessThan, Literal, Fragment(Expr), If, LParen, LBracket, LBrace, Loop, While, For, Match], counter_example: [] }"]
         empty_expr_is_not_an_expr {
             #[expr]
             {

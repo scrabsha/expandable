@@ -23,12 +23,13 @@ pub(crate) fn check_arm<Span>(
     init_state: DynamicState<Span>,
     bindings: Matcher<Span>,
     substitution: &[TokenTree<Span>],
+    closing_brace_span: Span,
 ) -> Result<(), Error<Span>>
 where
     Span: Copy + 'static,
 {
     let bindings = bindings.bindings;
-    ExpCtx::check_rule(bindings, substitution, init_state)
+    ExpCtx::check_rule(bindings, substitution, init_state, closing_brace_span)
 }
 
 struct ExpCtx<Span> {
@@ -47,25 +48,21 @@ where
     //
     // Parsing code is so fragile that a low value should be enough for us to
     // either find the fixed-point or detect a syntax error.
-    const FIXED_POINT_ITERATIONS_FUEL: usize = 16;
+    const FIXED_POINT_ITERATIONS_FUEL: usize = 16
 
     fn check_rule(
         bindings: HashMap<String, BindingData<Span>>,
         subst: &[TokenTree<Span>],
         initial_state: DynamicState<Span>,
+        closing_brace_span: Span,
     ) -> Result<(), Error<Span>> {
         let ctx = ExpCtx::new(bindings);
         let states = ctx.parse_stream(singleton((initial_state, ctx.id())), subst)?;
 
         states
             .into_iter()
-            .try_for_each(|(mut state, _, _)| state.is_accepting())
-            .map_err(|e| match e {
-                Some(parsing_error) => CounterExamplePrefix::from(parsing_error).into(),
-                None => Error::UnexpectedEnd {
-                    last_token: subst.last().map(|t| t.span),
-                },
-            })
+            .try_for_each(|(mut state, _, _)| state.is_accepting(closing_brace_span))
+            .map_err(|e| CounterExamplePrefix::from(e).into())
     }
 
     fn new(bindings: HashMap<String, BindingData<Span>>) -> ExpCtx<Span> {
@@ -207,7 +204,7 @@ where
 
         let states = states
             .into_iter()
-            .map(|(s, t, id)| (s, t_after_open_delim.clone().combine_chasles(t), id));
+            .map(|(s, t, id)| (s, t_after_open_delim.clone() + t, id));
 
         // Parse close delimiter
         let states = states
@@ -216,7 +213,7 @@ where
                 state
                     .accept(close, span)
                     .map(|(state, new_trans)| {
-                        let trans = trans.combine_chasles(new_trans);
+                        let trans = trans + new_trans;
                         (state, trans, id)
                     })
                     .map_err(CounterExamplePrefix::from)
@@ -236,7 +233,10 @@ where
     {
         let mut states: Set<(DynamicState<Span>, (Transition, Id))> = states
             .into_iter()
-            .map(|(s, id)| (s, (Transition::empty(), id)))
+            .map(|(s, id)| {
+                let trans = s.initial_transition();
+                (s, (trans, id))
+            })
             .collect();
 
         for (idx, tree) in stream.iter().enumerate() {
@@ -257,7 +257,7 @@ where
                     cex
                 })?
                 .into_iter()
-                .map(|(state, trans_, (trans, id))| (state, (trans.combine_chasles(trans_), id)))
+                .map(|(state, trans_, (trans, id))| (state, (trans + trans_, id)))
                 .collect();
         }
 
@@ -302,7 +302,10 @@ where
     {
         let mut candidates = states
             .into_iter()
-            .map(|(s, id)| (s, Transition::empty(), id))
+            .map(|(s, id)| {
+                let trans = s.initial_transition();
+                (s, trans, id)
+            })
             .collect::<Set<_>>();
 
         let candidates_ = candidates
@@ -314,7 +317,7 @@ where
         candidates.extend(
             self.parse_single_repetition(candidates_, None, stream)?
                 .into_iter()
-                .map(|(s, t_, (t, id))| (s, t.combine_chasles(t_), id)),
+                .map(|(s, t_, (t, id))| (s, t + t_, id)),
         );
 
         Ok(candidates)
@@ -346,14 +349,20 @@ where
         let mut outcomes = states
             .iter()
             .cloned()
-            .map(|(s, id)| (s, Transition::empty(), id))
+            .map(|(s, id)| {
+                let trans = s.initial_transition();
+                (s, trans, id)
+            })
             .collect::<Set<_>>();
 
         let mut reached_transitions = Set::<Transition>::new();
         // Values discovered during the current iteration.
         let mut to_test: Set<(DynamicState<_>, (Transition, Id))> = states
             .into_iter()
-            .map(|(s, id)| (s, (Transition::empty(), id)))
+            .map(|(s, id)| {
+                let trans = s.initial_transition();
+                (s, (trans, id))
+            })
             .collect();
 
         let mut fuel = Self::FIXED_POINT_ITERATIONS_FUEL;
@@ -371,7 +380,7 @@ where
                 .into_iter()
                 .filter_map(|(s, t_, (t, id))| {
                     if !reached_transitions.contains(&t_) {
-                        Some(((s, (t.combine_chasles(t_.clone()), id)), t_))
+                        Some(((s, (t + t_.clone(), id)), t_))
                     } else {
                         None
                     }
@@ -407,7 +416,7 @@ where
         Ok(self
             .parse_zero_or_more_repetitions_inner(states, stream, sep, false)?
             .into_iter()
-            .map(|(s, t_, (t, id))| (s, t.combine_chasles(t_), id))
+            .map(|(s, t_, (t, id))| (s, t + t_, id))
             .collect())
     }
 
@@ -437,7 +446,10 @@ where
 
             None => states
                 .into_iter()
-                .map(|(s, id)| (s, Transition::empty(), id))
+                .map(|(s, id)| {
+                    let trans = s.initial_transition();
+                    (s, trans, id)
+                })
                 .collect(),
         };
 
@@ -446,7 +458,7 @@ where
         Ok(self
             .parse_stream(states, stream)?
             .into_iter()
-            .map(|(s, t_, (t, id))| (s, t.combine_chasles(t_), id))
+            .map(|(s, t_, (t, id))| (s, t + t_, id))
             .collect())
     }
 
@@ -625,7 +637,7 @@ mod tests {
                 let state = stringify!($kind).parse::<crate::InvocationContext>().expect("Failed to generate `FragmentKind`");
                 let state = state.to_state();
 
-                check_arm(state, bindings, &subst).expect("Checking failed");
+                check_arm(state, bindings, &subst, crate::span::DebugSpan::EOF).expect("Checking failed");
             }
         }
     }
@@ -722,7 +734,7 @@ mod tests {
                 let state = stringify!($kind).parse::<crate::InvocationContext>().expect("Failed to generate `FragmentKind`");
                 let state = state.to_state();
 
-                let e = check_arm(state, bindings, &subst).unwrap_err();
+                let e = check_arm(state, bindings, &subst, crate::span::DebugSpan::EOF).unwrap_err();
 
                 let left = match e {
                     Error::InvalidProducedAst { counter_example, .. } => counter_example,

@@ -1,13 +1,9 @@
 // Architectural invariant: this module contains basic types that allow to parse
 // the Rust language.
 
-use std::{
-    cmp::Ordering,
-    hash::{Hash, Hasher},
-    ptr,
-};
+use std::{cmp::Ordering, ptr};
 
-use rust_grammar_dpdfa::RustParser;
+use rust_grammar_dpdfa::Interpreter;
 pub(crate) use rust_grammar_dpdfa::Transition;
 
 use crate::{FragmentKind, Terminal};
@@ -17,7 +13,7 @@ pub(crate) struct DynamicState<Span>
 where
     Span: 'static + Copy,
 {
-    pub(crate) state: RustParser<Span>,
+    pub(crate) state: Interpreter<'static, Span>,
     pub(crate) eaten: Vec<(TokenDescription, Span)>,
 }
 
@@ -31,15 +27,6 @@ where
 }
 
 impl<Span: 'static + Copy> Eq for DynamicState<Span> {}
-
-impl<Span> Hash for DynamicState<Span>
-where
-    Span: 'static + Copy,
-{
-    fn hash<H: Hasher>(&self, state: &mut H) {
-        self.state.hash(state);
-    }
-}
 
 impl<Span> PartialOrd for DynamicState<Span>
 where
@@ -75,35 +62,35 @@ where
 {
     pub(crate) fn item() -> DynamicState<Span> {
         DynamicState {
-            state: RustParser::item(),
+            state: rust_grammar_dpdfa::new_item(),
             eaten: Vec::new(),
         }
     }
 
     pub(crate) fn expr() -> DynamicState<Span> {
         DynamicState {
-            state: RustParser::expr(),
+            state: rust_grammar_dpdfa::new_expr(),
             eaten: Vec::new(),
         }
     }
 
     pub(crate) fn pat() -> DynamicState<Span> {
         DynamicState {
-            state: RustParser::pat(),
+            state: rust_grammar_dpdfa::new_pat(),
             eaten: Vec::new(),
         }
     }
 
     pub(crate) fn stmt() -> DynamicState<Span> {
         DynamicState {
-            state: RustParser::stmt(),
+            state: rust_grammar_dpdfa::new_stmt(),
             eaten: Vec::new(),
         }
     }
 
     pub(crate) fn ty() -> DynamicState<Span> {
         DynamicState {
-            state: RustParser::ty(),
+            state: rust_grammar_dpdfa::new_ty(),
             eaten: Vec::new(),
         }
     }
@@ -123,7 +110,7 @@ where
     ) -> Result<(DynamicState<Span>, Transition), ParsingError<Span>> {
         self.eaten.push((descr, span));
         let descr = rust_grammar_dpdfa::TokenDescription::from(descr);
-        let trans = self.state.step(descr, span).map_err(|(err_span, e)| {
+        let trans = self.state.step(descr, span).map_err(|(e, err_span)| {
             let expected = e.into_iter().flat_map(TokenDescription::try_from).collect();
             let cex = self.eaten.clone();
 
@@ -137,19 +124,21 @@ where
         Ok((self, trans))
     }
 
-    pub(crate) fn is_accepting(&mut self) -> Result<(), Option<ParsingError<Span>>> {
-        self.state.finish().map_err(|e| {
-            e.map(|(err_span, e)| {
-                let expected = e.into_iter().flat_map(TokenDescription::try_from).collect();
-                let cex = self.eaten.clone();
+    pub(crate) fn is_accepting(&mut self, span: Span) -> Result<(), ParsingError<Span>> {
+        self.state.finish(span).map(drop).map_err(|(e, err_span)| {
+            let expected = e.into_iter().flat_map(TokenDescription::try_from).collect();
+            let cex = self.eaten.clone();
 
-                ParsingError {
-                    err_span,
-                    expected,
-                    cex,
-                }
-            })
+            ParsingError {
+                err_span,
+                expected,
+                cex,
+            }
         })
+    }
+
+    pub(crate) fn initial_transition(&self) -> Transition {
+        self.state.initial_transition()
     }
 }
 
