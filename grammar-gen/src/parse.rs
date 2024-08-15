@@ -1,4 +1,5 @@
 use proc_macro2::Ident;
+use smallvec::SmallVec;
 use syn::{
     parenthesized,
     parse::Parse,
@@ -60,8 +61,10 @@ pub(crate) enum Expr {
 
 #[derive(Clone, Debug, PartialEq)]
 pub(crate) struct CallExpr {
+    pub(crate) assign: Option<(Token![let], Ident, Token![=])>,
     pub(crate) func: Ident,
     pub(crate) paren: Paren,
+    pub(crate) args: SmallVec<[Ident; 2]>,
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -76,7 +79,7 @@ pub(crate) struct CondExpr {
 pub(crate) struct BuiltinExpr {
     pub(crate) builtin: Builtin,
     pub(crate) paren: Paren,
-    pub(crate) predicate: Option<Predicate>,
+    pub(crate) predicate: SmallVec<[Predicate; 2]>,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -203,8 +206,17 @@ impl Parse for CallExpr {
     fn parse(input: syn::parse::ParseStream) -> syn::Result<Self> {
         let _inner;
         Ok(CallExpr {
+            assign: if input.peek(Token![let]) {
+                Some((input.parse()?, input.parse()?, input.parse()?))
+            } else {
+                None
+            },
             func: input.parse()?,
             paren: parenthesized!(_inner in input),
+            args: {
+                let tmp: Punctuated<Ident, Token![,]> = Punctuated::parse_terminated(&_inner)?;
+                tmp.into_pairs().map(|pair| pair.into_value()).collect()
+            },
         })
     }
 }
@@ -234,11 +246,8 @@ impl Parse for BuiltinExpr {
             builtin,
             paren: parenthesized!(inner in input),
             predicate: {
-                if inner.is_empty() {
-                    None
-                } else {
-                    Some(inner.parse()?)
-                }
+                let tmp: Punctuated<Predicate, Token![,]> = Punctuated::parse_terminated(&inner)?;
+                tmp.into_pairs().map(|pair| pair.into_value()).collect()
             },
         })
     }
