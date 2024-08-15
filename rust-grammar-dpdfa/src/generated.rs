@@ -3,6094 +3,5752 @@
 // See the documentation in `expandable` for more information:
 // https://github.com/scrabsha/expandable
 
-#![allow(unused, non_snake_case)]
-use std::{
-    cmp::Ordering,
-    hash::{Hash, Hasher},
-    mem,
+use crate::{
+    rt::{Address, Function, FunctionId, Instruction, Interpreter, Program, Register, Value},
+    token::TokenDescription,
 };
-
-use smallvec::SmallVec;
-#[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
-pub enum TokenDescription {
-    Ident,
-    As,
-    Async,
-    Await,
-    Break,
-    Const,
-    Continue,
-    Crate,
-    Dyn,
-    Else,
-    Enum,
-    Extern,
-    False,
-    Fn,
-    For,
-    If,
-    Impl,
-    In,
-    Let,
-    Loop,
-    Match,
-    Mod,
-    Move,
-    Mut,
-    Pub,
-    Ref,
-    Return,
-    Self_,
-    SelfUpper,
-    Static,
-    Struct,
-    Super,
-    Trait,
-    True,
-    Type,
-    Union,
-    Unsafe,
-    Use,
-    Where,
-    While,
-    Yield,
-    Abstract,
-    Become,
-    Box,
-    Do,
-    Final,
-    Macro,
-    Override,
-    Priv,
-    Try,
-    Typeof,
-    Unsized,
-    Virtual,
-    Literal,
-    Plus,
-    Minus,
-    Star,
-    Slash,
-    Percent,
-    Caret,
-    Not,
-    And,
-    Or,
-    AndAnd,
-    OrOr,
-    Shl,
-    Shr,
-    PlusEquals,
-    MinusEquals,
-    StarEquals,
-    SlashEquals,
-    PercentEquals,
-    CaretEquals,
-    AndEquals,
-    OrEquals,
-    ShlEquals,
-    ShrEquals,
-    Equals,
-    EqualsEquals,
-    NotEquals,
-    GreaterThan,
-    LessThan,
-    GreaterThanEquals,
-    LessThanEquals,
-    At,
-    Underscore,
-    Dot,
-    DotDot,
-    DotDotDot,
-    DotDotEquals,
-    Comma,
-    Semicolon,
-    Colon,
-    ColonColon,
-    RightArrow,
-    FatArrow,
-    Pound,
-    Dollar,
-    QuestionMark,
-    LParen,
-    RParen,
-    LBracket,
-    RBracket,
-    LBrace,
-    RBrace,
-    FragmentBlock,
-    FragmentExpr,
-    FragmentIdent,
-    FragmentItem,
-    FragmentLifetime,
-    FragmentLiteral,
-    FragmentMeta,
-    FragmentPat,
-    FragmentPatParam,
-    FragmentPath,
-    FragmentStmt,
-    FragmentTt,
-    FragmentTy,
-    FragmentVis,
-}
-use TokenDescription::*;
-impl TokenDescription {
-    fn try_split_with(self, first: TokenDescription) -> Option<TokenDescription> {
-        match (self, first) {
-            (AndAnd, And) => Some(And),
-            (OrOr, Or) => Some(Or),
-            (Shl, LessThan) => Some(LessThan),
-            (Shr, GreaterThan) => Some(GreaterThan),
-            (PlusEquals, Plus) => Some(Equals),
-            (MinusEquals, Minus) => Some(Equals),
-            (StarEquals, Star) => Some(Equals),
-            (SlashEquals, Slash) => Some(Equals),
-            (PercentEquals, Percent) => Some(Equals),
-            (CaretEquals, Caret) => Some(Equals),
-            (AndEquals, And) => Some(Equals),
-            (OrEquals, Or) => Some(Equals),
-            (ShlEquals, Shl) => Some(Equals),
-            (ShrEquals, Shr) => Some(LessThanEquals),
-            (ShrEquals, Shr) => Some(Equals),
-            (ShrEquals, Shr) => Some(GreaterThanEquals),
-            (DotDot, Dot) => Some(Dot),
-            _ => None,
-        }
-    }
-}
-#[derive(Clone, Debug)]
-pub struct RustParser<Span>
-where
-    Span: 'static + Copy,
-{
-    buffer: TokenBuffer<Span>,
-    stack: Vec<State<Span>>,
-    tried: SmallVec<[TokenDescription; 10]>,
-    ret: Option<&'static str>,
-}
-impl<Span> PartialEq for RustParser<Span>
-where
-    Span: Copy + 'static,
-{
-    fn eq(&self, other: &RustParser<Span>) -> bool {
-        std::ptr::eq(self, other) || (self.buffer == other.buffer && self.stack == other.stack)
-    }
-}
-impl<Span: Copy + 'static> Eq for RustParser<Span> {}
-impl<Span> Hash for RustParser<Span>
-where
-    Span: 'static + Copy,
-{
-    fn hash<H: Hasher>(&self, state: &mut H) {
-        self.buffer.hash(state);
-        self.stack.hash(state);
-    }
-}
-impl<Span> Ord for RustParser<Span>
+const PROGRAM: Program = Program {
+    functions: &[
+        Function {
+            name: "vis",
+            code: &[
+                Instruction::LoadConst(Register(1u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::Pub,
+                    reg: Register(1u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(1u8),
+                    address: Address(3u32),
+                },
+                Instruction::JumpIfZero {
+                    cond: Register(1u8),
+                    address: Address(30u32),
+                },
+                Instruction::BumpToken {
+                    tok: TokenDescription::Pub,
+                },
+                Instruction::LoadConst(Register(2u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::LParen,
+                    reg: Register(2u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(2u8),
+                    address: Address(8u32),
+                },
+                Instruction::JumpIfZero {
+                    cond: Register(2u8),
+                    address: Address(29u32),
+                },
+                Instruction::LoadConst(Register(3u8), Value(0i8)),
+                Instruction::Peek2 {
+                    tok: TokenDescription::Crate,
+                    reg: Register(3u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(3u8),
+                    address: Address(16u32),
+                },
+                Instruction::Peek2 {
+                    tok: TokenDescription::Self_,
+                    reg: Register(3u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(3u8),
+                    address: Address(16u32),
+                },
+                Instruction::Peek2 {
+                    tok: TokenDescription::Super,
+                    reg: Register(3u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(3u8),
+                    address: Address(16u32),
+                },
+                Instruction::JumpIfZero {
+                    cond: Register(3u8),
+                    address: Address(21u32),
+                },
+                Instruction::BumpToken {
+                    tok: TokenDescription::LParen,
+                },
+                Instruction::Bump,
+                Instruction::BumpToken {
+                    tok: TokenDescription::RParen,
+                },
+                Instruction::Jump {
+                    address: Address(29u32),
+                },
+                Instruction::LoadConst(Register(4u8), Value(0i8)),
+                Instruction::Peek2 {
+                    tok: TokenDescription::In,
+                    reg: Register(4u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(4u8),
+                    address: Address(24u32),
+                },
+                Instruction::JumpIfZero {
+                    cond: Register(4u8),
+                    address: Address(29u32),
+                },
+                Instruction::BumpToken {
+                    tok: TokenDescription::LParen,
+                },
+                Instruction::BumpToken {
+                    tok: TokenDescription::In,
+                },
+                Instruction::Call {
+                    function: FunctionId(47u32),
+                    result: Register(5u8),
+                },
+                Instruction::BumpToken {
+                    tok: TokenDescription::RParen,
+                },
+                Instruction::Jump {
+                    address: Address(35u32),
+                },
+                Instruction::LoadConst(Register(6u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::FragmentVis,
+                    reg: Register(6u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(6u8),
+                    address: Address(33u32),
+                },
+                Instruction::JumpIfZero {
+                    cond: Register(6u8),
+                    address: Address(35u32),
+                },
+                Instruction::BumpToken {
+                    tok: TokenDescription::FragmentVis,
+                },
+                Instruction::Return(Register(0u8)),
+            ],
+            reg_num: 7usize,
+        },
+        Function {
+            name: "vis_opt",
+            code: &[
+                Instruction::LoadConst(Register(1u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::Pub,
+                    reg: Register(1u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(1u8),
+                    address: Address(5u32),
+                },
+                Instruction::Peek {
+                    tok: TokenDescription::FragmentVis,
+                    reg: Register(1u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(1u8),
+                    address: Address(5u32),
+                },
+                Instruction::JumpIfZero {
+                    cond: Register(1u8),
+                    address: Address(7u32),
+                },
+                Instruction::Call {
+                    function: FunctionId(0u32),
+                    result: Register(2u8),
+                },
+                Instruction::Return(Register(0u8)),
+            ],
+            reg_num: 3usize,
+        },
+        Function {
+            name: "item",
+            code: &[
+                Instruction::LoadConst(Register(1u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::ColonColon,
+                    reg: Register(1u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(1u8),
+                    address: Address(15u32),
+                },
+                Instruction::Peek {
+                    tok: TokenDescription::Ident,
+                    reg: Register(1u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(1u8),
+                    address: Address(15u32),
+                },
+                Instruction::Peek {
+                    tok: TokenDescription::FragmentIdent,
+                    reg: Register(1u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(1u8),
+                    address: Address(15u32),
+                },
+                Instruction::Peek {
+                    tok: TokenDescription::Super,
+                    reg: Register(1u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(1u8),
+                    address: Address(15u32),
+                },
+                Instruction::Peek {
+                    tok: TokenDescription::Self_,
+                    reg: Register(1u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(1u8),
+                    address: Address(15u32),
+                },
+                Instruction::Peek {
+                    tok: TokenDescription::Crate,
+                    reg: Register(1u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(1u8),
+                    address: Address(15u32),
+                },
+                Instruction::Peek {
+                    tok: TokenDescription::FragmentPath,
+                    reg: Register(1u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(1u8),
+                    address: Address(15u32),
+                },
+                Instruction::JumpIfZero {
+                    cond: Register(1u8),
+                    address: Address(26u32),
+                },
+                Instruction::Call {
+                    function: FunctionId(47u32),
+                    result: Register(2u8),
+                },
+                Instruction::LoadConst(Register(3u8), Value(0i8)),
+                Instruction::Peek2 {
+                    tok: TokenDescription::LBrace,
+                    reg: Register(3u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(3u8),
+                    address: Address(20u32),
+                },
+                Instruction::JumpIfZero {
+                    cond: Register(3u8),
+                    address: Address(23u32),
+                },
+                Instruction::Call {
+                    function: FunctionId(74u32),
+                    result: Register(4u8),
+                },
+                Instruction::Jump {
+                    address: Address(25u32),
+                },
+                Instruction::Call {
+                    function: FunctionId(74u32),
+                    result: Register(5u8),
+                },
+                Instruction::BumpToken {
+                    tok: TokenDescription::Semicolon,
+                },
+                Instruction::Jump {
+                    address: Address(46u32),
+                },
+                Instruction::LoadConst(Register(6u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::FragmentItem,
+                    reg: Register(6u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(6u8),
+                    address: Address(29u32),
+                },
+                Instruction::JumpIfZero {
+                    cond: Register(6u8),
+                    address: Address(32u32),
+                },
+                Instruction::BumpToken {
+                    tok: TokenDescription::FragmentItem,
+                },
+                Instruction::Jump {
+                    address: Address(46u32),
+                },
+                Instruction::Call {
+                    function: FunctionId(1u32),
+                    result: Register(7u8),
+                },
+                Instruction::LoadConst(Register(8u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::Fn,
+                    reg: Register(8u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(8u8),
+                    address: Address(36u32),
+                },
+                Instruction::JumpIfZero {
+                    cond: Register(8u8),
+                    address: Address(39u32),
+                },
+                Instruction::Call {
+                    function: FunctionId(10u32),
+                    result: Register(9u8),
+                },
+                Instruction::Jump {
+                    address: Address(46u32),
+                },
+                Instruction::LoadConst(Register(10u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::Struct,
+                    reg: Register(10u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(10u8),
+                    address: Address(42u32),
+                },
+                Instruction::JumpIfZero {
+                    cond: Register(10u8),
+                    address: Address(45u32),
+                },
+                Instruction::Call {
+                    function: FunctionId(3u32),
+                    result: Register(11u8),
+                },
+                Instruction::Jump {
+                    address: Address(46u32),
+                },
+                Instruction::Error {
+                    message: "<sample message>",
+                },
+                Instruction::LoadConst(Register(12u8), Value(0i8)),
+                Instruction::PeekAny {
+                    reg: Register(12u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(12u8),
+                    address: Address(49u32),
+                },
+                Instruction::JumpIfZero {
+                    cond: Register(12u8),
+                    address: Address(51u32),
+                },
+                Instruction::Call {
+                    function: FunctionId(2u32),
+                    result: Register(13u8),
+                },
+                Instruction::Return(Register(0u8)),
+            ],
+            reg_num: 14usize,
+        },
+        Function {
+            name: "struct_item",
+            code: &[
+                Instruction::Call {
+                    function: FunctionId(1u32),
+                    result: Register(1u8),
+                },
+                Instruction::BumpToken {
+                    tok: TokenDescription::Struct,
+                },
+                Instruction::LoadConst(Register(2u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::Ident,
+                    reg: Register(2u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(2u8),
+                    address: Address(7u32),
+                },
+                Instruction::Peek {
+                    tok: TokenDescription::FragmentIdent,
+                    reg: Register(2u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(2u8),
+                    address: Address(7u32),
+                },
+                Instruction::JumpIfZero {
+                    cond: Register(2u8),
+                    address: Address(10u32),
+                },
+                Instruction::Bump,
+                Instruction::Jump {
+                    address: Address(11u32),
+                },
+                Instruction::Error {
+                    message: "<sample message>",
+                },
+                Instruction::LoadConst(Register(3u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::LParen,
+                    reg: Register(3u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(3u8),
+                    address: Address(14u32),
+                },
+                Instruction::JumpIfZero {
+                    cond: Register(3u8),
+                    address: Address(20u32),
+                },
+                Instruction::BumpToken {
+                    tok: TokenDescription::LParen,
+                },
+                Instruction::Call {
+                    function: FunctionId(4u32),
+                    result: Register(4u8),
+                },
+                Instruction::BumpToken {
+                    tok: TokenDescription::RParen,
+                },
+                Instruction::BumpToken {
+                    tok: TokenDescription::Semicolon,
+                },
+                Instruction::Jump {
+                    address: Address(33u32),
+                },
+                Instruction::LoadConst(Register(5u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::LBrace,
+                    reg: Register(5u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(5u8),
+                    address: Address(23u32),
+                },
+                Instruction::JumpIfZero {
+                    cond: Register(5u8),
+                    address: Address(28u32),
+                },
+                Instruction::BumpToken {
+                    tok: TokenDescription::LBrace,
+                },
+                Instruction::Call {
+                    function: FunctionId(6u32),
+                    result: Register(6u8),
+                },
+                Instruction::BumpToken {
+                    tok: TokenDescription::RBrace,
+                },
+                Instruction::Jump {
+                    address: Address(33u32),
+                },
+                Instruction::LoadConst(Register(7u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::Semicolon,
+                    reg: Register(7u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(7u8),
+                    address: Address(31u32),
+                },
+                Instruction::JumpIfZero {
+                    cond: Register(7u8),
+                    address: Address(33u32),
+                },
+                Instruction::BumpToken {
+                    tok: TokenDescription::Semicolon,
+                },
+                Instruction::Return(Register(0u8)),
+            ],
+            reg_num: 8usize,
+        },
+        Function {
+            name: "tuple_struct_fields",
+            code: &[
+                Instruction::LoadConst(Register(1u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::RParen,
+                    reg: Register(1u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(1u8),
+                    address: Address(3u32),
+                },
+                Instruction::JumpIfZero {
+                    cond: Register(1u8),
+                    address: Address(5u32),
+                },
+                Instruction::Jump {
+                    address: Address(7u32),
+                },
+                Instruction::Call {
+                    function: FunctionId(8u32),
+                    result: Register(2u8),
+                },
+                Instruction::Call {
+                    function: FunctionId(5u32),
+                    result: Register(3u8),
+                },
+                Instruction::Return(Register(0u8)),
+            ],
+            reg_num: 4usize,
+        },
+        Function {
+            name: "tuple_struct_fields_",
+            code: &[
+                Instruction::LoadConst(Register(1u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::RParen,
+                    reg: Register(1u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(1u8),
+                    address: Address(3u32),
+                },
+                Instruction::JumpIfZero {
+                    cond: Register(1u8),
+                    address: Address(5u32),
+                },
+                Instruction::Jump {
+                    address: Address(13u32),
+                },
+                Instruction::BumpToken {
+                    tok: TokenDescription::Comma,
+                },
+                Instruction::LoadConst(Register(2u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::RParen,
+                    reg: Register(2u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(2u8),
+                    address: Address(9u32),
+                },
+                Instruction::JumpIfZero {
+                    cond: Register(2u8),
+                    address: Address(11u32),
+                },
+                Instruction::Jump {
+                    address: Address(13u32),
+                },
+                Instruction::Call {
+                    function: FunctionId(8u32),
+                    result: Register(3u8),
+                },
+                Instruction::Call {
+                    function: FunctionId(5u32),
+                    result: Register(4u8),
+                },
+                Instruction::Return(Register(0u8)),
+            ],
+            reg_num: 5usize,
+        },
+        Function {
+            name: "struct_fields",
+            code: &[
+                Instruction::LoadConst(Register(1u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::RBrace,
+                    reg: Register(1u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(1u8),
+                    address: Address(3u32),
+                },
+                Instruction::JumpIfZero {
+                    cond: Register(1u8),
+                    address: Address(5u32),
+                },
+                Instruction::Jump {
+                    address: Address(7u32),
+                },
+                Instruction::Call {
+                    function: FunctionId(9u32),
+                    result: Register(2u8),
+                },
+                Instruction::Call {
+                    function: FunctionId(7u32),
+                    result: Register(3u8),
+                },
+                Instruction::Return(Register(0u8)),
+            ],
+            reg_num: 4usize,
+        },
+        Function {
+            name: "struct_fields_",
+            code: &[
+                Instruction::LoadConst(Register(1u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::RBrace,
+                    reg: Register(1u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(1u8),
+                    address: Address(3u32),
+                },
+                Instruction::JumpIfZero {
+                    cond: Register(1u8),
+                    address: Address(5u32),
+                },
+                Instruction::Jump {
+                    address: Address(13u32),
+                },
+                Instruction::BumpToken {
+                    tok: TokenDescription::Comma,
+                },
+                Instruction::LoadConst(Register(2u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::RBrace,
+                    reg: Register(2u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(2u8),
+                    address: Address(9u32),
+                },
+                Instruction::JumpIfZero {
+                    cond: Register(2u8),
+                    address: Address(11u32),
+                },
+                Instruction::Jump {
+                    address: Address(13u32),
+                },
+                Instruction::Call {
+                    function: FunctionId(9u32),
+                    result: Register(3u8),
+                },
+                Instruction::Call {
+                    function: FunctionId(7u32),
+                    result: Register(4u8),
+                },
+                Instruction::Return(Register(0u8)),
+            ],
+            reg_num: 5usize,
+        },
+        Function {
+            name: "tuple_struct_field",
+            code: &[
+                Instruction::Call {
+                    function: FunctionId(1u32),
+                    result: Register(1u8),
+                },
+                Instruction::Call {
+                    function: FunctionId(16u32),
+                    result: Register(2u8),
+                },
+                Instruction::Return(Register(0u8)),
+            ],
+            reg_num: 3usize,
+        },
+        Function {
+            name: "struct_field",
+            code: &[
+                Instruction::Call {
+                    function: FunctionId(1u32),
+                    result: Register(1u8),
+                },
+                Instruction::LoadConst(Register(2u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::Ident,
+                    reg: Register(2u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(2u8),
+                    address: Address(6u32),
+                },
+                Instruction::Peek {
+                    tok: TokenDescription::FragmentIdent,
+                    reg: Register(2u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(2u8),
+                    address: Address(6u32),
+                },
+                Instruction::JumpIfZero {
+                    cond: Register(2u8),
+                    address: Address(9u32),
+                },
+                Instruction::Bump,
+                Instruction::Jump {
+                    address: Address(10u32),
+                },
+                Instruction::Error {
+                    message: "<sample message>",
+                },
+                Instruction::BumpToken {
+                    tok: TokenDescription::Colon,
+                },
+                Instruction::Call {
+                    function: FunctionId(16u32),
+                    result: Register(3u8),
+                },
+                Instruction::Return(Register(0u8)),
+            ],
+            reg_num: 4usize,
+        },
+        Function {
+            name: "fn_item",
+            code: &[
+                Instruction::BumpToken {
+                    tok: TokenDescription::Fn,
+                },
+                Instruction::LoadConst(Register(1u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::Ident,
+                    reg: Register(1u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(1u8),
+                    address: Address(4u32),
+                },
+                Instruction::JumpIfZero {
+                    cond: Register(1u8),
+                    address: Address(7u32),
+                },
+                Instruction::BumpToken {
+                    tok: TokenDescription::Ident,
+                },
+                Instruction::Jump {
+                    address: Address(14u32),
+                },
+                Instruction::LoadConst(Register(2u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::FragmentIdent,
+                    reg: Register(2u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(2u8),
+                    address: Address(10u32),
+                },
+                Instruction::JumpIfZero {
+                    cond: Register(2u8),
+                    address: Address(13u32),
+                },
+                Instruction::BumpToken {
+                    tok: TokenDescription::FragmentIdent,
+                },
+                Instruction::Jump {
+                    address: Address(14u32),
+                },
+                Instruction::Error {
+                    message: "<sample message>",
+                },
+                Instruction::Call {
+                    function: FunctionId(24u32),
+                    result: Register(3u8),
+                },
+                Instruction::LoadConst(Register(4u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::RightArrow,
+                    reg: Register(4u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(4u8),
+                    address: Address(18u32),
+                },
+                Instruction::JumpIfZero {
+                    cond: Register(4u8),
+                    address: Address(21u32),
+                },
+                Instruction::Bump,
+                Instruction::Call {
+                    function: FunctionId(16u32),
+                    result: Register(5u8),
+                },
+                Instruction::Call {
+                    function: FunctionId(12u32),
+                    result: Register(6u8),
+                },
+                Instruction::Return(Register(0u8)),
+            ],
+            reg_num: 7usize,
+        },
+        Function {
+            name: "stmt",
+            code: &[
+                Instruction::Call {
+                    function: FunctionId(13u32),
+                    result: Register(1u8),
+                },
+                Instruction::Return(Register(0u8)),
+            ],
+            reg_num: 2usize,
+        },
+        Function {
+            name: "block",
+            code: &[
+                Instruction::BumpToken {
+                    tok: TokenDescription::LBrace,
+                },
+                Instruction::Call {
+                    function: FunctionId(13u32),
+                    result: Register(1u8),
+                },
+                Instruction::BumpToken {
+                    tok: TokenDescription::RBrace,
+                },
+                Instruction::Return(Register(0u8)),
+            ],
+            reg_num: 2usize,
+        },
+        Function {
+            name: "stmt_tail",
+            code: &[
+                Instruction::LoadConst(Register(1u8), Value(0i8)),
+                Instruction::PeekAny { reg: Register(1u8) },
+                Instruction::JumpIfNonZero {
+                    cond: Register(1u8),
+                    address: Address(3u32),
+                },
+                Instruction::JumpIfZero {
+                    cond: Register(1u8),
+                    address: Address(69u32),
+                },
+                Instruction::LoadConst(Register(2u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::RBrace,
+                    reg: Register(2u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(2u8),
+                    address: Address(7u32),
+                },
+                Instruction::JumpIfZero {
+                    cond: Register(2u8),
+                    address: Address(9u32),
+                },
+                Instruction::Jump {
+                    address: Address(69u32),
+                },
+                Instruction::LoadConst(Register(3u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::FragmentStmt,
+                    reg: Register(3u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(3u8),
+                    address: Address(12u32),
+                },
+                Instruction::JumpIfZero {
+                    cond: Register(3u8),
+                    address: Address(15u32),
+                },
+                Instruction::BumpToken {
+                    tok: TokenDescription::FragmentStmt,
+                },
+                Instruction::Jump {
+                    address: Address(69u32),
+                },
+                Instruction::LoadConst(Register(4u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::Semicolon,
+                    reg: Register(4u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(4u8),
+                    address: Address(18u32),
+                },
+                Instruction::JumpIfZero {
+                    cond: Register(4u8),
+                    address: Address(22u32),
+                },
+                Instruction::BumpToken {
+                    tok: TokenDescription::Semicolon,
+                },
+                Instruction::Call {
+                    function: FunctionId(13u32),
+                    result: Register(5u8),
+                },
+                Instruction::Jump {
+                    address: Address(69u32),
+                },
+                Instruction::LoadConst(Register(6u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::Let,
+                    reg: Register(6u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(6u8),
+                    address: Address(25u32),
+                },
+                Instruction::JumpIfZero {
+                    cond: Register(6u8),
+                    address: Address(39u32),
+                },
+                Instruction::BumpToken {
+                    tok: TokenDescription::Let,
+                },
+                Instruction::Call {
+                    function: FunctionId(26u32),
+                    result: Register(7u8),
+                },
+                Instruction::LoadConst(Register(8u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::Colon,
+                    reg: Register(8u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(8u8),
+                    address: Address(31u32),
+                },
+                Instruction::JumpIfZero {
+                    cond: Register(8u8),
+                    address: Address(34u32),
+                },
+                Instruction::BumpToken {
+                    tok: TokenDescription::Colon,
+                },
+                Instruction::Call {
+                    function: FunctionId(16u32),
+                    result: Register(9u8),
+                },
+                Instruction::BumpToken {
+                    tok: TokenDescription::Equals,
+                },
+                Instruction::Call {
+                    function: FunctionId(43u32),
+                    result: Register(10u8),
+                },
+                Instruction::BumpToken {
+                    tok: TokenDescription::Semicolon,
+                },
+                Instruction::Call {
+                    function: FunctionId(13u32),
+                    result: Register(11u8),
+                },
+                Instruction::Jump {
+                    address: Address(69u32),
+                },
+                Instruction::Call {
+                    function: FunctionId(43u32),
+                    result: Register(12u8),
+                },
+                Instruction::LoadConst(Register(13u8), Value(0i8)),
+                Instruction::LoadConst(Register(14u8), Value(0i8)),
+                Instruction::Sub {
+                    lhs: Register(12u8),
+                    rhs: Register(14u8),
+                    out: Register(13u8),
+                },
+                Instruction::Invert {
+                    src: Register(13u8),
+                    dst: Register(13u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(13u8),
+                    address: Address(65u32),
+                },
+                Instruction::LoadConst(Register(15u8), Value(1i8)),
+                Instruction::Sub {
+                    lhs: Register(12u8),
+                    rhs: Register(15u8),
+                    out: Register(13u8),
+                },
+                Instruction::Invert {
+                    src: Register(13u8),
+                    dst: Register(13u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(13u8),
+                    address: Address(65u32),
+                },
+                Instruction::LoadConst(Register(16u8), Value(2i8)),
+                Instruction::Sub {
+                    lhs: Register(12u8),
+                    rhs: Register(16u8),
+                    out: Register(13u8),
+                },
+                Instruction::Invert {
+                    src: Register(13u8),
+                    dst: Register(13u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(13u8),
+                    address: Address(65u32),
+                },
+                Instruction::LoadConst(Register(17u8), Value(3i8)),
+                Instruction::Sub {
+                    lhs: Register(12u8),
+                    rhs: Register(17u8),
+                    out: Register(13u8),
+                },
+                Instruction::Invert {
+                    src: Register(13u8),
+                    dst: Register(13u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(13u8),
+                    address: Address(65u32),
+                },
+                Instruction::LoadConst(Register(18u8), Value(4i8)),
+                Instruction::Sub {
+                    lhs: Register(12u8),
+                    rhs: Register(18u8),
+                    out: Register(13u8),
+                },
+                Instruction::Invert {
+                    src: Register(13u8),
+                    dst: Register(13u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(13u8),
+                    address: Address(65u32),
+                },
+                Instruction::LoadConst(Register(19u8), Value(5i8)),
+                Instruction::Sub {
+                    lhs: Register(12u8),
+                    rhs: Register(19u8),
+                    out: Register(13u8),
+                },
+                Instruction::Invert {
+                    src: Register(13u8),
+                    dst: Register(13u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(13u8),
+                    address: Address(65u32),
+                },
+                Instruction::JumpIfZero {
+                    cond: Register(13u8),
+                    address: Address(68u32),
+                },
+                Instruction::Call {
+                    function: FunctionId(15u32),
+                    result: Register(20u8),
+                },
+                Instruction::Jump {
+                    address: Address(69u32),
+                },
+                Instruction::Call {
+                    function: FunctionId(14u32),
+                    result: Register(21u8),
+                },
+                Instruction::Return(Register(0u8)),
+            ],
+            reg_num: 22usize,
+        },
+        Function {
+            name: "stmt_end_semi",
+            code: &[
+                Instruction::LoadConst(Register(1u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::Semicolon,
+                    reg: Register(1u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(1u8),
+                    address: Address(3u32),
+                },
+                Instruction::JumpIfZero {
+                    cond: Register(1u8),
+                    address: Address(7u32),
+                },
+                Instruction::BumpToken {
+                    tok: TokenDescription::Semicolon,
+                },
+                Instruction::Call {
+                    function: FunctionId(13u32),
+                    result: Register(2u8),
+                },
+                Instruction::Jump {
+                    address: Address(17u32),
+                },
+                Instruction::LoadConst(Register(3u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::RBrace,
+                    reg: Register(3u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(3u8),
+                    address: Address(10u32),
+                },
+                Instruction::JumpIfZero {
+                    cond: Register(3u8),
+                    address: Address(12u32),
+                },
+                Instruction::Jump {
+                    address: Address(17u32),
+                },
+                Instruction::LoadConst(Register(4u8), Value(0i8)),
+                Instruction::PeekAny { reg: Register(4u8) },
+                Instruction::JumpIfNonZero {
+                    cond: Register(4u8),
+                    address: Address(15u32),
+                },
+                Instruction::JumpIfZero {
+                    cond: Register(4u8),
+                    address: Address(17u32),
+                },
+                Instruction::Error {
+                    message: "<sample message>",
+                },
+                Instruction::Return(Register(0u8)),
+            ],
+            reg_num: 5usize,
+        },
+        Function {
+            name: "stmt_end_nosemi",
+            code: &[
+                Instruction::LoadConst(Register(1u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::RBrace,
+                    reg: Register(1u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(1u8),
+                    address: Address(3u32),
+                },
+                Instruction::JumpIfZero {
+                    cond: Register(1u8),
+                    address: Address(5u32),
+                },
+                Instruction::Jump {
+                    address: Address(6u32),
+                },
+                Instruction::Call {
+                    function: FunctionId(13u32),
+                    result: Register(2u8),
+                },
+                Instruction::Return(Register(0u8)),
+            ],
+            reg_num: 3usize,
+        },
+        Function {
+            name: "ty",
+            code: &[
+                Instruction::LoadConst(Register(1u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::FragmentTy,
+                    reg: Register(1u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(1u8),
+                    address: Address(3u32),
+                },
+                Instruction::JumpIfZero {
+                    cond: Register(1u8),
+                    address: Address(6u32),
+                },
+                Instruction::BumpToken {
+                    tok: TokenDescription::FragmentTy,
+                },
+                Instruction::Jump {
+                    address: Address(37u32),
+                },
+                Instruction::LoadConst(Register(2u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::Underscore,
+                    reg: Register(2u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(2u8),
+                    address: Address(9u32),
+                },
+                Instruction::JumpIfZero {
+                    cond: Register(2u8),
+                    address: Address(12u32),
+                },
+                Instruction::BumpToken {
+                    tok: TokenDescription::Underscore,
+                },
+                Instruction::Jump {
+                    address: Address(37u32),
+                },
+                Instruction::LoadConst(Register(3u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::Ident,
+                    reg: Register(3u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(3u8),
+                    address: Address(25u32),
+                },
+                Instruction::Peek {
+                    tok: TokenDescription::FragmentIdent,
+                    reg: Register(3u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(3u8),
+                    address: Address(25u32),
+                },
+                Instruction::Peek {
+                    tok: TokenDescription::Self_,
+                    reg: Register(3u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(3u8),
+                    address: Address(25u32),
+                },
+                Instruction::Peek {
+                    tok: TokenDescription::SelfUpper,
+                    reg: Register(3u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(3u8),
+                    address: Address(25u32),
+                },
+                Instruction::Peek {
+                    tok: TokenDescription::Super,
+                    reg: Register(3u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(3u8),
+                    address: Address(25u32),
+                },
+                Instruction::Peek {
+                    tok: TokenDescription::FragmentIdent,
+                    reg: Register(3u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(3u8),
+                    address: Address(25u32),
+                },
+                Instruction::JumpIfZero {
+                    cond: Register(3u8),
+                    address: Address(28u32),
+                },
+                Instruction::Call {
+                    function: FunctionId(18u32),
+                    result: Register(4u8),
+                },
+                Instruction::Jump {
+                    address: Address(37u32),
+                },
+                Instruction::LoadConst(Register(5u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::LParen,
+                    reg: Register(5u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(5u8),
+                    address: Address(31u32),
+                },
+                Instruction::JumpIfZero {
+                    cond: Register(5u8),
+                    address: Address(36u32),
+                },
+                Instruction::BumpToken {
+                    tok: TokenDescription::LParen,
+                },
+                Instruction::Call {
+                    function: FunctionId(16u32),
+                    result: Register(6u8),
+                },
+                Instruction::BumpToken {
+                    tok: TokenDescription::RParen,
+                },
+                Instruction::Jump {
+                    address: Address(37u32),
+                },
+                Instruction::Error {
+                    message: "<sample message>",
+                },
+                Instruction::Return(Register(0u8)),
+            ],
+            reg_num: 7usize,
+        },
+        Function {
+            name: "ty_no_bounds",
+            code: &[
+                Instruction::Call {
+                    function: FunctionId(16u32),
+                    result: Register(1u8),
+                },
+                Instruction::Return(Register(0u8)),
+            ],
+            reg_num: 2usize,
+        },
+        Function {
+            name: "ty_path",
+            code: &[
+                Instruction::LoadConst(Register(1u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::ColonColon,
+                    reg: Register(1u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(1u8),
+                    address: Address(3u32),
+                },
+                Instruction::JumpIfZero {
+                    cond: Register(1u8),
+                    address: Address(5u32),
+                },
+                Instruction::BumpToken {
+                    tok: TokenDescription::ColonColon,
+                },
+                Instruction::Call {
+                    function: FunctionId(20u32),
+                    result: Register(2u8),
+                },
+                Instruction::LoadConst(Register(3u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::ColonColon,
+                    reg: Register(3u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(3u8),
+                    address: Address(9u32),
+                },
+                Instruction::JumpIfZero {
+                    cond: Register(3u8),
+                    address: Address(11u32),
+                },
+                Instruction::Call {
+                    function: FunctionId(19u32),
+                    result: Register(4u8),
+                },
+                Instruction::LoadConst(Register(5u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::Not,
+                    reg: Register(5u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(5u8),
+                    address: Address(14u32),
+                },
+                Instruction::JumpIfZero {
+                    cond: Register(5u8),
+                    address: Address(16u32),
+                },
+                Instruction::Call {
+                    function: FunctionId(74u32),
+                    result: Register(6u8),
+                },
+                Instruction::Return(Register(0u8)),
+            ],
+            reg_num: 7usize,
+        },
+        Function {
+            name: "ty_path_",
+            code: &[
+                Instruction::LoadConst(Register(1u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::ColonColon,
+                    reg: Register(1u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(1u8),
+                    address: Address(3u32),
+                },
+                Instruction::JumpIfZero {
+                    cond: Register(1u8),
+                    address: Address(7u32),
+                },
+                Instruction::BumpToken {
+                    tok: TokenDescription::ColonColon,
+                },
+                Instruction::Call {
+                    function: FunctionId(20u32),
+                    result: Register(2u8),
+                },
+                Instruction::Call {
+                    function: FunctionId(19u32),
+                    result: Register(3u8),
+                },
+                Instruction::Return(Register(0u8)),
+            ],
+            reg_num: 4usize,
+        },
+        Function {
+            name: "ty_path_segment",
+            code: &[
+                Instruction::Call {
+                    function: FunctionId(52u32),
+                    result: Register(1u8),
+                },
+                Instruction::LoadConst(Register(2u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::ColonColon,
+                    reg: Register(2u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(2u8),
+                    address: Address(4u32),
+                },
+                Instruction::JumpIfZero {
+                    cond: Register(2u8),
+                    address: Address(19u32),
+                },
+                Instruction::LoadConst(Register(3u8), Value(0i8)),
+                Instruction::Peek2 {
+                    tok: TokenDescription::LessThan,
+                    reg: Register(3u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(3u8),
+                    address: Address(8u32),
+                },
+                Instruction::JumpIfZero {
+                    cond: Register(3u8),
+                    address: Address(12u32),
+                },
+                Instruction::BumpToken {
+                    tok: TokenDescription::ColonColon,
+                },
+                Instruction::Call {
+                    function: FunctionId(61u32),
+                    result: Register(4u8),
+                },
+                Instruction::Jump {
+                    address: Address(18u32),
+                },
+                Instruction::LoadConst(Register(5u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::LParen,
+                    reg: Register(5u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(5u8),
+                    address: Address(15u32),
+                },
+                Instruction::JumpIfZero {
+                    cond: Register(5u8),
+                    address: Address(18u32),
+                },
+                Instruction::BumpToken {
+                    tok: TokenDescription::ColonColon,
+                },
+                Instruction::Call {
+                    function: FunctionId(21u32),
+                    result: Register(6u8),
+                },
+                Instruction::Jump {
+                    address: Address(30u32),
+                },
+                Instruction::LoadConst(Register(7u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::LessThan,
+                    reg: Register(7u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(7u8),
+                    address: Address(22u32),
+                },
+                Instruction::JumpIfZero {
+                    cond: Register(7u8),
+                    address: Address(25u32),
+                },
+                Instruction::Call {
+                    function: FunctionId(61u32),
+                    result: Register(8u8),
+                },
+                Instruction::Jump {
+                    address: Address(30u32),
+                },
+                Instruction::LoadConst(Register(9u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::LParen,
+                    reg: Register(9u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(9u8),
+                    address: Address(28u32),
+                },
+                Instruction::JumpIfZero {
+                    cond: Register(9u8),
+                    address: Address(30u32),
+                },
+                Instruction::Call {
+                    function: FunctionId(21u32),
+                    result: Register(10u8),
+                },
+                Instruction::Return(Register(0u8)),
+            ],
+            reg_num: 11usize,
+        },
+        Function {
+            name: "ty_path_fn",
+            code: &[
+                Instruction::BumpToken {
+                    tok: TokenDescription::LParen,
+                },
+                Instruction::LoadConst(Register(1u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::RParen,
+                    reg: Register(1u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(1u8),
+                    address: Address(4u32),
+                },
+                Instruction::JumpIfZero {
+                    cond: Register(1u8),
+                    address: Address(7u32),
+                },
+                Instruction::BumpToken {
+                    tok: TokenDescription::RParen,
+                },
+                Instruction::Jump {
+                    address: Address(9u32),
+                },
+                Instruction::Call {
+                    function: FunctionId(22u32),
+                    result: Register(2u8),
+                },
+                Instruction::BumpToken {
+                    tok: TokenDescription::RParen,
+                },
+                Instruction::LoadConst(Register(3u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::RightArrow,
+                    reg: Register(3u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(3u8),
+                    address: Address(12u32),
+                },
+                Instruction::JumpIfZero {
+                    cond: Register(3u8),
+                    address: Address(15u32),
+                },
+                Instruction::BumpToken {
+                    tok: TokenDescription::RightArrow,
+                },
+                Instruction::Call {
+                    function: FunctionId(17u32),
+                    result: Register(4u8),
+                },
+                Instruction::Return(Register(0u8)),
+            ],
+            reg_num: 5usize,
+        },
+        Function {
+            name: "ty_path_fn_inputs",
+            code: &[
+                Instruction::Call {
+                    function: FunctionId(16u32),
+                    result: Register(1u8),
+                },
+                Instruction::LoadConst(Register(2u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::Comma,
+                    reg: Register(2u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(2u8),
+                    address: Address(4u32),
+                },
+                Instruction::JumpIfZero {
+                    cond: Register(2u8),
+                    address: Address(13u32),
+                },
+                Instruction::BumpToken {
+                    tok: TokenDescription::Comma,
+                },
+                Instruction::LoadConst(Register(3u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::RParen,
+                    reg: Register(3u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(3u8),
+                    address: Address(9u32),
+                },
+                Instruction::JumpIfZero {
+                    cond: Register(3u8),
+                    address: Address(12u32),
+                },
+                Instruction::BumpToken {
+                    tok: TokenDescription::RParen,
+                },
+                Instruction::Jump {
+                    address: Address(13u32),
+                },
+                Instruction::Call {
+                    function: FunctionId(23u32),
+                    result: Register(4u8),
+                },
+                Instruction::Return(Register(0u8)),
+            ],
+            reg_num: 5usize,
+        },
+        Function {
+            name: "ty_path_fn_inputs_",
+            code: &[
+                Instruction::Call {
+                    function: FunctionId(16u32),
+                    result: Register(1u8),
+                },
+                Instruction::LoadConst(Register(2u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::Comma,
+                    reg: Register(2u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(2u8),
+                    address: Address(4u32),
+                },
+                Instruction::JumpIfZero {
+                    cond: Register(2u8),
+                    address: Address(14u32),
+                },
+                Instruction::BumpToken {
+                    tok: TokenDescription::Comma,
+                },
+                Instruction::LoadConst(Register(3u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::RParen,
+                    reg: Register(3u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(3u8),
+                    address: Address(9u32),
+                },
+                Instruction::JumpIfZero {
+                    cond: Register(3u8),
+                    address: Address(12u32),
+                },
+                Instruction::BumpToken {
+                    tok: TokenDescription::RParen,
+                },
+                Instruction::Jump {
+                    address: Address(13u32),
+                },
+                Instruction::Call {
+                    function: FunctionId(23u32),
+                    result: Register(4u8),
+                },
+                Instruction::Jump {
+                    address: Address(15u32),
+                },
+                Instruction::BumpToken {
+                    tok: TokenDescription::RParen,
+                },
+                Instruction::Return(Register(0u8)),
+            ],
+            reg_num: 5usize,
+        },
+        Function {
+            name: "fn_args",
+            code: &[
+                Instruction::BumpToken {
+                    tok: TokenDescription::LParen,
+                },
+                Instruction::LoadConst(Register(1u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::RParen,
+                    reg: Register(1u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(1u8),
+                    address: Address(4u32),
+                },
+                Instruction::JumpIfZero {
+                    cond: Register(1u8),
+                    address: Address(6u32),
+                },
+                Instruction::Jump {
+                    address: Address(7u32),
+                },
+                Instruction::Call {
+                    function: FunctionId(42u32),
+                    result: Register(2u8),
+                },
+                Instruction::LoadConst(Register(3u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::Comma,
+                    reg: Register(3u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(3u8),
+                    address: Address(10u32),
+                },
+                Instruction::JumpIfZero {
+                    cond: Register(3u8),
+                    address: Address(12u32),
+                },
+                Instruction::BumpToken {
+                    tok: TokenDescription::Comma,
+                },
+                Instruction::LoadConst(Register(4u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::RParen,
+                    reg: Register(4u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(4u8),
+                    address: Address(15u32),
+                },
+                Instruction::JumpIfZero {
+                    cond: Register(4u8),
+                    address: Address(18u32),
+                },
+                Instruction::BumpToken {
+                    tok: TokenDescription::RParen,
+                },
+                Instruction::Jump {
+                    address: Address(19u32),
+                },
+                Instruction::Call {
+                    function: FunctionId(25u32),
+                    result: Register(5u8),
+                },
+                Instruction::Return(Register(0u8)),
+            ],
+            reg_num: 6usize,
+        },
+        Function {
+            name: "fn_args_",
+            code: &[
+                Instruction::Call {
+                    function: FunctionId(42u32),
+                    result: Register(1u8),
+                },
+                Instruction::LoadConst(Register(2u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::Comma,
+                    reg: Register(2u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(2u8),
+                    address: Address(4u32),
+                },
+                Instruction::JumpIfZero {
+                    cond: Register(2u8),
+                    address: Address(6u32),
+                },
+                Instruction::BumpToken {
+                    tok: TokenDescription::Comma,
+                },
+                Instruction::LoadConst(Register(3u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::RParen,
+                    reg: Register(3u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(3u8),
+                    address: Address(9u32),
+                },
+                Instruction::JumpIfZero {
+                    cond: Register(3u8),
+                    address: Address(11u32),
+                },
+                Instruction::BumpToken {
+                    tok: TokenDescription::RParen,
+                },
+                Instruction::Return(Register(0u8)),
+            ],
+            reg_num: 4usize,
+        },
+        Function {
+            name: "pat",
+            code: &[
+                Instruction::LoadConst(Register(1u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::Or,
+                    reg: Register(1u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(1u8),
+                    address: Address(3u32),
+                },
+                Instruction::JumpIfZero {
+                    cond: Register(1u8),
+                    address: Address(5u32),
+                },
+                Instruction::BumpToken {
+                    tok: TokenDescription::Or,
+                },
+                Instruction::Call {
+                    function: FunctionId(28u32),
+                    result: Register(2u8),
+                },
+                Instruction::Call {
+                    function: FunctionId(27u32),
+                    result: Register(3u8),
+                },
+                Instruction::Return(Register(0u8)),
+            ],
+            reg_num: 4usize,
+        },
+        Function {
+            name: "pat_",
+            code: &[
+                Instruction::LoadConst(Register(1u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::Or,
+                    reg: Register(1u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(1u8),
+                    address: Address(3u32),
+                },
+                Instruction::JumpIfZero {
+                    cond: Register(1u8),
+                    address: Address(7u32),
+                },
+                Instruction::BumpToken {
+                    tok: TokenDescription::Or,
+                },
+                Instruction::Call {
+                    function: FunctionId(28u32),
+                    result: Register(2u8),
+                },
+                Instruction::Call {
+                    function: FunctionId(27u32),
+                    result: Register(3u8),
+                },
+                Instruction::Return(Register(0u8)),
+            ],
+            reg_num: 4usize,
+        },
+        Function {
+            name: "pat_no_top_alt",
+            code: &[
+                Instruction::LoadConst(Register(1u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::FragmentPat,
+                    reg: Register(1u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(1u8),
+                    address: Address(9u32),
+                },
+                Instruction::Peek {
+                    tok: TokenDescription::FragmentPatParam,
+                    reg: Register(1u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(1u8),
+                    address: Address(9u32),
+                },
+                Instruction::Peek {
+                    tok: TokenDescription::Underscore,
+                    reg: Register(1u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(1u8),
+                    address: Address(9u32),
+                },
+                Instruction::Peek {
+                    tok: TokenDescription::DotDot,
+                    reg: Register(1u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(1u8),
+                    address: Address(9u32),
+                },
+                Instruction::JumpIfZero {
+                    cond: Register(1u8),
+                    address: Address(12u32),
+                },
+                Instruction::Bump,
+                Instruction::Jump {
+                    address: Address(89u32),
+                },
+                Instruction::LoadConst(Register(2u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::Ref,
+                    reg: Register(2u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(2u8),
+                    address: Address(17u32),
+                },
+                Instruction::Peek {
+                    tok: TokenDescription::Mut,
+                    reg: Register(2u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(2u8),
+                    address: Address(17u32),
+                },
+                Instruction::JumpIfZero {
+                    cond: Register(2u8),
+                    address: Address(20u32),
+                },
+                Instruction::Call {
+                    function: FunctionId(41u32),
+                    result: Register(3u8),
+                },
+                Instruction::Jump {
+                    address: Address(89u32),
+                },
+                Instruction::LoadConst(Register(4u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::Literal,
+                    reg: Register(4u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(4u8),
+                    address: Address(31u32),
+                },
+                Instruction::Peek {
+                    tok: TokenDescription::FragmentLiteral,
+                    reg: Register(4u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(4u8),
+                    address: Address(31u32),
+                },
+                Instruction::Peek {
+                    tok: TokenDescription::True,
+                    reg: Register(4u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(4u8),
+                    address: Address(31u32),
+                },
+                Instruction::Peek {
+                    tok: TokenDescription::False,
+                    reg: Register(4u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(4u8),
+                    address: Address(31u32),
+                },
+                Instruction::Peek {
+                    tok: TokenDescription::Minus,
+                    reg: Register(4u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(4u8),
+                    address: Address(31u32),
+                },
+                Instruction::JumpIfZero {
+                    cond: Register(4u8),
+                    address: Address(35u32),
+                },
+                Instruction::Call {
+                    function: FunctionId(40u32),
+                    result: Register(5u8),
+                },
+                Instruction::Call {
+                    function: FunctionId(30u32),
+                    result: Register(6u8),
+                },
+                Instruction::Jump {
+                    address: Address(89u32),
+                },
+                Instruction::LoadConst(Register(7u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::DotDotEquals,
+                    reg: Register(7u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(7u8),
+                    address: Address(38u32),
+                },
+                Instruction::JumpIfZero {
+                    cond: Register(7u8),
+                    address: Address(42u32),
+                },
+                Instruction::BumpToken {
+                    tok: TokenDescription::DotDotEquals,
+                },
+                Instruction::Call {
+                    function: FunctionId(40u32),
+                    result: Register(8u8),
+                },
+                Instruction::Jump {
+                    address: Address(89u32),
+                },
+                Instruction::LoadConst(Register(9u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::ColonColon,
+                    reg: Register(9u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(9u8),
+                    address: Address(47u32),
+                },
+                Instruction::Peek {
+                    tok: TokenDescription::FragmentPath,
+                    reg: Register(9u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(9u8),
+                    address: Address(47u32),
+                },
+                Instruction::JumpIfZero {
+                    cond: Register(9u8),
+                    address: Address(50u32),
+                },
+                Instruction::Call {
+                    function: FunctionId(29u32),
+                    result: Register(10u8),
+                },
+                Instruction::Jump {
+                    address: Address(89u32),
+                },
+                Instruction::LoadConst(Register(11u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::Ident,
+                    reg: Register(11u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(11u8),
+                    address: Address(55u32),
+                },
+                Instruction::Peek {
+                    tok: TokenDescription::FragmentIdent,
+                    reg: Register(11u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(11u8),
+                    address: Address(55u32),
+                },
+                Instruction::JumpIfZero {
+                    cond: Register(11u8),
+                    address: Address(64u32),
+                },
+                Instruction::LoadConst(Register(12u8), Value(0i8)),
+                Instruction::Peek2 {
+                    tok: TokenDescription::At,
+                    reg: Register(12u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(12u8),
+                    address: Address(59u32),
+                },
+                Instruction::JumpIfZero {
+                    cond: Register(12u8),
+                    address: Address(62u32),
+                },
+                Instruction::Call {
+                    function: FunctionId(41u32),
+                    result: Register(13u8),
+                },
+                Instruction::Jump {
+                    address: Address(63u32),
+                },
+                Instruction::Call {
+                    function: FunctionId(29u32),
+                    result: Register(14u8),
+                },
+                Instruction::Jump {
+                    address: Address(89u32),
+                },
+                Instruction::LoadConst(Register(15u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::And,
+                    reg: Register(15u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(15u8),
+                    address: Address(67u32),
+                },
+                Instruction::JumpIfZero {
+                    cond: Register(15u8),
+                    address: Address(76u32),
+                },
+                Instruction::BumpToken {
+                    tok: TokenDescription::And,
+                },
+                Instruction::LoadConst(Register(16u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::And,
+                    reg: Register(16u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(16u8),
+                    address: Address(72u32),
+                },
+                Instruction::JumpIfZero {
+                    cond: Register(16u8),
+                    address: Address(74u32),
+                },
+                Instruction::BumpToken {
+                    tok: TokenDescription::And,
+                },
+                Instruction::Call {
+                    function: FunctionId(28u32),
+                    result: Register(17u8),
+                },
+                Instruction::Jump {
+                    address: Address(89u32),
+                },
+                Instruction::LoadConst(Register(18u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::LParen,
+                    reg: Register(18u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(18u8),
+                    address: Address(79u32),
+                },
+                Instruction::JumpIfZero {
+                    cond: Register(18u8),
+                    address: Address(82u32),
+                },
+                Instruction::Call {
+                    function: FunctionId(33u32),
+                    result: Register(19u8),
+                },
+                Instruction::Jump {
+                    address: Address(89u32),
+                },
+                Instruction::LoadConst(Register(20u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::LBracket,
+                    reg: Register(20u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(20u8),
+                    address: Address(85u32),
+                },
+                Instruction::JumpIfZero {
+                    cond: Register(20u8),
+                    address: Address(88u32),
+                },
+                Instruction::Call {
+                    function: FunctionId(37u32),
+                    result: Register(21u8),
+                },
+                Instruction::Jump {
+                    address: Address(89u32),
+                },
+                Instruction::Error {
+                    message: "<sample message>",
+                },
+                Instruction::Return(Register(0u8)),
+            ],
+            reg_num: 22usize,
+        },
+        Function {
+            name: "pat_starting_with_path",
+            code: &[
+                Instruction::Call {
+                    function: FunctionId(47u32),
+                    result: Register(1u8),
+                },
+                Instruction::LoadConst(Register(2u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::LBrace,
+                    reg: Register(2u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(2u8),
+                    address: Address(4u32),
+                },
+                Instruction::JumpIfZero {
+                    cond: Register(2u8),
+                    address: Address(7u32),
+                },
+                Instruction::Call {
+                    function: FunctionId(31u32),
+                    result: Register(3u8),
+                },
+                Instruction::Jump {
+                    address: Address(21u32),
+                },
+                Instruction::LoadConst(Register(4u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::LParen,
+                    reg: Register(4u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(4u8),
+                    address: Address(10u32),
+                },
+                Instruction::JumpIfZero {
+                    cond: Register(4u8),
+                    address: Address(13u32),
+                },
+                Instruction::Call {
+                    function: FunctionId(33u32),
+                    result: Register(5u8),
+                },
+                Instruction::Jump {
+                    address: Address(21u32),
+                },
+                Instruction::LoadConst(Register(6u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::Not,
+                    reg: Register(6u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(6u8),
+                    address: Address(16u32),
+                },
+                Instruction::JumpIfZero {
+                    cond: Register(6u8),
+                    address: Address(20u32),
+                },
+                Instruction::Call {
+                    function: FunctionId(74u32),
+                    result: Register(7u8),
+                },
+                Instruction::Call {
+                    function: FunctionId(30u32),
+                    result: Register(8u8),
+                },
+                Instruction::Jump {
+                    address: Address(21u32),
+                },
+                Instruction::Call {
+                    function: FunctionId(30u32),
+                    result: Register(9u8),
+                },
+                Instruction::Return(Register(0u8)),
+            ],
+            reg_num: 10usize,
+        },
+        Function {
+            name: "pat_maybe_range_tail",
+            code: &[
+                Instruction::LoadConst(Register(1u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::DotDotEquals,
+                    reg: Register(1u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(1u8),
+                    address: Address(3u32),
+                },
+                Instruction::JumpIfZero {
+                    cond: Register(1u8),
+                    address: Address(21u32),
+                },
+                Instruction::BumpToken {
+                    tok: TokenDescription::DotDotEquals,
+                },
+                Instruction::LoadConst(Register(2u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::Ident,
+                    reg: Register(2u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(2u8),
+                    address: Address(16u32),
+                },
+                Instruction::Peek {
+                    tok: TokenDescription::FragmentIdent,
+                    reg: Register(2u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(2u8),
+                    address: Address(16u32),
+                },
+                Instruction::Peek {
+                    tok: TokenDescription::ColonColon,
+                    reg: Register(2u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(2u8),
+                    address: Address(16u32),
+                },
+                Instruction::Peek {
+                    tok: TokenDescription::FragmentPath,
+                    reg: Register(2u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(2u8),
+                    address: Address(16u32),
+                },
+                Instruction::Peek {
+                    tok: TokenDescription::LessThan,
+                    reg: Register(2u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(2u8),
+                    address: Address(16u32),
+                },
+                Instruction::JumpIfZero {
+                    cond: Register(2u8),
+                    address: Address(19u32),
+                },
+                Instruction::Call {
+                    function: FunctionId(47u32),
+                    result: Register(3u8),
+                },
+                Instruction::Jump {
+                    address: Address(20u32),
+                },
+                Instruction::Call {
+                    function: FunctionId(40u32),
+                    result: Register(4u8),
+                },
+                Instruction::Jump {
+                    address: Address(26u32),
+                },
+                Instruction::LoadConst(Register(5u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::DotDot,
+                    reg: Register(5u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(5u8),
+                    address: Address(24u32),
+                },
+                Instruction::JumpIfZero {
+                    cond: Register(5u8),
+                    address: Address(26u32),
+                },
+                Instruction::Bump,
+                Instruction::Return(Register(0u8)),
+            ],
+            reg_num: 6usize,
+        },
+        Function {
+            name: "pat_struct_tail",
+            code: &[
+                Instruction::BumpToken {
+                    tok: TokenDescription::LBrace,
+                },
+                Instruction::LoadConst(Register(1u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::DotDot,
+                    reg: Register(1u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(1u8),
+                    address: Address(4u32),
+                },
+                Instruction::JumpIfZero {
+                    cond: Register(1u8),
+                    address: Address(8u32),
+                },
+                Instruction::BumpToken {
+                    tok: TokenDescription::DotDot,
+                },
+                Instruction::BumpToken {
+                    tok: TokenDescription::RBrace,
+                },
+                Instruction::Jump {
+                    address: Address(22u32),
+                },
+                Instruction::LoadConst(Register(2u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::RBrace,
+                    reg: Register(2u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(2u8),
+                    address: Address(11u32),
+                },
+                Instruction::JumpIfZero {
+                    cond: Register(2u8),
+                    address: Address(14u32),
+                },
+                Instruction::BumpToken {
+                    tok: TokenDescription::RBrace,
+                },
+                Instruction::Jump {
+                    address: Address(22u32),
+                },
+                Instruction::Call {
+                    function: FunctionId(35u32),
+                    result: Register(3u8),
+                },
+                Instruction::LoadConst(Register(4u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::RBrace,
+                    reg: Register(4u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(4u8),
+                    address: Address(18u32),
+                },
+                Instruction::JumpIfZero {
+                    cond: Register(4u8),
+                    address: Address(21u32),
+                },
+                Instruction::BumpToken {
+                    tok: TokenDescription::RBrace,
+                },
+                Instruction::Jump {
+                    address: Address(22u32),
+                },
+                Instruction::Call {
+                    function: FunctionId(32u32),
+                    result: Register(5u8),
+                },
+                Instruction::Return(Register(0u8)),
+            ],
+            reg_num: 6usize,
+        },
+        Function {
+            name: "pat_struct_tail_",
+            code: &[
+                Instruction::LoadConst(Register(1u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::DotDot,
+                    reg: Register(1u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(1u8),
+                    address: Address(3u32),
+                },
+                Instruction::JumpIfZero {
+                    cond: Register(1u8),
+                    address: Address(7u32),
+                },
+                Instruction::BumpToken {
+                    tok: TokenDescription::DotDot,
+                },
+                Instruction::BumpToken {
+                    tok: TokenDescription::RBrace,
+                },
+                Instruction::Jump {
+                    address: Address(22u32),
+                },
+                Instruction::LoadConst(Register(2u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::Comma,
+                    reg: Register(2u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(2u8),
+                    address: Address(10u32),
+                },
+                Instruction::JumpIfZero {
+                    cond: Register(2u8),
+                    address: Address(21u32),
+                },
+                Instruction::BumpToken {
+                    tok: TokenDescription::Comma,
+                },
+                Instruction::LoadConst(Register(3u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::RBrace,
+                    reg: Register(3u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(3u8),
+                    address: Address(15u32),
+                },
+                Instruction::JumpIfZero {
+                    cond: Register(3u8),
+                    address: Address(18u32),
+                },
+                Instruction::BumpToken {
+                    tok: TokenDescription::RBrace,
+                },
+                Instruction::Jump {
+                    address: Address(20u32),
+                },
+                Instruction::Call {
+                    function: FunctionId(35u32),
+                    result: Register(4u8),
+                },
+                Instruction::Call {
+                    function: FunctionId(32u32),
+                    result: Register(5u8),
+                },
+                Instruction::Jump {
+                    address: Address(22u32),
+                },
+                Instruction::BumpToken {
+                    tok: TokenDescription::RBrace,
+                },
+                Instruction::Return(Register(0u8)),
+            ],
+            reg_num: 6usize,
+        },
+        Function {
+            name: "pat_tuple",
+            code: &[
+                Instruction::BumpToken {
+                    tok: TokenDescription::LParen,
+                },
+                Instruction::LoadConst(Register(1u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::RParen,
+                    reg: Register(1u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(1u8),
+                    address: Address(4u32),
+                },
+                Instruction::JumpIfZero {
+                    cond: Register(1u8),
+                    address: Address(7u32),
+                },
+                Instruction::BumpToken {
+                    tok: TokenDescription::RParen,
+                },
+                Instruction::Jump {
+                    address: Address(15u32),
+                },
+                Instruction::Call {
+                    function: FunctionId(36u32),
+                    result: Register(2u8),
+                },
+                Instruction::LoadConst(Register(3u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::RParen,
+                    reg: Register(3u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(3u8),
+                    address: Address(11u32),
+                },
+                Instruction::JumpIfZero {
+                    cond: Register(3u8),
+                    address: Address(14u32),
+                },
+                Instruction::BumpToken {
+                    tok: TokenDescription::RParen,
+                },
+                Instruction::Jump {
+                    address: Address(15u32),
+                },
+                Instruction::Call {
+                    function: FunctionId(34u32),
+                    result: Register(4u8),
+                },
+                Instruction::Return(Register(0u8)),
+            ],
+            reg_num: 5usize,
+        },
+        Function {
+            name: "pat_tuple_",
+            code: &[
+                Instruction::LoadConst(Register(1u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::Comma,
+                    reg: Register(1u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(1u8),
+                    address: Address(3u32),
+                },
+                Instruction::JumpIfZero {
+                    cond: Register(1u8),
+                    address: Address(14u32),
+                },
+                Instruction::BumpToken {
+                    tok: TokenDescription::Comma,
+                },
+                Instruction::LoadConst(Register(2u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::RParen,
+                    reg: Register(2u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(2u8),
+                    address: Address(8u32),
+                },
+                Instruction::JumpIfZero {
+                    cond: Register(2u8),
+                    address: Address(11u32),
+                },
+                Instruction::BumpToken {
+                    tok: TokenDescription::RParen,
+                },
+                Instruction::Jump {
+                    address: Address(13u32),
+                },
+                Instruction::Call {
+                    function: FunctionId(36u32),
+                    result: Register(3u8),
+                },
+                Instruction::Call {
+                    function: FunctionId(34u32),
+                    result: Register(4u8),
+                },
+                Instruction::Jump {
+                    address: Address(15u32),
+                },
+                Instruction::BumpToken {
+                    tok: TokenDescription::RParen,
+                },
+                Instruction::Return(Register(0u8)),
+            ],
+            reg_num: 5usize,
+        },
+        Function {
+            name: "pat_struct_field",
+            code: &[
+                Instruction::LoadConst(Register(1u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::Literal,
+                    reg: Register(1u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(1u8),
+                    address: Address(3u32),
+                },
+                Instruction::JumpIfZero {
+                    cond: Register(1u8),
+                    address: Address(8u32),
+                },
+                Instruction::BumpToken {
+                    tok: TokenDescription::Literal,
+                },
+                Instruction::BumpToken {
+                    tok: TokenDescription::Colon,
+                },
+                Instruction::Call {
+                    function: FunctionId(26u32),
+                    result: Register(2u8),
+                },
+                Instruction::Jump {
+                    address: Address(29u32),
+                },
+                Instruction::LoadConst(Register(3u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::Ident,
+                    reg: Register(3u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(3u8),
+                    address: Address(11u32),
+                },
+                Instruction::JumpIfZero {
+                    cond: Register(3u8),
+                    address: Address(22u32),
+                },
+                Instruction::LoadConst(Register(4u8), Value(0i8)),
+                Instruction::Peek2 {
+                    tok: TokenDescription::Colon,
+                    reg: Register(4u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(4u8),
+                    address: Address(15u32),
+                },
+                Instruction::JumpIfZero {
+                    cond: Register(4u8),
+                    address: Address(20u32),
+                },
+                Instruction::BumpToken {
+                    tok: TokenDescription::Ident,
+                },
+                Instruction::BumpToken {
+                    tok: TokenDescription::Colon,
+                },
+                Instruction::Call {
+                    function: FunctionId(26u32),
+                    result: Register(5u8),
+                },
+                Instruction::Jump {
+                    address: Address(21u32),
+                },
+                Instruction::BumpToken {
+                    tok: TokenDescription::Ident,
+                },
+                Instruction::Jump {
+                    address: Address(29u32),
+                },
+                Instruction::LoadConst(Register(6u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::Ref,
+                    reg: Register(6u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(6u8),
+                    address: Address(27u32),
+                },
+                Instruction::Peek {
+                    tok: TokenDescription::Mut,
+                    reg: Register(6u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(6u8),
+                    address: Address(27u32),
+                },
+                Instruction::JumpIfZero {
+                    cond: Register(6u8),
+                    address: Address(29u32),
+                },
+                Instruction::Call {
+                    function: FunctionId(41u32),
+                    result: Register(7u8),
+                },
+                Instruction::Return(Register(0u8)),
+            ],
+            reg_num: 8usize,
+        },
+        Function {
+            name: "pat_tuple_field",
+            code: &[
+                Instruction::Call {
+                    function: FunctionId(26u32),
+                    result: Register(1u8),
+                },
+                Instruction::Return(Register(0u8)),
+            ],
+            reg_num: 2usize,
+        },
+        Function {
+            name: "pat_slice",
+            code: &[
+                Instruction::BumpToken {
+                    tok: TokenDescription::LBracket,
+                },
+                Instruction::LoadConst(Register(1u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::RBracket,
+                    reg: Register(1u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(1u8),
+                    address: Address(4u32),
+                },
+                Instruction::JumpIfZero {
+                    cond: Register(1u8),
+                    address: Address(7u32),
+                },
+                Instruction::BumpToken {
+                    tok: TokenDescription::RBracket,
+                },
+                Instruction::Jump {
+                    address: Address(9u32),
+                },
+                Instruction::Call {
+                    function: FunctionId(26u32),
+                    result: Register(2u8),
+                },
+                Instruction::Call {
+                    function: FunctionId(38u32),
+                    result: Register(3u8),
+                },
+                Instruction::Return(Register(0u8)),
+            ],
+            reg_num: 4usize,
+        },
+        Function {
+            name: "pat_slice_",
+            code: &[
+                Instruction::LoadConst(Register(1u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::Comma,
+                    reg: Register(1u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(1u8),
+                    address: Address(3u32),
+                },
+                Instruction::JumpIfZero {
+                    cond: Register(1u8),
+                    address: Address(14u32),
+                },
+                Instruction::BumpToken {
+                    tok: TokenDescription::Comma,
+                },
+                Instruction::LoadConst(Register(2u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::RBracket,
+                    reg: Register(2u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(2u8),
+                    address: Address(8u32),
+                },
+                Instruction::JumpIfZero {
+                    cond: Register(2u8),
+                    address: Address(11u32),
+                },
+                Instruction::BumpToken {
+                    tok: TokenDescription::RBracket,
+                },
+                Instruction::Jump {
+                    address: Address(13u32),
+                },
+                Instruction::Call {
+                    function: FunctionId(26u32),
+                    result: Register(3u8),
+                },
+                Instruction::Call {
+                    function: FunctionId(38u32),
+                    result: Register(4u8),
+                },
+                Instruction::Jump {
+                    address: Address(15u32),
+                },
+                Instruction::BumpToken {
+                    tok: TokenDescription::RBracket,
+                },
+                Instruction::Return(Register(0u8)),
+            ],
+            reg_num: 5usize,
+        },
+        Function {
+            name: "pat_range_bound",
+            code: &[
+                Instruction::LoadConst(Register(1u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::Minus,
+                    reg: Register(1u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(1u8),
+                    address: Address(3u32),
+                },
+                Instruction::JumpIfZero {
+                    cond: Register(1u8),
+                    address: Address(6u32),
+                },
+                Instruction::Call {
+                    function: FunctionId(40u32),
+                    result: Register(2u8),
+                },
+                Instruction::Jump {
+                    address: Address(25u32),
+                },
+                Instruction::LoadConst(Register(3u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::Literal,
+                    reg: Register(3u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(3u8),
+                    address: Address(11u32),
+                },
+                Instruction::Peek {
+                    tok: TokenDescription::FragmentLiteral,
+                    reg: Register(3u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(3u8),
+                    address: Address(11u32),
+                },
+                Instruction::JumpIfZero {
+                    cond: Register(3u8),
+                    address: Address(14u32),
+                },
+                Instruction::Call {
+                    function: FunctionId(40u32),
+                    result: Register(4u8),
+                },
+                Instruction::Jump {
+                    address: Address(25u32),
+                },
+                Instruction::LoadConst(Register(5u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::Ident,
+                    reg: Register(5u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(5u8),
+                    address: Address(23u32),
+                },
+                Instruction::Peek {
+                    tok: TokenDescription::FragmentIdent,
+                    reg: Register(5u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(5u8),
+                    address: Address(23u32),
+                },
+                Instruction::Peek {
+                    tok: TokenDescription::FragmentPath,
+                    reg: Register(5u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(5u8),
+                    address: Address(23u32),
+                },
+                Instruction::Peek {
+                    tok: TokenDescription::LessThan,
+                    reg: Register(5u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(5u8),
+                    address: Address(23u32),
+                },
+                Instruction::JumpIfZero {
+                    cond: Register(5u8),
+                    address: Address(25u32),
+                },
+                Instruction::Call {
+                    function: FunctionId(47u32),
+                    result: Register(6u8),
+                },
+                Instruction::Return(Register(0u8)),
+            ],
+            reg_num: 7usize,
+        },
+        Function {
+            name: "pat_literal",
+            code: &[
+                Instruction::LoadConst(Register(1u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::Minus,
+                    reg: Register(1u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(1u8),
+                    address: Address(3u32),
+                },
+                Instruction::JumpIfZero {
+                    cond: Register(1u8),
+                    address: Address(5u32),
+                },
+                Instruction::BumpToken {
+                    tok: TokenDescription::Minus,
+                },
+                Instruction::LoadConst(Register(2u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::Literal,
+                    reg: Register(2u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(2u8),
+                    address: Address(14u32),
+                },
+                Instruction::Peek {
+                    tok: TokenDescription::FragmentLiteral,
+                    reg: Register(2u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(2u8),
+                    address: Address(14u32),
+                },
+                Instruction::Peek {
+                    tok: TokenDescription::True,
+                    reg: Register(2u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(2u8),
+                    address: Address(14u32),
+                },
+                Instruction::Peek {
+                    tok: TokenDescription::False,
+                    reg: Register(2u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(2u8),
+                    address: Address(14u32),
+                },
+                Instruction::JumpIfZero {
+                    cond: Register(2u8),
+                    address: Address(17u32),
+                },
+                Instruction::Bump,
+                Instruction::Jump {
+                    address: Address(18u32),
+                },
+                Instruction::Error {
+                    message: "<sample message>",
+                },
+                Instruction::Return(Register(0u8)),
+            ],
+            reg_num: 3usize,
+        },
+        Function {
+            name: "pat_ident",
+            code: &[
+                Instruction::LoadConst(Register(1u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::Ref,
+                    reg: Register(1u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(1u8),
+                    address: Address(3u32),
+                },
+                Instruction::JumpIfZero {
+                    cond: Register(1u8),
+                    address: Address(5u32),
+                },
+                Instruction::BumpToken {
+                    tok: TokenDescription::Ref,
+                },
+                Instruction::LoadConst(Register(2u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::Mut,
+                    reg: Register(2u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(2u8),
+                    address: Address(8u32),
+                },
+                Instruction::JumpIfZero {
+                    cond: Register(2u8),
+                    address: Address(10u32),
+                },
+                Instruction::BumpToken {
+                    tok: TokenDescription::Mut,
+                },
+                Instruction::LoadConst(Register(3u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::Ident,
+                    reg: Register(3u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(3u8),
+                    address: Address(13u32),
+                },
+                Instruction::JumpIfZero {
+                    cond: Register(3u8),
+                    address: Address(16u32),
+                },
+                Instruction::BumpToken {
+                    tok: TokenDescription::Ident,
+                },
+                Instruction::Jump {
+                    address: Address(23u32),
+                },
+                Instruction::LoadConst(Register(4u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::FragmentIdent,
+                    reg: Register(4u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(4u8),
+                    address: Address(19u32),
+                },
+                Instruction::JumpIfZero {
+                    cond: Register(4u8),
+                    address: Address(22u32),
+                },
+                Instruction::BumpToken {
+                    tok: TokenDescription::FragmentIdent,
+                },
+                Instruction::Jump {
+                    address: Address(23u32),
+                },
+                Instruction::Error {
+                    message: "<sample message>",
+                },
+                Instruction::LoadConst(Register(5u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::At,
+                    reg: Register(5u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(5u8),
+                    address: Address(26u32),
+                },
+                Instruction::JumpIfZero {
+                    cond: Register(5u8),
+                    address: Address(29u32),
+                },
+                Instruction::BumpToken {
+                    tok: TokenDescription::At,
+                },
+                Instruction::Call {
+                    function: FunctionId(28u32),
+                    result: Register(6u8),
+                },
+                Instruction::Return(Register(0u8)),
+            ],
+            reg_num: 7usize,
+        },
+        Function {
+            name: "fn_arg",
+            code: &[
+                Instruction::Call {
+                    function: FunctionId(26u32),
+                    result: Register(1u8),
+                },
+                Instruction::BumpToken {
+                    tok: TokenDescription::Colon,
+                },
+                Instruction::Call {
+                    function: FunctionId(16u32),
+                    result: Register(2u8),
+                },
+                Instruction::Return(Register(0u8)),
+            ],
+            reg_num: 3usize,
+        },
+        Function {
+            name: "expr",
+            code: &[
+                Instruction::Call {
+                    function: FunctionId(65u32),
+                    result: Register(1u8),
+                },
+                Instruction::Call {
+                    function: FunctionId(45u32),
+                    result: Register(2u8),
+                },
+                Instruction::Call {
+                    function: FunctionId(44u32),
+                    result: Register(3u8),
+                },
+                Instruction::Return(Register(0u8)),
+            ],
+            reg_num: 4usize,
+        },
+        Function {
+            name: "expr_after_atom",
+            code: &[
+                Instruction::LoadConst(Register(1u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::Plus,
+                    reg: Register(1u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(1u8),
+                    address: Address(21u32),
+                },
+                Instruction::Peek {
+                    tok: TokenDescription::Minus,
+                    reg: Register(1u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(1u8),
+                    address: Address(21u32),
+                },
+                Instruction::Peek {
+                    tok: TokenDescription::Star,
+                    reg: Register(1u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(1u8),
+                    address: Address(21u32),
+                },
+                Instruction::Peek {
+                    tok: TokenDescription::Slash,
+                    reg: Register(1u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(1u8),
+                    address: Address(21u32),
+                },
+                Instruction::Peek {
+                    tok: TokenDescription::Percent,
+                    reg: Register(1u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(1u8),
+                    address: Address(21u32),
+                },
+                Instruction::Peek {
+                    tok: TokenDescription::And,
+                    reg: Register(1u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(1u8),
+                    address: Address(21u32),
+                },
+                Instruction::Peek {
+                    tok: TokenDescription::Or,
+                    reg: Register(1u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(1u8),
+                    address: Address(21u32),
+                },
+                Instruction::Peek {
+                    tok: TokenDescription::Caret,
+                    reg: Register(1u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(1u8),
+                    address: Address(21u32),
+                },
+                Instruction::Peek {
+                    tok: TokenDescription::Shl,
+                    reg: Register(1u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(1u8),
+                    address: Address(21u32),
+                },
+                Instruction::Peek {
+                    tok: TokenDescription::Shr,
+                    reg: Register(1u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(1u8),
+                    address: Address(21u32),
+                },
+                Instruction::JumpIfZero {
+                    cond: Register(1u8),
+                    address: Address(26u32),
+                },
+                Instruction::Bump,
+                Instruction::Call {
+                    function: FunctionId(43u32),
+                    result: Register(2u8),
+                },
+                Instruction::LoadConst(Register(0u8), Value(6i8)),
+                Instruction::Return(Register(0u8)),
+                Instruction::LoadConst(Register(3u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::EqualsEquals,
+                    reg: Register(3u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(3u8),
+                    address: Address(39u32),
+                },
+                Instruction::Peek {
+                    tok: TokenDescription::NotEquals,
+                    reg: Register(3u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(3u8),
+                    address: Address(39u32),
+                },
+                Instruction::Peek {
+                    tok: TokenDescription::GreaterThan,
+                    reg: Register(3u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(3u8),
+                    address: Address(39u32),
+                },
+                Instruction::Peek {
+                    tok: TokenDescription::LessThan,
+                    reg: Register(3u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(3u8),
+                    address: Address(39u32),
+                },
+                Instruction::Peek {
+                    tok: TokenDescription::GreaterThanEquals,
+                    reg: Register(3u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(3u8),
+                    address: Address(39u32),
+                },
+                Instruction::Peek {
+                    tok: TokenDescription::LessThanEquals,
+                    reg: Register(3u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(3u8),
+                    address: Address(39u32),
+                },
+                Instruction::JumpIfZero {
+                    cond: Register(3u8),
+                    address: Address(44u32),
+                },
+                Instruction::Bump,
+                Instruction::Call {
+                    function: FunctionId(43u32),
+                    result: Register(4u8),
+                },
+                Instruction::LoadConst(Register(0u8), Value(6i8)),
+                Instruction::Return(Register(0u8)),
+                Instruction::LoadConst(Register(5u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::OrOr,
+                    reg: Register(5u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(5u8),
+                    address: Address(49u32),
+                },
+                Instruction::Peek {
+                    tok: TokenDescription::AndAnd,
+                    reg: Register(5u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(5u8),
+                    address: Address(49u32),
+                },
+                Instruction::JumpIfZero {
+                    cond: Register(5u8),
+                    address: Address(54u32),
+                },
+                Instruction::Bump,
+                Instruction::Call {
+                    function: FunctionId(43u32),
+                    result: Register(6u8),
+                },
+                Instruction::LoadConst(Register(0u8), Value(6i8)),
+                Instruction::Return(Register(0u8)),
+                Instruction::LoadConst(Register(7u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::DotDot,
+                    reg: Register(7u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(7u8),
+                    address: Address(59u32),
+                },
+                Instruction::Peek {
+                    tok: TokenDescription::DotDotEquals,
+                    reg: Register(7u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(7u8),
+                    address: Address(59u32),
+                },
+                Instruction::JumpIfZero {
+                    cond: Register(7u8),
+                    address: Address(64u32),
+                },
+                Instruction::Bump,
+                Instruction::Call {
+                    function: FunctionId(43u32),
+                    result: Register(8u8),
+                },
+                Instruction::LoadConst(Register(0u8), Value(6i8)),
+                Instruction::Return(Register(0u8)),
+                Instruction::LoadConst(Register(9u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::LParen,
+                    reg: Register(9u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(9u8),
+                    address: Address(67u32),
+                },
+                Instruction::JumpIfZero {
+                    cond: Register(9u8),
+                    address: Address(72u32),
+                },
+                Instruction::Call {
+                    function: FunctionId(57u32),
+                    result: Register(10u8),
+                },
+                Instruction::Call {
+                    function: FunctionId(44u32),
+                    result: Register(11u8),
+                },
+                Instruction::LoadConst(Register(0u8), Value(7i8)),
+                Instruction::Return(Register(0u8)),
+                Instruction::LoadConst(Register(12u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::LBracket,
+                    reg: Register(12u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(12u8),
+                    address: Address(75u32),
+                },
+                Instruction::JumpIfZero {
+                    cond: Register(12u8),
+                    address: Address(81u32),
+                },
+                Instruction::BumpToken {
+                    tok: TokenDescription::LBracket,
+                },
+                Instruction::Call {
+                    function: FunctionId(43u32),
+                    result: Register(13u8),
+                },
+                Instruction::BumpToken {
+                    tok: TokenDescription::RBracket,
+                },
+                Instruction::LoadConst(Register(0u8), Value(8i8)),
+                Instruction::Return(Register(0u8)),
+                Instruction::LoadConst(Register(14u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::Dot,
+                    reg: Register(14u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(14u8),
+                    address: Address(84u32),
+                },
+                Instruction::JumpIfZero {
+                    cond: Register(14u8),
+                    address: Address(87u32),
+                },
+                Instruction::Call {
+                    function: FunctionId(59u32),
+                    result: Register(15u8),
+                },
+                Instruction::Call {
+                    function: FunctionId(44u32),
+                    result: Register(16u8),
+                },
+                Instruction::Return(Register(0u8)),
+            ],
+            reg_num: 17usize,
+        },
+        Function {
+            name: "expr_atom",
+            code: &[
+                Instruction::LoadConst(Register(1u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::Return,
+                    reg: Register(1u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(1u8),
+                    address: Address(5u32),
+                },
+                Instruction::Peek {
+                    tok: TokenDescription::Break,
+                    reg: Register(1u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(1u8),
+                    address: Address(5u32),
+                },
+                Instruction::JumpIfZero {
+                    cond: Register(1u8),
+                    address: Address(8u32),
+                },
+                Instruction::Call {
+                    function: FunctionId(46u32),
+                    result: Register(2u8),
+                },
+                Instruction::Jump {
+                    address: Address(118u32),
+                },
+                Instruction::LoadConst(Register(3u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::Ident,
+                    reg: Register(3u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(3u8),
+                    address: Address(27u32),
+                },
+                Instruction::Peek {
+                    tok: TokenDescription::Self_,
+                    reg: Register(3u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(3u8),
+                    address: Address(27u32),
+                },
+                Instruction::Peek {
+                    tok: TokenDescription::SelfUpper,
+                    reg: Register(3u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(3u8),
+                    address: Address(27u32),
+                },
+                Instruction::Peek {
+                    tok: TokenDescription::Super,
+                    reg: Register(3u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(3u8),
+                    address: Address(27u32),
+                },
+                Instruction::Peek {
+                    tok: TokenDescription::Crate,
+                    reg: Register(3u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(3u8),
+                    address: Address(27u32),
+                },
+                Instruction::Peek {
+                    tok: TokenDescription::FragmentIdent,
+                    reg: Register(3u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(3u8),
+                    address: Address(27u32),
+                },
+                Instruction::Peek {
+                    tok: TokenDescription::ColonColon,
+                    reg: Register(3u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(3u8),
+                    address: Address(27u32),
+                },
+                Instruction::Peek {
+                    tok: TokenDescription::LessThan,
+                    reg: Register(3u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(3u8),
+                    address: Address(27u32),
+                },
+                Instruction::Peek {
+                    tok: TokenDescription::FragmentPath,
+                    reg: Register(3u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(3u8),
+                    address: Address(27u32),
+                },
+                Instruction::JumpIfZero {
+                    cond: Register(3u8),
+                    address: Address(38u32),
+                },
+                Instruction::Call {
+                    function: FunctionId(47u32),
+                    result: Register(4u8),
+                },
+                Instruction::LoadConst(Register(5u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::Not,
+                    reg: Register(5u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(5u8),
+                    address: Address(32u32),
+                },
+                Instruction::JumpIfZero {
+                    cond: Register(5u8),
+                    address: Address(35u32),
+                },
+                Instruction::Call {
+                    function: FunctionId(74u32),
+                    result: Register(6u8),
+                },
+                Instruction::Jump {
+                    address: Address(37u32),
+                },
+                Instruction::LoadConst(Register(0u8), Value(9i8)),
+                Instruction::Return(Register(0u8)),
+                Instruction::Jump {
+                    address: Address(118u32),
+                },
+                Instruction::LoadConst(Register(7u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::Literal,
+                    reg: Register(7u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(7u8),
+                    address: Address(41u32),
+                },
+                Instruction::JumpIfZero {
+                    cond: Register(7u8),
+                    address: Address(45u32),
+                },
+                Instruction::Bump,
+                Instruction::LoadConst(Register(0u8), Value(10i8)),
+                Instruction::Return(Register(0u8)),
+                Instruction::LoadConst(Register(8u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::FragmentExpr,
+                    reg: Register(8u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(8u8),
+                    address: Address(48u32),
+                },
+                Instruction::JumpIfZero {
+                    cond: Register(8u8),
+                    address: Address(52u32),
+                },
+                Instruction::Bump,
+                Instruction::LoadConst(Register(0u8), Value(11i8)),
+                Instruction::Return(Register(0u8)),
+                Instruction::LoadConst(Register(9u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::FragmentBlock,
+                    reg: Register(9u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(9u8),
+                    address: Address(55u32),
+                },
+                Instruction::JumpIfZero {
+                    cond: Register(9u8),
+                    address: Address(59u32),
+                },
+                Instruction::Bump,
+                Instruction::LoadConst(Register(0u8), Value(12i8)),
+                Instruction::Return(Register(0u8)),
+                Instruction::LoadConst(Register(10u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::If,
+                    reg: Register(10u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(10u8),
+                    address: Address(62u32),
+                },
+                Instruction::JumpIfZero {
+                    cond: Register(10u8),
+                    address: Address(66u32),
+                },
+                Instruction::Call {
+                    function: FunctionId(53u32),
+                    result: Register(11u8),
+                },
+                Instruction::LoadConst(Register(0u8), Value(0i8)),
+                Instruction::Return(Register(0u8)),
+                Instruction::LoadConst(Register(12u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::LParen,
+                    reg: Register(12u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(12u8),
+                    address: Address(69u32),
+                },
+                Instruction::JumpIfZero {
+                    cond: Register(12u8),
+                    address: Address(73u32),
+                },
+                Instruction::Call {
+                    function: FunctionId(66u32),
+                    result: Register(13u8),
+                },
+                Instruction::LoadConst(Register(0u8), Value(13i8)),
+                Instruction::Return(Register(0u8)),
+                Instruction::LoadConst(Register(14u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::LBracket,
+                    reg: Register(14u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(14u8),
+                    address: Address(76u32),
+                },
+                Instruction::JumpIfZero {
+                    cond: Register(14u8),
+                    address: Address(80u32),
+                },
+                Instruction::Call {
+                    function: FunctionId(54u32),
+                    result: Register(15u8),
+                },
+                Instruction::LoadConst(Register(0u8), Value(14i8)),
+                Instruction::Return(Register(0u8)),
+                Instruction::LoadConst(Register(16u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::LBrace,
+                    reg: Register(16u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(16u8),
+                    address: Address(83u32),
+                },
+                Instruction::JumpIfZero {
+                    cond: Register(16u8),
+                    address: Address(87u32),
+                },
+                Instruction::Call {
+                    function: FunctionId(12u32),
+                    result: Register(17u8),
+                },
+                Instruction::LoadConst(Register(0u8), Value(1i8)),
+                Instruction::Return(Register(0u8)),
+                Instruction::LoadConst(Register(18u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::Loop,
+                    reg: Register(18u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(18u8),
+                    address: Address(92u32),
+                },
+                Instruction::Peek {
+                    tok: TokenDescription::FragmentLifetime,
+                    reg: Register(18u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(18u8),
+                    address: Address(92u32),
+                },
+                Instruction::JumpIfZero {
+                    cond: Register(18u8),
+                    address: Address(96u32),
+                },
+                Instruction::Call {
+                    function: FunctionId(68u32),
+                    result: Register(19u8),
+                },
+                Instruction::LoadConst(Register(0u8), Value(2i8)),
+                Instruction::Return(Register(0u8)),
+                Instruction::LoadConst(Register(20u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::While,
+                    reg: Register(20u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(20u8),
+                    address: Address(99u32),
+                },
+                Instruction::JumpIfZero {
+                    cond: Register(20u8),
+                    address: Address(103u32),
+                },
+                Instruction::Call {
+                    function: FunctionId(69u32),
+                    result: Register(21u8),
+                },
+                Instruction::LoadConst(Register(0u8), Value(15i8)),
+                Instruction::Return(Register(0u8)),
+                Instruction::LoadConst(Register(22u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::For,
+                    reg: Register(22u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(22u8),
+                    address: Address(106u32),
+                },
+                Instruction::JumpIfZero {
+                    cond: Register(22u8),
+                    address: Address(110u32),
+                },
+                Instruction::Call {
+                    function: FunctionId(70u32),
+                    result: Register(23u8),
+                },
+                Instruction::LoadConst(Register(0u8), Value(3i8)),
+                Instruction::Return(Register(0u8)),
+                Instruction::LoadConst(Register(24u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::Match,
+                    reg: Register(24u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(24u8),
+                    address: Address(113u32),
+                },
+                Instruction::JumpIfZero {
+                    cond: Register(24u8),
+                    address: Address(117u32),
+                },
+                Instruction::Call {
+                    function: FunctionId(71u32),
+                    result: Register(25u8),
+                },
+                Instruction::LoadConst(Register(0u8), Value(4i8)),
+                Instruction::Return(Register(0u8)),
+                Instruction::Error {
+                    message: "<sample message>",
+                },
+                Instruction::Return(Register(0u8)),
+            ],
+            reg_num: 26usize,
+        },
+        Function {
+            name: "expr_return_or_break",
+            code: &[
+                Instruction::LoadConst(Register(1u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::Return,
+                    reg: Register(1u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(1u8),
+                    address: Address(3u32),
+                },
+                Instruction::JumpIfZero {
+                    cond: Register(1u8),
+                    address: Address(6u32),
+                },
+                Instruction::BumpToken {
+                    tok: TokenDescription::Return,
+                },
+                Instruction::Jump {
+                    address: Address(13u32),
+                },
+                Instruction::LoadConst(Register(2u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::Break,
+                    reg: Register(2u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(2u8),
+                    address: Address(9u32),
+                },
+                Instruction::JumpIfZero {
+                    cond: Register(2u8),
+                    address: Address(12u32),
+                },
+                Instruction::BumpToken {
+                    tok: TokenDescription::Break,
+                },
+                Instruction::Jump {
+                    address: Address(13u32),
+                },
+                Instruction::Error {
+                    message: "<sample message>",
+                },
+                Instruction::LoadConst(Register(3u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::Async,
+                    reg: Register(3u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(3u8),
+                    address: Address(80u32),
+                },
+                Instruction::Peek {
+                    tok: TokenDescription::Break,
+                    reg: Register(3u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(3u8),
+                    address: Address(80u32),
+                },
+                Instruction::Peek {
+                    tok: TokenDescription::Continue,
+                    reg: Register(3u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(3u8),
+                    address: Address(80u32),
+                },
+                Instruction::Peek {
+                    tok: TokenDescription::Crate,
+                    reg: Register(3u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(3u8),
+                    address: Address(80u32),
+                },
+                Instruction::Peek {
+                    tok: TokenDescription::False,
+                    reg: Register(3u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(3u8),
+                    address: Address(80u32),
+                },
+                Instruction::Peek {
+                    tok: TokenDescription::For,
+                    reg: Register(3u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(3u8),
+                    address: Address(80u32),
+                },
+                Instruction::Peek {
+                    tok: TokenDescription::Let,
+                    reg: Register(3u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(3u8),
+                    address: Address(80u32),
+                },
+                Instruction::Peek {
+                    tok: TokenDescription::Loop,
+                    reg: Register(3u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(3u8),
+                    address: Address(80u32),
+                },
+                Instruction::Peek {
+                    tok: TokenDescription::Match,
+                    reg: Register(3u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(3u8),
+                    address: Address(80u32),
+                },
+                Instruction::Peek {
+                    tok: TokenDescription::Move,
+                    reg: Register(3u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(3u8),
+                    address: Address(80u32),
+                },
+                Instruction::Peek {
+                    tok: TokenDescription::Return,
+                    reg: Register(3u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(3u8),
+                    address: Address(80u32),
+                },
+                Instruction::Peek {
+                    tok: TokenDescription::Self_,
+                    reg: Register(3u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(3u8),
+                    address: Address(80u32),
+                },
+                Instruction::Peek {
+                    tok: TokenDescription::SelfUpper,
+                    reg: Register(3u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(3u8),
+                    address: Address(80u32),
+                },
+                Instruction::Peek {
+                    tok: TokenDescription::True,
+                    reg: Register(3u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(3u8),
+                    address: Address(80u32),
+                },
+                Instruction::Peek {
+                    tok: TokenDescription::Union,
+                    reg: Register(3u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(3u8),
+                    address: Address(80u32),
+                },
+                Instruction::Peek {
+                    tok: TokenDescription::While,
+                    reg: Register(3u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(3u8),
+                    address: Address(80u32),
+                },
+                Instruction::Peek {
+                    tok: TokenDescription::Yield,
+                    reg: Register(3u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(3u8),
+                    address: Address(80u32),
+                },
+                Instruction::Peek {
+                    tok: TokenDescription::Ident,
+                    reg: Register(3u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(3u8),
+                    address: Address(80u32),
+                },
+                Instruction::Peek {
+                    tok: TokenDescription::FragmentIdent,
+                    reg: Register(3u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(3u8),
+                    address: Address(80u32),
+                },
+                Instruction::Peek {
+                    tok: TokenDescription::LParen,
+                    reg: Register(3u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(3u8),
+                    address: Address(80u32),
+                },
+                Instruction::Peek {
+                    tok: TokenDescription::LBracket,
+                    reg: Register(3u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(3u8),
+                    address: Address(80u32),
+                },
+                Instruction::Peek {
+                    tok: TokenDescription::LBrace,
+                    reg: Register(3u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(3u8),
+                    address: Address(80u32),
+                },
+                Instruction::Peek {
+                    tok: TokenDescription::Literal,
+                    reg: Register(3u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(3u8),
+                    address: Address(80u32),
+                },
+                Instruction::Peek {
+                    tok: TokenDescription::FragmentLiteral,
+                    reg: Register(3u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(3u8),
+                    address: Address(80u32),
+                },
+                Instruction::Peek {
+                    tok: TokenDescription::Not,
+                    reg: Register(3u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(3u8),
+                    address: Address(80u32),
+                },
+                Instruction::Peek {
+                    tok: TokenDescription::Star,
+                    reg: Register(3u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(3u8),
+                    address: Address(80u32),
+                },
+                Instruction::Peek {
+                    tok: TokenDescription::Or,
+                    reg: Register(3u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(3u8),
+                    address: Address(80u32),
+                },
+                Instruction::Peek {
+                    tok: TokenDescription::And,
+                    reg: Register(3u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(3u8),
+                    address: Address(80u32),
+                },
+                Instruction::Peek {
+                    tok: TokenDescription::DotDot,
+                    reg: Register(3u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(3u8),
+                    address: Address(80u32),
+                },
+                Instruction::Peek {
+                    tok: TokenDescription::LessThan,
+                    reg: Register(3u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(3u8),
+                    address: Address(80u32),
+                },
+                Instruction::Peek {
+                    tok: TokenDescription::ColonColon,
+                    reg: Register(3u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(3u8),
+                    address: Address(80u32),
+                },
+                Instruction::Peek {
+                    tok: TokenDescription::Pound,
+                    reg: Register(3u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(3u8),
+                    address: Address(80u32),
+                },
+                Instruction::Peek {
+                    tok: TokenDescription::FragmentExpr,
+                    reg: Register(3u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(3u8),
+                    address: Address(80u32),
+                },
+                Instruction::JumpIfZero {
+                    cond: Register(3u8),
+                    address: Address(82u32),
+                },
+                Instruction::Call {
+                    function: FunctionId(45u32),
+                    result: Register(4u8),
+                },
+                Instruction::Return(Register(0u8)),
+            ],
+            reg_num: 5usize,
+        },
+        Function {
+            name: "expr_path",
+            code: &[
+                Instruction::LoadConst(Register(1u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::FragmentPath,
+                    reg: Register(1u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(1u8),
+                    address: Address(3u32),
+                },
+                Instruction::JumpIfZero {
+                    cond: Register(1u8),
+                    address: Address(6u32),
+                },
+                Instruction::BumpToken {
+                    tok: TokenDescription::FragmentPath,
+                },
+                Instruction::Jump {
+                    address: Address(31u32),
+                },
+                Instruction::LoadConst(Register(2u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::LessThan,
+                    reg: Register(2u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(2u8),
+                    address: Address(9u32),
+                },
+                Instruction::JumpIfZero {
+                    cond: Register(2u8),
+                    address: Address(12u32),
+                },
+                Instruction::Call {
+                    function: FunctionId(48u32),
+                    result: Register(3u8),
+                },
+                Instruction::Jump {
+                    address: Address(31u32),
+                },
+                Instruction::LoadConst(Register(4u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::Ident,
+                    reg: Register(4u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(4u8),
+                    address: Address(27u32),
+                },
+                Instruction::Peek {
+                    tok: TokenDescription::FragmentIdent,
+                    reg: Register(4u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(4u8),
+                    address: Address(27u32),
+                },
+                Instruction::Peek {
+                    tok: TokenDescription::Super,
+                    reg: Register(4u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(4u8),
+                    address: Address(27u32),
+                },
+                Instruction::Peek {
+                    tok: TokenDescription::Self_,
+                    reg: Register(4u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(4u8),
+                    address: Address(27u32),
+                },
+                Instruction::Peek {
+                    tok: TokenDescription::SelfUpper,
+                    reg: Register(4u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(4u8),
+                    address: Address(27u32),
+                },
+                Instruction::Peek {
+                    tok: TokenDescription::Crate,
+                    reg: Register(4u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(4u8),
+                    address: Address(27u32),
+                },
+                Instruction::Peek {
+                    tok: TokenDescription::ColonColon,
+                    reg: Register(4u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(4u8),
+                    address: Address(27u32),
+                },
+                Instruction::JumpIfZero {
+                    cond: Register(4u8),
+                    address: Address(30u32),
+                },
+                Instruction::Call {
+                    function: FunctionId(49u32),
+                    result: Register(5u8),
+                },
+                Instruction::Jump {
+                    address: Address(31u32),
+                },
+                Instruction::Error {
+                    message: "<sample message>",
+                },
+                Instruction::Return(Register(0u8)),
+            ],
+            reg_num: 6usize,
+        },
+        Function {
+            name: "expr_qualified_path",
+            code: &[
+                Instruction::BumpToken {
+                    tok: TokenDescription::LessThan,
+                },
+                Instruction::Call {
+                    function: FunctionId(16u32),
+                    result: Register(1u8),
+                },
+                Instruction::LoadConst(Register(2u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::As,
+                    reg: Register(2u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(2u8),
+                    address: Address(5u32),
+                },
+                Instruction::JumpIfZero {
+                    cond: Register(2u8),
+                    address: Address(8u32),
+                },
+                Instruction::BumpToken {
+                    tok: TokenDescription::As,
+                },
+                Instruction::Call {
+                    function: FunctionId(18u32),
+                    result: Register(3u8),
+                },
+                Instruction::BumpToken {
+                    tok: TokenDescription::GreaterThan,
+                },
+                Instruction::BumpToken {
+                    tok: TokenDescription::ColonColon,
+                },
+                Instruction::Call {
+                    function: FunctionId(51u32),
+                    result: Register(4u8),
+                },
+                Instruction::Return(Register(0u8)),
+            ],
+            reg_num: 5usize,
+        },
+        Function {
+            name: "expr_path_in",
+            code: &[
+                Instruction::LoadConst(Register(1u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::ColonColon,
+                    reg: Register(1u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(1u8),
+                    address: Address(3u32),
+                },
+                Instruction::JumpIfZero {
+                    cond: Register(1u8),
+                    address: Address(5u32),
+                },
+                Instruction::BumpToken {
+                    tok: TokenDescription::ColonColon,
+                },
+                Instruction::Call {
+                    function: FunctionId(51u32),
+                    result: Register(2u8),
+                },
+                Instruction::LoadConst(Register(3u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::ColonColon,
+                    reg: Register(3u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(3u8),
+                    address: Address(9u32),
+                },
+                Instruction::JumpIfZero {
+                    cond: Register(3u8),
+                    address: Address(11u32),
+                },
+                Instruction::Call {
+                    function: FunctionId(50u32),
+                    result: Register(4u8),
+                },
+                Instruction::Return(Register(0u8)),
+            ],
+            reg_num: 5usize,
+        },
+        Function {
+            name: "expr_path_in_",
+            code: &[
+                Instruction::BumpToken {
+                    tok: TokenDescription::ColonColon,
+                },
+                Instruction::Call {
+                    function: FunctionId(51u32),
+                    result: Register(1u8),
+                },
+                Instruction::LoadConst(Register(2u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::ColonColon,
+                    reg: Register(2u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(2u8),
+                    address: Address(5u32),
+                },
+                Instruction::JumpIfZero {
+                    cond: Register(2u8),
+                    address: Address(7u32),
+                },
+                Instruction::Call {
+                    function: FunctionId(50u32),
+                    result: Register(3u8),
+                },
+                Instruction::Return(Register(0u8)),
+            ],
+            reg_num: 4usize,
+        },
+        Function {
+            name: "expr_path_segment",
+            code: &[
+                Instruction::Call {
+                    function: FunctionId(52u32),
+                    result: Register(1u8),
+                },
+                Instruction::LoadConst(Register(2u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::ColonColon,
+                    reg: Register(2u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(2u8),
+                    address: Address(4u32),
+                },
+                Instruction::JumpIfZero {
+                    cond: Register(2u8),
+                    address: Address(11u32),
+                },
+                Instruction::LoadConst(Register(3u8), Value(0i8)),
+                Instruction::Peek2 {
+                    tok: TokenDescription::LessThan,
+                    reg: Register(3u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(3u8),
+                    address: Address(8u32),
+                },
+                Instruction::JumpIfZero {
+                    cond: Register(3u8),
+                    address: Address(11u32),
+                },
+                Instruction::BumpToken {
+                    tok: TokenDescription::ColonColon,
+                },
+                Instruction::Call {
+                    function: FunctionId(61u32),
+                    result: Register(4u8),
+                },
+                Instruction::Return(Register(0u8)),
+            ],
+            reg_num: 5usize,
+        },
+        Function {
+            name: "path_ident_segment",
+            code: &[
+                Instruction::LoadConst(Register(1u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::Ident,
+                    reg: Register(1u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(1u8),
+                    address: Address(13u32),
+                },
+                Instruction::Peek {
+                    tok: TokenDescription::FragmentIdent,
+                    reg: Register(1u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(1u8),
+                    address: Address(13u32),
+                },
+                Instruction::Peek {
+                    tok: TokenDescription::SelfUpper,
+                    reg: Register(1u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(1u8),
+                    address: Address(13u32),
+                },
+                Instruction::Peek {
+                    tok: TokenDescription::Self_,
+                    reg: Register(1u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(1u8),
+                    address: Address(13u32),
+                },
+                Instruction::Peek {
+                    tok: TokenDescription::Super,
+                    reg: Register(1u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(1u8),
+                    address: Address(13u32),
+                },
+                Instruction::Peek {
+                    tok: TokenDescription::Crate,
+                    reg: Register(1u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(1u8),
+                    address: Address(13u32),
+                },
+                Instruction::JumpIfZero {
+                    cond: Register(1u8),
+                    address: Address(16u32),
+                },
+                Instruction::Bump,
+                Instruction::Jump {
+                    address: Address(17u32),
+                },
+                Instruction::Error {
+                    message: "<sample message>",
+                },
+                Instruction::Return(Register(0u8)),
+            ],
+            reg_num: 2usize,
+        },
+        Function {
+            name: "expr_if",
+            code: &[
+                Instruction::BumpToken {
+                    tok: TokenDescription::If,
+                },
+                Instruction::Call {
+                    function: FunctionId(43u32),
+                    result: Register(1u8),
+                },
+                Instruction::Call {
+                    function: FunctionId(56u32),
+                    result: Register(2u8),
+                },
+                Instruction::LoadConst(Register(3u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::Else,
+                    reg: Register(3u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(3u8),
+                    address: Address(6u32),
+                },
+                Instruction::JumpIfZero {
+                    cond: Register(3u8),
+                    address: Address(9u32),
+                },
+                Instruction::BumpToken {
+                    tok: TokenDescription::Else,
+                },
+                Instruction::Call {
+                    function: FunctionId(56u32),
+                    result: Register(4u8),
+                },
+                Instruction::Return(Register(0u8)),
+            ],
+            reg_num: 5usize,
+        },
+        Function {
+            name: "expr_array",
+            code: &[
+                Instruction::BumpToken {
+                    tok: TokenDescription::LBracket,
+                },
+                Instruction::LoadConst(Register(1u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::RBracket,
+                    reg: Register(1u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(1u8),
+                    address: Address(4u32),
+                },
+                Instruction::JumpIfZero {
+                    cond: Register(1u8),
+                    address: Address(7u32),
+                },
+                Instruction::BumpToken {
+                    tok: TokenDescription::RBracket,
+                },
+                Instruction::Jump {
+                    address: Address(17u32),
+                },
+                Instruction::Call {
+                    function: FunctionId(43u32),
+                    result: Register(2u8),
+                },
+                Instruction::LoadConst(Register(3u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::Semicolon,
+                    reg: Register(3u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(3u8),
+                    address: Address(11u32),
+                },
+                Instruction::JumpIfZero {
+                    cond: Register(3u8),
+                    address: Address(16u32),
+                },
+                Instruction::BumpToken {
+                    tok: TokenDescription::Semicolon,
+                },
+                Instruction::Call {
+                    function: FunctionId(43u32),
+                    result: Register(4u8),
+                },
+                Instruction::BumpToken {
+                    tok: TokenDescription::RBracket,
+                },
+                Instruction::Jump {
+                    address: Address(17u32),
+                },
+                Instruction::Call {
+                    function: FunctionId(55u32),
+                    result: Register(5u8),
+                },
+                Instruction::Return(Register(0u8)),
+            ],
+            reg_num: 6usize,
+        },
+        Function {
+            name: "expr_array_",
+            code: &[
+                Instruction::LoadConst(Register(1u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::Comma,
+                    reg: Register(1u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(1u8),
+                    address: Address(3u32),
+                },
+                Instruction::JumpIfZero {
+                    cond: Register(1u8),
+                    address: Address(14u32),
+                },
+                Instruction::BumpToken {
+                    tok: TokenDescription::Comma,
+                },
+                Instruction::LoadConst(Register(2u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::RBracket,
+                    reg: Register(2u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(2u8),
+                    address: Address(8u32),
+                },
+                Instruction::JumpIfZero {
+                    cond: Register(2u8),
+                    address: Address(11u32),
+                },
+                Instruction::BumpToken {
+                    tok: TokenDescription::RBracket,
+                },
+                Instruction::Jump {
+                    address: Address(13u32),
+                },
+                Instruction::Call {
+                    function: FunctionId(43u32),
+                    result: Register(3u8),
+                },
+                Instruction::Call {
+                    function: FunctionId(55u32),
+                    result: Register(4u8),
+                },
+                Instruction::Jump {
+                    address: Address(15u32),
+                },
+                Instruction::BumpToken {
+                    tok: TokenDescription::RBracket,
+                },
+                Instruction::Return(Register(0u8)),
+            ],
+            reg_num: 5usize,
+        },
+        Function {
+            name: "expr_block",
+            code: &[
+                Instruction::Call {
+                    function: FunctionId(12u32),
+                    result: Register(1u8),
+                },
+                Instruction::Return(Register(0u8)),
+            ],
+            reg_num: 2usize,
+        },
+        Function {
+            name: "expr_call",
+            code: &[
+                Instruction::BumpToken {
+                    tok: TokenDescription::LParen,
+                },
+                Instruction::LoadConst(Register(1u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::RParen,
+                    reg: Register(1u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(1u8),
+                    address: Address(4u32),
+                },
+                Instruction::JumpIfZero {
+                    cond: Register(1u8),
+                    address: Address(7u32),
+                },
+                Instruction::BumpToken {
+                    tok: TokenDescription::RParen,
+                },
+                Instruction::Jump {
+                    address: Address(9u32),
+                },
+                Instruction::Call {
+                    function: FunctionId(43u32),
+                    result: Register(2u8),
+                },
+                Instruction::Call {
+                    function: FunctionId(58u32),
+                    result: Register(3u8),
+                },
+                Instruction::Return(Register(0u8)),
+            ],
+            reg_num: 4usize,
+        },
+        Function {
+            name: "expr_call_",
+            code: &[
+                Instruction::LoadConst(Register(1u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::Comma,
+                    reg: Register(1u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(1u8),
+                    address: Address(3u32),
+                },
+                Instruction::JumpIfZero {
+                    cond: Register(1u8),
+                    address: Address(14u32),
+                },
+                Instruction::BumpToken {
+                    tok: TokenDescription::Comma,
+                },
+                Instruction::LoadConst(Register(2u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::RParen,
+                    reg: Register(2u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(2u8),
+                    address: Address(8u32),
+                },
+                Instruction::JumpIfZero {
+                    cond: Register(2u8),
+                    address: Address(11u32),
+                },
+                Instruction::BumpToken {
+                    tok: TokenDescription::RParen,
+                },
+                Instruction::Jump {
+                    address: Address(13u32),
+                },
+                Instruction::Call {
+                    function: FunctionId(43u32),
+                    result: Register(3u8),
+                },
+                Instruction::Call {
+                    function: FunctionId(58u32),
+                    result: Register(4u8),
+                },
+                Instruction::Jump {
+                    address: Address(15u32),
+                },
+                Instruction::BumpToken {
+                    tok: TokenDescription::RParen,
+                },
+                Instruction::Return(Register(0u8)),
+            ],
+            reg_num: 5usize,
+        },
+        Function {
+            name: "expr_dot_expr",
+            code: &[
+                Instruction::BumpToken {
+                    tok: TokenDescription::Dot,
+                },
+                Instruction::LoadConst(Register(1u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::Await,
+                    reg: Register(1u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(1u8),
+                    address: Address(4u32),
+                },
+                Instruction::JumpIfZero {
+                    cond: Register(1u8),
+                    address: Address(7u32),
+                },
+                Instruction::BumpToken {
+                    tok: TokenDescription::Await,
+                },
+                Instruction::Jump {
+                    address: Address(36u32),
+                },
+                Instruction::LoadConst(Register(2u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::Ident,
+                    reg: Register(2u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(2u8),
+                    address: Address(10u32),
+                },
+                Instruction::JumpIfZero {
+                    cond: Register(2u8),
+                    address: Address(14u32),
+                },
+                Instruction::BumpToken {
+                    tok: TokenDescription::Ident,
+                },
+                Instruction::Call {
+                    function: FunctionId(60u32),
+                    result: Register(3u8),
+                },
+                Instruction::Jump {
+                    address: Address(36u32),
+                },
+                Instruction::LoadConst(Register(4u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::FragmentIdent,
+                    reg: Register(4u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(4u8),
+                    address: Address(17u32),
+                },
+                Instruction::JumpIfZero {
+                    cond: Register(4u8),
+                    address: Address(21u32),
+                },
+                Instruction::BumpToken {
+                    tok: TokenDescription::FragmentIdent,
+                },
+                Instruction::Call {
+                    function: FunctionId(60u32),
+                    result: Register(5u8),
+                },
+                Instruction::Jump {
+                    address: Address(36u32),
+                },
+                Instruction::LoadConst(Register(6u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::Literal,
+                    reg: Register(6u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(6u8),
+                    address: Address(24u32),
+                },
+                Instruction::JumpIfZero {
+                    cond: Register(6u8),
+                    address: Address(28u32),
+                },
+                Instruction::BumpToken {
+                    tok: TokenDescription::Literal,
+                },
+                Instruction::Call {
+                    function: FunctionId(60u32),
+                    result: Register(7u8),
+                },
+                Instruction::Jump {
+                    address: Address(36u32),
+                },
+                Instruction::LoadConst(Register(8u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::FragmentLiteral,
+                    reg: Register(8u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(8u8),
+                    address: Address(31u32),
+                },
+                Instruction::JumpIfZero {
+                    cond: Register(8u8),
+                    address: Address(35u32),
+                },
+                Instruction::BumpToken {
+                    tok: TokenDescription::FragmentLiteral,
+                },
+                Instruction::Call {
+                    function: FunctionId(60u32),
+                    result: Register(9u8),
+                },
+                Instruction::Jump {
+                    address: Address(36u32),
+                },
+                Instruction::Error {
+                    message: "<sample message>",
+                },
+                Instruction::Return(Register(0u8)),
+            ],
+            reg_num: 10usize,
+        },
+        Function {
+            name: "expr_field_or_method",
+            code: &[
+                Instruction::LoadConst(Register(1u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::ColonColon,
+                    reg: Register(1u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(1u8),
+                    address: Address(3u32),
+                },
+                Instruction::JumpIfZero {
+                    cond: Register(1u8),
+                    address: Address(7u32),
+                },
+                Instruction::BumpToken {
+                    tok: TokenDescription::ColonColon,
+                },
+                Instruction::Call {
+                    function: FunctionId(61u32),
+                    result: Register(2u8),
+                },
+                Instruction::Call {
+                    function: FunctionId(57u32),
+                    result: Register(3u8),
+                },
+                Instruction::LoadConst(Register(4u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::LParen,
+                    reg: Register(4u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(4u8),
+                    address: Address(10u32),
+                },
+                Instruction::JumpIfZero {
+                    cond: Register(4u8),
+                    address: Address(12u32),
+                },
+                Instruction::Call {
+                    function: FunctionId(57u32),
+                    result: Register(5u8),
+                },
+                Instruction::Return(Register(0u8)),
+            ],
+            reg_num: 6usize,
+        },
+        Function {
+            name: "expr_angle_bracketed_generic_arguments",
+            code: &[
+                Instruction::BumpToken {
+                    tok: TokenDescription::LessThan,
+                },
+                Instruction::LoadConst(Register(1u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::GreaterThan,
+                    reg: Register(1u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(1u8),
+                    address: Address(4u32),
+                },
+                Instruction::JumpIfZero {
+                    cond: Register(1u8),
+                    address: Address(7u32),
+                },
+                Instruction::BumpToken {
+                    tok: TokenDescription::GreaterThan,
+                },
+                Instruction::Jump {
+                    address: Address(9u32),
+                },
+                Instruction::Call {
+                    function: FunctionId(63u32),
+                    result: Register(2u8),
+                },
+                Instruction::Call {
+                    function: FunctionId(62u32),
+                    result: Register(3u8),
+                },
+                Instruction::Return(Register(0u8)),
+            ],
+            reg_num: 4usize,
+        },
+        Function {
+            name: "expr_angle_bracketed_generic_arguments_",
+            code: &[
+                Instruction::LoadConst(Register(1u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::GreaterThan,
+                    reg: Register(1u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(1u8),
+                    address: Address(3u32),
+                },
+                Instruction::JumpIfZero {
+                    cond: Register(1u8),
+                    address: Address(6u32),
+                },
+                Instruction::BumpToken {
+                    tok: TokenDescription::GreaterThan,
+                },
+                Instruction::Jump {
+                    address: Address(19u32),
+                },
+                Instruction::LoadConst(Register(2u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::Comma,
+                    reg: Register(2u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(2u8),
+                    address: Address(9u32),
+                },
+                Instruction::JumpIfZero {
+                    cond: Register(2u8),
+                    address: Address(19u32),
+                },
+                Instruction::BumpToken {
+                    tok: TokenDescription::Comma,
+                },
+                Instruction::LoadConst(Register(3u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::GreaterThan,
+                    reg: Register(3u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(3u8),
+                    address: Address(14u32),
+                },
+                Instruction::JumpIfZero {
+                    cond: Register(3u8),
+                    address: Address(17u32),
+                },
+                Instruction::BumpToken {
+                    tok: TokenDescription::GreaterThan,
+                },
+                Instruction::Jump {
+                    address: Address(19u32),
+                },
+                Instruction::Call {
+                    function: FunctionId(63u32),
+                    result: Register(4u8),
+                },
+                Instruction::Call {
+                    function: FunctionId(62u32),
+                    result: Register(5u8),
+                },
+                Instruction::Return(Register(0u8)),
+            ],
+            reg_num: 6usize,
+        },
+        Function {
+            name: "expr_generic_argument",
+            code: &[
+                Instruction::LoadConst(Register(1u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::Literal,
+                    reg: Register(1u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(1u8),
+                    address: Address(5u32),
+                },
+                Instruction::Peek {
+                    tok: TokenDescription::FragmentLiteral,
+                    reg: Register(1u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(1u8),
+                    address: Address(5u32),
+                },
+                Instruction::JumpIfZero {
+                    cond: Register(1u8),
+                    address: Address(8u32),
+                },
+                Instruction::Bump,
+                Instruction::Jump {
+                    address: Address(35u32),
+                },
+                Instruction::LoadConst(Register(2u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::Minus,
+                    reg: Register(2u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(2u8),
+                    address: Address(11u32),
+                },
+                Instruction::JumpIfZero {
+                    cond: Register(2u8),
+                    address: Address(14u32),
+                },
+                Instruction::Call {
+                    function: FunctionId(64u32),
+                    result: Register(3u8),
+                },
+                Instruction::Jump {
+                    address: Address(35u32),
+                },
+                Instruction::LoadConst(Register(4u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::FragmentIdent,
+                    reg: Register(4u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(4u8),
+                    address: Address(19u32),
+                },
+                Instruction::Peek {
+                    tok: TokenDescription::Ident,
+                    reg: Register(4u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(4u8),
+                    address: Address(19u32),
+                },
+                Instruction::JumpIfZero {
+                    cond: Register(4u8),
+                    address: Address(28u32),
+                },
+                Instruction::LoadConst(Register(5u8), Value(0i8)),
+                Instruction::Peek2 {
+                    tok: TokenDescription::Equals,
+                    reg: Register(5u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(5u8),
+                    address: Address(23u32),
+                },
+                Instruction::JumpIfZero {
+                    cond: Register(5u8),
+                    address: Address(26u32),
+                },
+                Instruction::Bump,
+                Instruction::BumpToken {
+                    tok: TokenDescription::Equals,
+                },
+                Instruction::Call {
+                    function: FunctionId(16u32),
+                    result: Register(6u8),
+                },
+                Instruction::Jump {
+                    address: Address(35u32),
+                },
+                Instruction::LoadConst(Register(7u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::LBrace,
+                    reg: Register(7u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(7u8),
+                    address: Address(31u32),
+                },
+                Instruction::JumpIfZero {
+                    cond: Register(7u8),
+                    address: Address(34u32),
+                },
+                Instruction::Call {
+                    function: FunctionId(12u32),
+                    result: Register(8u8),
+                },
+                Instruction::Jump {
+                    address: Address(35u32),
+                },
+                Instruction::Call {
+                    function: FunctionId(16u32),
+                    result: Register(9u8),
+                },
+                Instruction::Return(Register(0u8)),
+            ],
+            reg_num: 10usize,
+        },
+        Function {
+            name: "minus_prefixed_literal",
+            code: &[
+                Instruction::LoadConst(Register(1u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::Minus,
+                    reg: Register(1u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(1u8),
+                    address: Address(3u32),
+                },
+                Instruction::JumpIfZero {
+                    cond: Register(1u8),
+                    address: Address(7u32),
+                },
+                Instruction::BumpToken {
+                    tok: TokenDescription::Minus,
+                },
+                Instruction::Call {
+                    function: FunctionId(64u32),
+                    result: Register(2u8),
+                },
+                Instruction::Jump {
+                    address: Address(20u32),
+                },
+                Instruction::LoadConst(Register(3u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::Literal,
+                    reg: Register(3u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(3u8),
+                    address: Address(10u32),
+                },
+                Instruction::JumpIfZero {
+                    cond: Register(3u8),
+                    address: Address(13u32),
+                },
+                Instruction::BumpToken {
+                    tok: TokenDescription::Literal,
+                },
+                Instruction::Jump {
+                    address: Address(20u32),
+                },
+                Instruction::LoadConst(Register(4u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::FragmentLiteral,
+                    reg: Register(4u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(4u8),
+                    address: Address(16u32),
+                },
+                Instruction::JumpIfZero {
+                    cond: Register(4u8),
+                    address: Address(19u32),
+                },
+                Instruction::BumpToken {
+                    tok: TokenDescription::FragmentLiteral,
+                },
+                Instruction::Jump {
+                    address: Address(20u32),
+                },
+                Instruction::Error {
+                    message: "<sample message>",
+                },
+                Instruction::Return(Register(0u8)),
+            ],
+            reg_num: 5usize,
+        },
+        Function {
+            name: "expr_prefixed_unary_op",
+            code: &[Instruction::Return(Register(0u8))],
+            reg_num: 1usize,
+        },
+        Function {
+            name: "expr_tuple",
+            code: &[
+                Instruction::BumpToken {
+                    tok: TokenDescription::LParen,
+                },
+                Instruction::LoadConst(Register(1u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::RParen,
+                    reg: Register(1u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(1u8),
+                    address: Address(4u32),
+                },
+                Instruction::JumpIfZero {
+                    cond: Register(1u8),
+                    address: Address(7u32),
+                },
+                Instruction::BumpToken {
+                    tok: TokenDescription::RParen,
+                },
+                Instruction::Jump {
+                    address: Address(9u32),
+                },
+                Instruction::Call {
+                    function: FunctionId(43u32),
+                    result: Register(2u8),
+                },
+                Instruction::Call {
+                    function: FunctionId(67u32),
+                    result: Register(3u8),
+                },
+                Instruction::Return(Register(0u8)),
+            ],
+            reg_num: 4usize,
+        },
+        Function {
+            name: "expr_tuple_",
+            code: &[
+                Instruction::LoadConst(Register(1u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::RParen,
+                    reg: Register(1u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(1u8),
+                    address: Address(3u32),
+                },
+                Instruction::JumpIfZero {
+                    cond: Register(1u8),
+                    address: Address(6u32),
+                },
+                Instruction::BumpToken {
+                    tok: TokenDescription::RParen,
+                },
+                Instruction::Jump {
+                    address: Address(15u32),
+                },
+                Instruction::BumpToken {
+                    tok: TokenDescription::Comma,
+                },
+                Instruction::LoadConst(Register(2u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::RParen,
+                    reg: Register(2u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(2u8),
+                    address: Address(10u32),
+                },
+                Instruction::JumpIfZero {
+                    cond: Register(2u8),
+                    address: Address(13u32),
+                },
+                Instruction::BumpToken {
+                    tok: TokenDescription::RParen,
+                },
+                Instruction::Jump {
+                    address: Address(15u32),
+                },
+                Instruction::Call {
+                    function: FunctionId(43u32),
+                    result: Register(3u8),
+                },
+                Instruction::Call {
+                    function: FunctionId(67u32),
+                    result: Register(4u8),
+                },
+                Instruction::Return(Register(0u8)),
+            ],
+            reg_num: 5usize,
+        },
+        Function {
+            name: "expr_loop",
+            code: &[
+                Instruction::LoadConst(Register(1u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::FragmentLifetime,
+                    reg: Register(1u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(1u8),
+                    address: Address(3u32),
+                },
+                Instruction::JumpIfZero {
+                    cond: Register(1u8),
+                    address: Address(5u32),
+                },
+                Instruction::BumpToken {
+                    tok: TokenDescription::FragmentLifetime,
+                },
+                Instruction::BumpToken {
+                    tok: TokenDescription::Loop,
+                },
+                Instruction::Call {
+                    function: FunctionId(12u32),
+                    result: Register(2u8),
+                },
+                Instruction::Return(Register(0u8)),
+            ],
+            reg_num: 3usize,
+        },
+        Function {
+            name: "expr_while",
+            code: &[
+                Instruction::BumpToken {
+                    tok: TokenDescription::While,
+                },
+                Instruction::Call {
+                    function: FunctionId(43u32),
+                    result: Register(1u8),
+                },
+                Instruction::Call {
+                    function: FunctionId(12u32),
+                    result: Register(2u8),
+                },
+                Instruction::Return(Register(0u8)),
+            ],
+            reg_num: 3usize,
+        },
+        Function {
+            name: "expr_for",
+            code: &[
+                Instruction::BumpToken {
+                    tok: TokenDescription::For,
+                },
+                Instruction::Call {
+                    function: FunctionId(26u32),
+                    result: Register(1u8),
+                },
+                Instruction::BumpToken {
+                    tok: TokenDescription::In,
+                },
+                Instruction::Call {
+                    function: FunctionId(43u32),
+                    result: Register(2u8),
+                },
+                Instruction::Call {
+                    function: FunctionId(12u32),
+                    result: Register(3u8),
+                },
+                Instruction::Return(Register(0u8)),
+            ],
+            reg_num: 4usize,
+        },
+        Function {
+            name: "expr_match",
+            code: &[
+                Instruction::BumpToken {
+                    tok: TokenDescription::Match,
+                },
+                Instruction::Call {
+                    function: FunctionId(43u32),
+                    result: Register(1u8),
+                },
+                Instruction::BumpToken {
+                    tok: TokenDescription::LBrace,
+                },
+                Instruction::Call {
+                    function: FunctionId(72u32),
+                    result: Register(2u8),
+                },
+                Instruction::BumpToken {
+                    tok: TokenDescription::RBrace,
+                },
+                Instruction::Return(Register(0u8)),
+            ],
+            reg_num: 3usize,
+        },
+        Function {
+            name: "match_arms",
+            code: &[
+                Instruction::LoadConst(Register(1u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::RBrace,
+                    reg: Register(1u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(1u8),
+                    address: Address(3u32),
+                },
+                Instruction::JumpIfZero {
+                    cond: Register(1u8),
+                    address: Address(5u32),
+                },
+                Instruction::Jump {
+                    address: Address(7u32),
+                },
+                Instruction::Call {
+                    function: FunctionId(73u32),
+                    result: Register(2u8),
+                },
+                Instruction::Call {
+                    function: FunctionId(72u32),
+                    result: Register(3u8),
+                },
+                Instruction::Return(Register(0u8)),
+            ],
+            reg_num: 4usize,
+        },
+        Function {
+            name: "match_arm",
+            code: &[
+                Instruction::Call {
+                    function: FunctionId(26u32),
+                    result: Register(1u8),
+                },
+                Instruction::LoadConst(Register(2u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::If,
+                    reg: Register(2u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(2u8),
+                    address: Address(4u32),
+                },
+                Instruction::JumpIfZero {
+                    cond: Register(2u8),
+                    address: Address(7u32),
+                },
+                Instruction::BumpToken {
+                    tok: TokenDescription::If,
+                },
+                Instruction::Call {
+                    function: FunctionId(43u32),
+                    result: Register(3u8),
+                },
+                Instruction::BumpToken {
+                    tok: TokenDescription::FatArrow,
+                },
+                Instruction::Call {
+                    function: FunctionId(43u32),
+                    result: Register(4u8),
+                },
+                Instruction::BumpToken {
+                    tok: TokenDescription::Comma,
+                },
+                Instruction::Return(Register(0u8)),
+            ],
+            reg_num: 5usize,
+        },
+        Function {
+            name: "macro_call_tail",
+            code: &[
+                Instruction::BumpToken {
+                    tok: TokenDescription::Not,
+                },
+                Instruction::Call {
+                    function: FunctionId(75u32),
+                    result: Register(1u8),
+                },
+                Instruction::LoadConst(Register(2u8), Value(0i8)),
+                Instruction::LoadConst(Register(3u8), Value(16i8)),
+                Instruction::Sub {
+                    lhs: Register(1u8),
+                    rhs: Register(3u8),
+                    out: Register(2u8),
+                },
+                Instruction::Invert {
+                    src: Register(2u8),
+                    dst: Register(2u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(2u8),
+                    address: Address(7u32),
+                },
+                Instruction::JumpIfZero {
+                    cond: Register(2u8),
+                    address: Address(10u32),
+                },
+                Instruction::LoadConst(Register(0u8), Value(17i8)),
+                Instruction::Return(Register(0u8)),
+                Instruction::LoadConst(Register(4u8), Value(0i8)),
+                Instruction::LoadConst(Register(5u8), Value(18i8)),
+                Instruction::Sub {
+                    lhs: Register(1u8),
+                    rhs: Register(5u8),
+                    out: Register(4u8),
+                },
+                Instruction::Invert {
+                    src: Register(4u8),
+                    dst: Register(4u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(4u8),
+                    address: Address(15u32),
+                },
+                Instruction::JumpIfZero {
+                    cond: Register(4u8),
+                    address: Address(18u32),
+                },
+                Instruction::LoadConst(Register(0u8), Value(19i8)),
+                Instruction::Return(Register(0u8)),
+                Instruction::LoadConst(Register(6u8), Value(0i8)),
+                Instruction::LoadConst(Register(7u8), Value(20i8)),
+                Instruction::Sub {
+                    lhs: Register(1u8),
+                    rhs: Register(7u8),
+                    out: Register(6u8),
+                },
+                Instruction::Invert {
+                    src: Register(6u8),
+                    dst: Register(6u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(6u8),
+                    address: Address(23u32),
+                },
+                Instruction::JumpIfZero {
+                    cond: Register(6u8),
+                    address: Address(26u32),
+                },
+                Instruction::LoadConst(Register(0u8), Value(5i8)),
+                Instruction::Return(Register(0u8)),
+                Instruction::Return(Register(0u8)),
+            ],
+            reg_num: 8usize,
+        },
+        Function {
+            name: "token_stream_group",
+            code: &[
+                Instruction::LoadConst(Register(1u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::LParen,
+                    reg: Register(1u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(1u8),
+                    address: Address(3u32),
+                },
+                Instruction::JumpIfZero {
+                    cond: Register(1u8),
+                    address: Address(7u32),
+                },
+                Instruction::Call {
+                    function: FunctionId(77u32),
+                    result: Register(2u8),
+                },
+                Instruction::LoadConst(Register(0u8), Value(16i8)),
+                Instruction::Return(Register(0u8)),
+                Instruction::LoadConst(Register(3u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::LBracket,
+                    reg: Register(3u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(3u8),
+                    address: Address(10u32),
+                },
+                Instruction::JumpIfZero {
+                    cond: Register(3u8),
+                    address: Address(14u32),
+                },
+                Instruction::Call {
+                    function: FunctionId(79u32),
+                    result: Register(4u8),
+                },
+                Instruction::LoadConst(Register(0u8), Value(18i8)),
+                Instruction::Return(Register(0u8)),
+                Instruction::LoadConst(Register(5u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::LBrace,
+                    reg: Register(5u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(5u8),
+                    address: Address(17u32),
+                },
+                Instruction::JumpIfZero {
+                    cond: Register(5u8),
+                    address: Address(21u32),
+                },
+                Instruction::Call {
+                    function: FunctionId(81u32),
+                    result: Register(6u8),
+                },
+                Instruction::LoadConst(Register(0u8), Value(20i8)),
+                Instruction::Return(Register(0u8)),
+                Instruction::Error {
+                    message: "<sample message>",
+                },
+                Instruction::Return(Register(0u8)),
+            ],
+            reg_num: 7usize,
+        },
+        Function {
+            name: "token_stream_group_or_token",
+            code: &[
+                Instruction::LoadConst(Register(1u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::LParen,
+                    reg: Register(1u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(1u8),
+                    address: Address(7u32),
+                },
+                Instruction::Peek {
+                    tok: TokenDescription::LBracket,
+                    reg: Register(1u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(1u8),
+                    address: Address(7u32),
+                },
+                Instruction::Peek {
+                    tok: TokenDescription::LBrace,
+                    reg: Register(1u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(1u8),
+                    address: Address(7u32),
+                },
+                Instruction::JumpIfZero {
+                    cond: Register(1u8),
+                    address: Address(10u32),
+                },
+                Instruction::Call {
+                    function: FunctionId(75u32),
+                    result: Register(2u8),
+                },
+                Instruction::Jump {
+                    address: Address(21u32),
+                },
+                Instruction::LoadConst(Register(3u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::RParen,
+                    reg: Register(3u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(3u8),
+                    address: Address(17u32),
+                },
+                Instruction::Peek {
+                    tok: TokenDescription::RBracket,
+                    reg: Register(3u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(3u8),
+                    address: Address(17u32),
+                },
+                Instruction::Peek {
+                    tok: TokenDescription::RBrace,
+                    reg: Register(3u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(3u8),
+                    address: Address(17u32),
+                },
+                Instruction::JumpIfZero {
+                    cond: Register(3u8),
+                    address: Address(20u32),
+                },
+                Instruction::Error {
+                    message: "<sample message>",
+                },
+                Instruction::Jump {
+                    address: Address(21u32),
+                },
+                Instruction::Bump,
+                Instruction::Return(Register(0u8)),
+            ],
+            reg_num: 4usize,
+        },
+        Function {
+            name: "token_stream_group_paren",
+            code: &[
+                Instruction::BumpToken {
+                    tok: TokenDescription::LParen,
+                },
+                Instruction::Call {
+                    function: FunctionId(78u32),
+                    result: Register(1u8),
+                },
+                Instruction::Return(Register(0u8)),
+            ],
+            reg_num: 2usize,
+        },
+        Function {
+            name: "token_stream_group_paren_",
+            code: &[
+                Instruction::LoadConst(Register(1u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::RParen,
+                    reg: Register(1u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(1u8),
+                    address: Address(3u32),
+                },
+                Instruction::JumpIfZero {
+                    cond: Register(1u8),
+                    address: Address(6u32),
+                },
+                Instruction::BumpToken {
+                    tok: TokenDescription::RParen,
+                },
+                Instruction::Jump {
+                    address: Address(8u32),
+                },
+                Instruction::Call {
+                    function: FunctionId(76u32),
+                    result: Register(2u8),
+                },
+                Instruction::Call {
+                    function: FunctionId(78u32),
+                    result: Register(3u8),
+                },
+                Instruction::Return(Register(0u8)),
+            ],
+            reg_num: 4usize,
+        },
+        Function {
+            name: "token_stream_group_bracket",
+            code: &[
+                Instruction::BumpToken {
+                    tok: TokenDescription::LBracket,
+                },
+                Instruction::Call {
+                    function: FunctionId(80u32),
+                    result: Register(1u8),
+                },
+                Instruction::Return(Register(0u8)),
+            ],
+            reg_num: 2usize,
+        },
+        Function {
+            name: "token_stream_group_bracket_",
+            code: &[
+                Instruction::LoadConst(Register(1u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::RBracket,
+                    reg: Register(1u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(1u8),
+                    address: Address(3u32),
+                },
+                Instruction::JumpIfZero {
+                    cond: Register(1u8),
+                    address: Address(6u32),
+                },
+                Instruction::BumpToken {
+                    tok: TokenDescription::RBracket,
+                },
+                Instruction::Jump {
+                    address: Address(8u32),
+                },
+                Instruction::Call {
+                    function: FunctionId(76u32),
+                    result: Register(2u8),
+                },
+                Instruction::Call {
+                    function: FunctionId(80u32),
+                    result: Register(3u8),
+                },
+                Instruction::Return(Register(0u8)),
+            ],
+            reg_num: 4usize,
+        },
+        Function {
+            name: "token_stream_group_brace",
+            code: &[
+                Instruction::BumpToken {
+                    tok: TokenDescription::LBrace,
+                },
+                Instruction::Call {
+                    function: FunctionId(82u32),
+                    result: Register(1u8),
+                },
+                Instruction::Return(Register(0u8)),
+            ],
+            reg_num: 2usize,
+        },
+        Function {
+            name: "token_stream_group_brace_",
+            code: &[
+                Instruction::LoadConst(Register(1u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::RBrace,
+                    reg: Register(1u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(1u8),
+                    address: Address(3u32),
+                },
+                Instruction::JumpIfZero {
+                    cond: Register(1u8),
+                    address: Address(6u32),
+                },
+                Instruction::BumpToken {
+                    tok: TokenDescription::RBrace,
+                },
+                Instruction::Jump {
+                    address: Address(8u32),
+                },
+                Instruction::Call {
+                    function: FunctionId(76u32),
+                    result: Register(2u8),
+                },
+                Instruction::Call {
+                    function: FunctionId(82u32),
+                    result: Register(3u8),
+                },
+                Instruction::Return(Register(0u8)),
+            ],
+            reg_num: 4usize,
+        },
+    ],
+};
+pub fn new_item<Span>() -> Interpreter<'static, Span>
 where
     Span: Copy,
 {
-    fn cmp(&self, other: &RustParser<Span>) -> Ordering {
-        self.stack
-            .len()
-            .cmp(&other.stack.len())
-            .then_with(|| self.stack.iter().rev().cmp(other.stack.iter().rev()))
-            .then_with(|| self.buffer.cmp(&other.buffer))
-    }
+    Interpreter::new(&PROGRAM, FunctionId(2u32))
 }
-impl<Span> PartialOrd for RustParser<Span>
+pub fn new_stmt<Span>() -> Interpreter<'static, Span>
 where
-    Span: Copy + 'static,
+    Span: Copy,
 {
-    fn partial_cmp(&self, other: &RustParser<Span>) -> Option<Ordering> {
-        Some(self.cmp(other))
-    }
+    Interpreter::new(&PROGRAM, FunctionId(11u32))
 }
-#[derive(Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
-pub struct TransitionData {
-    pub popped: usize,
-    pub buf_size: usize,
-    pub pushed: Vec<TypeErasedState>,
-}
-#[derive(Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
-pub struct TypeErasedState {
-    inner: *const (),
-}
-impl<Span> RustParser<Span>
+pub fn new_ty<Span>() -> Interpreter<'static, Span>
 where
-    Span: Copy + 'static,
+    Span: Copy,
 {
-    pub fn item() -> RustParser<Span> {
-        RustParser {
-            buffer: TokenBuffer::Empty([]),
-            stack: vec![item],
-            tried: SmallVec::new(),
-            ret: None,
-        }
-    }
-
-    pub fn stmt() -> RustParser<Span> {
-        RustParser {
-            buffer: TokenBuffer::Empty([]),
-            stack: vec![stmt],
-            tried: SmallVec::new(),
-            ret: None,
-        }
-    }
-
-    pub fn ty() -> RustParser<Span> {
-        RustParser {
-            buffer: TokenBuffer::Empty([]),
-            stack: vec![ty],
-            tried: SmallVec::new(),
-            ret: None,
-        }
-    }
-
-    pub fn pat() -> RustParser<Span> {
-        RustParser {
-            buffer: TokenBuffer::Empty([]),
-            stack: vec![pat],
-            tried: SmallVec::new(),
-            ret: None,
-        }
-    }
-
-    pub fn expr() -> RustParser<Span> {
-        RustParser {
-            buffer: TokenBuffer::Empty([]),
-            stack: vec![expr],
-            tried: SmallVec::new(),
-            ret: None,
-        }
-    }
-
-    pub fn step(
-        &mut self,
-        token: TokenDescription,
-        span: Span,
-    ) -> Result<TransitionData, (Span, Vec<TokenDescription>)> {
-        match self.buffer.len() {
-            buf_size @ (0 | 1) => {
-                self.buffer.push(token, span);
-                return Ok(TransitionData {
-                    popped: 0,
-                    buf_size,
-                    pushed: vec![],
-                });
-            }
-            2 => {
-                self.buffer.push(token, span);
-            }
-            _ => panic!("Token buffer is full!"),
-        };
-        self.perform_progress().map_err(|e| match e {
-            ProgressError::EmptyStack(s) => (s.unwrap(), vec![]),
-            ProgressError::ParsingError(s, expected) => (s.unwrap(), expected),
-        })
-    }
-
-    pub fn finish(&mut self) -> Result<(), Option<(Span, Vec<TokenDescription>)>> {
-        while !self.buffer.is_empty() {
-            match self.perform_progress() {
-                Ok(_) => continue,
-                Err(ProgressError::EmptyStack(s)) => {
-                    let e = s.map(|s| (s, vec![]));
-                    return Err(e);
-                }
-                Err(ProgressError::ParsingError(s, e)) => {
-                    return Err(s.map(|s| (s, e)));
-                }
-            }
-        }
-        while !self.stack.is_empty() {
-            match self.perform_progress() {
-                Ok(_) => continue,
-                Err(ProgressError::EmptyStack(_)) => break,
-                Err(ProgressError::ParsingError(s, e)) => {
-                    let e = s.map(|s| (s, e));
-                    return Err(e);
-                }
-            }
-        }
-        Ok(())
-    }
-
-    fn perform_progress(&mut self) -> Result<TransitionData, ProgressError<Span>> {
-        let mut trans = TransitionData::new_full_buffer();
-        self.tried.clear();
-        let mut fuel = u8::MAX;
-        loop {
-            assert!(
-                fuel != 0,
-                "Out of fuel. This is probably a bug in the parser codegen."
-            );
-            fuel -= 1;
-            trans.log_pop();
-            let state = self.stack.pop().ok_or_else(|| {
-                let s = self.buffer.peek().map(|(_, s)| s);
-                ProgressError::EmptyStack(s)
-            })?;
-            match state(self)
-                .map_err(|s| ProgressError::ParsingError(s, self.tried.clone().into_vec()))?
-            {
-                Transition::CallNow(states) => {
-                    states.iter().copied().for_each(|f| {
-                        let state = TypeErasedState {
-                            inner: f as *const (),
-                        };
-                        trans.log_push(state);
-                    });
-                    self.stack.extend(states.iter().copied());
-                }
-                Transition::CallThen(states) => {
-                    self.buffer.shift();
-                    self.ret = None;
-                    states.iter().cloned().for_each(|f| {
-                        let state = TypeErasedState {
-                            inner: f as *const (),
-                        };
-                        trans.log_push(state);
-                    });
-                    self.stack.extend(states.iter().copied());
-                    break Ok(trans);
-                }
-                Transition::Ret(label) => {
-                    self.ret = Some(label);
-                }
-            }
-        }
-    }
-
-    fn bump_expect(
-        &mut self,
-        descr: TokenDescription,
-        then: &'static [State<Span>],
-    ) -> Result<Transition<Span>, Option<Span>> {
-        self.tried.push(descr);
-        match self.buffer.peek() {
-            Some((descr_, sp)) if descr_ == descr => Ok(Transition::CallThen(&[])),
-            Some((descr_, sp)) => match descr_.try_split_with(descr) {
-                Some(replacement) => {
-                    self.buffer.replace_first(replacement);
-                    Ok(Transition::CallNow(then))
-                }
-                None => Err(Some(sp)),
-            },
-            _ => Err(None),
-        }
-    }
-
-    fn bump_noexpect(
-        &mut self,
-        then: &'static [State<Span>],
-    ) -> Result<Transition<Span>, Option<Span>> {
-        if self.buffer.peek().is_some() {
-            Ok(Transition::CallThen(&[]))
-        } else {
-            Err(None)
-        }
-    }
-
-    fn peek_expect(&mut self, descr: TokenDescription) -> bool {
-        self.run_cond_fn_expect(TokenBuffer::peek, descr)
-    }
-
-    fn peek2_expect(&mut self, descr: TokenDescription) -> bool {
-        self.run_cond_fn_expect(TokenBuffer::peek2, descr)
-    }
-
-    fn peek3_expect(&mut self, descr: TokenDescription) -> bool {
-        self.run_cond_fn_expect(TokenBuffer::peek3, descr)
-    }
-
-    fn peek_noexpect(&mut self) -> bool {
-        self.run_cond_fn_noexpect(TokenBuffer::peek)
-    }
-
-    fn peek2_noexpect(&mut self) -> bool {
-        self.run_cond_fn_noexpect(TokenBuffer::peek2)
-    }
-
-    fn peek3_noexpect(&mut self) -> bool {
-        self.run_cond_fn_noexpect(TokenBuffer::peek3)
-    }
-
-    fn run_cond_fn_expect<F>(&mut self, f: F, descr: TokenDescription) -> bool
-    where
-        F: FnOnce(&TokenBuffer<Span>) -> Option<(TokenDescription, Span)>,
-    {
-        self.tried.push(descr);
-        match f(&self.buffer) {
-            Some((descr_, sp)) if descr_ == descr => true,
-            Some((descr_, sp)) => descr_.try_split_with(descr).is_some(),
-            otherwise => false,
-        }
-    }
-
-    fn run_cond_fn_noexpect<F>(&mut self, f: F) -> bool
-    where
-        F: FnOnce(&TokenBuffer<Span>) -> Option<(TokenDescription, Span)>,
-    {
-        f(&self.buffer).is_some()
-    }
-
-    fn call_now(&mut self, now: &'static [State<Span>]) -> Result<Transition<Span>, Option<Span>> {
-        Ok(Transition::CallNow(now))
-    }
-
-    fn call_then(
-        &mut self,
-        then: &'static [State<Span>],
-    ) -> Result<Transition<Span>, Option<Span>> {
-        Ok(Transition::CallThen(then))
-    }
-
-    fn error(&self) -> Result<Transition<Span>, Option<Span>> {
-        let sp = self.buffer.peek().map(|(_, sp)| sp);
-        Err(sp)
-    }
-
-    fn set_retval(&mut self, retval: &'static str) -> Result<Transition<Span>, Option<Span>> {
-        Ok(Transition::Ret(retval))
-    }
-
-    fn returned(&self, sym: &str) -> bool {
-        self.ret.map(|s| sym == s).unwrap_or_default()
-    }
+    Interpreter::new(&PROGRAM, FunctionId(16u32))
 }
-#[derive(Clone, Debug, PartialEq)]
-enum ProgressError<Span> {
-    EmptyStack(Option<Span>),
-    ParsingError(Option<Span>, Vec<TokenDescription>),
-}
-#[derive(Clone, Debug)]
-enum TokenBuffer<Span>
+pub fn new_pat<Span>() -> Interpreter<'static, Span>
 where
-    Span: Copy + 'static,
+    Span: Copy,
 {
-    Empty([(TokenDescription, Span); 0]),
-    Single([(TokenDescription, Span); 1]),
-    Double([(TokenDescription, Span); 2]),
-    Triple([(TokenDescription, Span); 3]),
+    Interpreter::new(&PROGRAM, FunctionId(26u32))
 }
-impl<Span> Hash for TokenBuffer<Span>
+pub fn new_expr<Span>() -> Interpreter<'static, Span>
 where
-    Span: Copy + 'static,
+    Span: Copy,
 {
-    fn hash<H: Hasher>(&self, state: &mut H) {
-        let discriminant = mem::discriminant(self);
-        discriminant.hash(state);
-        self.tokens().for_each(|t| t.hash(state));
-    }
-}
-impl<Span> PartialEq for TokenBuffer<Span>
-where
-    Span: Copy + 'static,
-{
-    fn eq(&self, other: &TokenBuffer<Span>) -> bool {
-        let self_tag = mem::discriminant(self);
-        let arg1_tag = mem::discriminant(other);
-        self_tag == arg1_tag && self.tokens().eq(other.tokens())
-    }
-}
-impl<Span: Copy> Eq for TokenBuffer<Span> {}
-impl<Span> Ord for TokenBuffer<Span>
-where
-    Span: Copy + 'static,
-{
-    fn cmp(&self, other: &TokenBuffer<Span>) -> Ordering {
-        self.len()
-            .cmp(&other.len())
-            .then_with(|| self.tokens().cmp(other.tokens()))
-    }
-}
-impl<Span> PartialOrd for TokenBuffer<Span>
-where
-    Span: Copy + 'static,
-{
-    fn partial_cmp(&self, other: &TokenBuffer<Span>) -> Option<Ordering> {
-        Some(self.cmp(other))
-    }
-}
-type State<Span> = fn(&mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>>;
-#[derive(Clone, Copy, Debug, PartialEq)]
-enum Transition<Span>
-where
-    Span: Copy + 'static,
-{
-    CallNow(&'static [State<Span>]),
-    CallThen(&'static [State<Span>]),
-    Ret(&'static str),
-}
-impl<Span> TokenBuffer<Span>
-where
-    Span: Copy + 'static,
-{
-    fn len(&self) -> usize {
-        match self {
-            TokenBuffer::Empty(_) => 0,
-            TokenBuffer::Single(_) => 1,
-            TokenBuffer::Double(_) => 2,
-            TokenBuffer::Triple(_) => 3,
-        }
-    }
-
-    fn is_empty(&self) -> bool {
-        self.len() == 0
-    }
-
-    fn push(&mut self, token: TokenDescription, span: Span) {
-        match self {
-            TokenBuffer::Empty([]) => {
-                *self = TokenBuffer::Single([(token, span)]);
-            }
-            TokenBuffer::Single([a]) => {
-                *self = TokenBuffer::Double([*a, (token, span)]);
-            }
-            TokenBuffer::Double([a, b]) => {
-                *self = TokenBuffer::Triple([*a, *b, (token, span)]);
-            }
-            TokenBuffer::Triple([a, b, c]) => {
-                panic!("Token buffer is full!");
-            }
-        }
-    }
-
-    fn shift(&mut self) -> (TokenDescription, Span) {
-        match self {
-            TokenBuffer::Empty(_) => panic!("Token buffer is empty!!"),
-            TokenBuffer::Single([a]) => {
-                let a = *a;
-                *self = TokenBuffer::Empty([]);
-                a
-            }
-            TokenBuffer::Double([a, b]) => {
-                let a = *a;
-                *self = TokenBuffer::Single([*b]);
-                a
-            }
-            TokenBuffer::Triple([a, b, c]) => {
-                let a = *a;
-                *self = TokenBuffer::Double([*b, *c]);
-                a
-            }
-        }
-    }
-
-    fn peek(&self) -> Option<(TokenDescription, Span)> {
-        match self {
-            TokenBuffer::Empty(_) => None,
-            TokenBuffer::Single([a])
-            | TokenBuffer::Double([a, _])
-            | TokenBuffer::Triple([a, _, _]) => Some(*a),
-        }
-    }
-
-    fn peek2(&self) -> Option<(TokenDescription, Span)> {
-        match self {
-            TokenBuffer::Empty(_) | TokenBuffer::Single([_]) => None,
-            TokenBuffer::Double([_, a]) | TokenBuffer::Triple([_, a, _]) => Some(*a),
-        }
-    }
-
-    fn peek3(&self) -> Option<(TokenDescription, Span)> {
-        match self {
-            TokenBuffer::Empty(_) | TokenBuffer::Single([_]) | TokenBuffer::Double([_, _]) => None,
-            TokenBuffer::Triple([_, _, a]) => Some(*a),
-        }
-    }
-
-    fn replace_first(&mut self, descr: TokenDescription) {
-        match self {
-            TokenBuffer::Empty(_) => unreachable!(),
-            TokenBuffer::Single([(a, _)])
-            | TokenBuffer::Double([(a, _), _])
-            | TokenBuffer::Triple([(a, _), _, _]) => *a = descr,
-        }
-    }
-
-    fn tokens(&self) -> impl Iterator<Item = TokenDescription> + '_ {
-        self.as_slice().iter().map(|(descr, _)| descr).copied()
-    }
-
-    fn as_slice(&self) -> &[(TokenDescription, Span)] {
-        match self {
-            TokenBuffer::Empty(b) => b,
-            TokenBuffer::Single(b) => b,
-            TokenBuffer::Double(b) => b,
-            TokenBuffer::Triple(b) => b,
-        }
-    }
-}
-impl TransitionData {
-    pub fn empty() -> TransitionData {
-        TransitionData {
-            popped: 0,
-            buf_size: 0,
-            pushed: vec![],
-        }
-    }
-
-    pub fn combine_chasles(mut self, other: TransitionData) -> TransitionData {
-        for _ in 0..other.popped {
-            self.log_pop();
-        }
-        for pushed in other.pushed {
-            self.log_push(pushed);
-        }
-        self
-    }
-
-    fn new_full_buffer() -> TransitionData {
-        TransitionData {
-            popped: 0,
-            buf_size: 3,
-            pushed: vec![],
-        }
-    }
-
-    fn log_pop(&mut self) {
-        if self.pushed.pop().is_none() {
-            self.popped += 1;
-        }
-    }
-
-    fn log_push(&mut self, state: TypeErasedState) {
-        self.pushed.push(state);
-    }
-}
-fn vis_18<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    if input.peek_expect(Pub) {
-        input.call_now(&[vis_14])
-    } else {
-        input.call_now(&[vis_17])
-    }
-}
-fn vis_12<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    if input.peek_expect(LParen) {
-        input.call_now(&[vis_11])
-    } else {
-        input.call_now(&[])
-    }
-}
-fn vis_10<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    if input.peek2_expect(Crate) || input.peek2_expect(Self_) || input.peek2_expect(Super) {
-        input.call_now(&[vis_3])
-    } else {
-        input.call_now(&[vis_9])
-    }
-}
-fn vis_0<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.bump_expect(RParen, &[])
-}
-fn vis_1<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.bump_noexpect(&[])
-}
-fn vis_2<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.bump_expect(LParen, &[])
-}
-fn vis_3<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[vis_0, vis_1, vis_2])
-}
-fn vis_9<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    if input.peek2_expect(In) {
-        input.call_now(&[vis_8])
-    } else {
-        input.call_now(&[])
-    }
-}
-fn vis_4<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.bump_expect(RParen, &[])
-}
-fn vis_5<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[expr_path])
-}
-fn vis_6<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.bump_expect(In, &[])
-}
-fn vis_7<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.bump_expect(LParen, &[])
-}
-fn vis_8<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[vis_4, vis_5, vis_6, vis_7])
-}
-fn vis_11<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[vis_10])
-}
-fn vis_13<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.bump_expect(Pub, &[])
-}
-fn vis_14<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[vis_12, vis_13])
-}
-fn vis_17<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    if input.peek_expect(FragmentVis) {
-        input.call_now(&[vis_16])
-    } else {
-        input.call_now(&[])
-    }
-}
-fn vis_15<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.bump_expect(FragmentVis, &[])
-}
-fn vis_16<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[vis_15])
-}
-fn vis_19<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[vis_18])
-}
-fn vis<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[vis_19])
-}
-fn vis_opt_2<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    if input.peek_expect(Pub) || input.peek_expect(FragmentVis) {
-        input.call_now(&[vis_opt_1])
-    } else {
-        input.call_now(&[])
-    }
-}
-fn vis_opt_0<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[vis])
-}
-fn vis_opt_1<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[vis_opt_0])
-}
-fn vis_opt_3<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[vis_opt_2])
-}
-fn vis_opt<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[vis_opt_3])
-}
-fn item_2<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    if input.peek_noexpect() {
-        input.call_now(&[item_1])
-    } else {
-        input.call_now(&[])
-    }
-}
-fn item_0<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[item])
-}
-fn item_1<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[item_0])
-}
-fn item_24<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    if input.peek_expect(ColonColon)
-        || input.peek_expect(Ident)
-        || input.peek_expect(FragmentIdent)
-        || input.peek_expect(Super)
-        || input.peek_expect(Self_)
-        || input.peek_expect(Crate)
-        || input.peek_expect(FragmentPath)
-    {
-        input.call_now(&[item_10])
-    } else {
-        input.call_now(&[item_23])
-    }
-}
-fn item_8<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    if input.peek2_expect(LBrace) {
-        input.call_now(&[item_4])
-    } else {
-        input.call_now(&[item_7])
-    }
-}
-fn item_3<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[macro_call_tail])
-}
-fn item_4<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[item_3])
-}
-fn item_5<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.bump_expect(Semicolon, &[])
-}
-fn item_6<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[macro_call_tail])
-}
-fn item_7<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[item_5, item_6])
-}
-fn item_9<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[expr_path])
-}
-fn item_10<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[item_8, item_9])
-}
-fn item_23<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    if input.peek_expect(FragmentItem) {
-        input.call_now(&[item_12])
-    } else {
-        input.call_now(&[item_22])
-    }
-}
-fn item_11<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.bump_expect(FragmentItem, &[])
-}
-fn item_12<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[item_11])
-}
-fn item_20<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    if input.peek_expect(Fn) {
-        input.call_now(&[item_14])
-    } else {
-        input.call_now(&[item_19])
-    }
-}
-fn item_13<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[fn_item])
-}
-fn item_14<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[item_13])
-}
-fn item_19<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    if input.peek_expect(Struct) {
-        input.call_now(&[item_16])
-    } else {
-        input.call_now(&[item_18])
-    }
-}
-fn item_15<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[struct_item])
-}
-fn item_16<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[item_15])
-}
-fn item_17<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.error()
-}
-fn item_18<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[item_17])
-}
-fn item_21<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[vis_opt])
-}
-fn item_22<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[item_20, item_21])
-}
-fn item_25<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[item_2, item_24])
-}
-fn item<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[item_25])
-}
-fn struct_item_13<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    if input.peek_expect(LParen) {
-        input.call_now(&[struct_item_4])
-    } else {
-        input.call_now(&[struct_item_12])
-    }
-}
-fn struct_item_0<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.bump_expect(Semicolon, &[])
-}
-fn struct_item_1<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.bump_expect(RParen, &[])
-}
-fn struct_item_2<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[tuple_struct_fields])
-}
-fn struct_item_3<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.bump_expect(LParen, &[])
-}
-fn struct_item_4<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[struct_item_0, struct_item_1, struct_item_2, struct_item_3])
-}
-fn struct_item_12<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    if input.peek_expect(LBrace) {
-        input.call_now(&[struct_item_8])
-    } else {
-        input.call_now(&[struct_item_11])
-    }
-}
-fn struct_item_5<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.bump_expect(RBrace, &[])
-}
-fn struct_item_6<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[struct_fields])
-}
-fn struct_item_7<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.bump_expect(LBrace, &[])
-}
-fn struct_item_8<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[struct_item_5, struct_item_6, struct_item_7])
-}
-fn struct_item_11<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    if input.peek_expect(Semicolon) {
-        input.call_now(&[struct_item_10])
-    } else {
-        input.call_now(&[])
-    }
-}
-fn struct_item_9<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.bump_expect(Semicolon, &[])
-}
-fn struct_item_10<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[struct_item_9])
-}
-fn struct_item_18<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    if input.peek_expect(Ident) || input.peek_expect(FragmentIdent) {
-        input.call_now(&[struct_item_15])
-    } else {
-        input.call_now(&[struct_item_17])
-    }
-}
-fn struct_item_14<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.bump_noexpect(&[])
-}
-fn struct_item_15<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[struct_item_14])
-}
-fn struct_item_16<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.error()
-}
-fn struct_item_17<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[struct_item_16])
-}
-fn struct_item_19<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.bump_expect(Struct, &[])
-}
-fn struct_item_20<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[vis_opt])
-}
-fn struct_item_21<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[
-        struct_item_13,
-        struct_item_18,
-        struct_item_19,
-        struct_item_20,
-    ])
-}
-fn struct_item<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[struct_item_21])
-}
-fn tuple_struct_fields_4<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    if input.peek_expect(RParen) {
-        input.call_now(&[tuple_struct_fields_0])
-    } else {
-        input.call_now(&[tuple_struct_fields_3])
-    }
-}
-fn tuple_struct_fields_0<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[])
-}
-fn tuple_struct_fields_1<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[tuple_struct_fields_])
-}
-fn tuple_struct_fields_2<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[tuple_struct_field])
-}
-fn tuple_struct_fields_3<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[tuple_struct_fields_1, tuple_struct_fields_2])
-}
-fn tuple_struct_fields_5<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[tuple_struct_fields_4])
-}
-fn tuple_struct_fields<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[tuple_struct_fields_5])
-}
-fn tuple_struct_fields__8<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    if input.peek_expect(RParen) {
-        input.call_now(&[tuple_struct_fields__0])
-    } else {
-        input.call_now(&[tuple_struct_fields__7])
-    }
-}
-fn tuple_struct_fields__0<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[])
-}
-fn tuple_struct_fields__5<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    if input.peek_expect(RParen) {
-        input.call_now(&[tuple_struct_fields__1])
-    } else {
-        input.call_now(&[tuple_struct_fields__4])
-    }
-}
-fn tuple_struct_fields__1<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[])
-}
-fn tuple_struct_fields__2<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[tuple_struct_fields_])
-}
-fn tuple_struct_fields__3<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[tuple_struct_field])
-}
-fn tuple_struct_fields__4<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[tuple_struct_fields__2, tuple_struct_fields__3])
-}
-fn tuple_struct_fields__6<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.bump_expect(Comma, &[])
-}
-fn tuple_struct_fields__7<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[tuple_struct_fields__5, tuple_struct_fields__6])
-}
-fn tuple_struct_fields__9<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[tuple_struct_fields__8])
-}
-fn tuple_struct_fields_<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[tuple_struct_fields__9])
-}
-fn struct_fields_4<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    if input.peek_expect(RBrace) {
-        input.call_now(&[struct_fields_0])
-    } else {
-        input.call_now(&[struct_fields_3])
-    }
-}
-fn struct_fields_0<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[])
-}
-fn struct_fields_1<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[struct_fields_])
-}
-fn struct_fields_2<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[struct_field])
-}
-fn struct_fields_3<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[struct_fields_1, struct_fields_2])
-}
-fn struct_fields_5<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[struct_fields_4])
-}
-fn struct_fields<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[struct_fields_5])
-}
-fn struct_fields__8<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    if input.peek_expect(RBrace) {
-        input.call_now(&[struct_fields__0])
-    } else {
-        input.call_now(&[struct_fields__7])
-    }
-}
-fn struct_fields__0<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[])
-}
-fn struct_fields__5<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    if input.peek_expect(RBrace) {
-        input.call_now(&[struct_fields__1])
-    } else {
-        input.call_now(&[struct_fields__4])
-    }
-}
-fn struct_fields__1<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[])
-}
-fn struct_fields__2<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[struct_fields_])
-}
-fn struct_fields__3<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[struct_field])
-}
-fn struct_fields__4<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[struct_fields__2, struct_fields__3])
-}
-fn struct_fields__6<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.bump_expect(Comma, &[])
-}
-fn struct_fields__7<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[struct_fields__5, struct_fields__6])
-}
-fn struct_fields__9<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[struct_fields__8])
-}
-fn struct_fields_<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[struct_fields__9])
-}
-fn tuple_struct_field_0<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[ty])
-}
-fn tuple_struct_field_1<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[vis_opt])
-}
-fn tuple_struct_field_2<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[tuple_struct_field_0, tuple_struct_field_1])
-}
-fn tuple_struct_field<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[tuple_struct_field_2])
-}
-fn struct_field_0<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[ty])
-}
-fn struct_field_1<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.bump_expect(Colon, &[])
-}
-fn struct_field_6<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    if input.peek_expect(Ident) || input.peek_expect(FragmentIdent) {
-        input.call_now(&[struct_field_3])
-    } else {
-        input.call_now(&[struct_field_5])
-    }
-}
-fn struct_field_2<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.bump_noexpect(&[])
-}
-fn struct_field_3<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[struct_field_2])
-}
-fn struct_field_4<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.error()
-}
-fn struct_field_5<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[struct_field_4])
-}
-fn struct_field_7<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[vis_opt])
-}
-fn struct_field_8<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[
-        struct_field_0,
-        struct_field_1,
-        struct_field_6,
-        struct_field_7,
-    ])
-}
-fn struct_field<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[struct_field_8])
-}
-fn fn_item_0<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[block])
-}
-fn fn_item_4<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    if input.peek_expect(RightArrow) {
-        input.call_now(&[fn_item_3])
-    } else {
-        input.call_now(&[])
-    }
-}
-fn fn_item_1<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[ty])
-}
-fn fn_item_2<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.bump_noexpect(&[])
-}
-fn fn_item_3<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[fn_item_1, fn_item_2])
-}
-fn fn_item_5<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[fn_args])
-}
-fn fn_item_13<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    if input.peek_expect(Ident) {
-        input.call_now(&[fn_item_7])
-    } else {
-        input.call_now(&[fn_item_12])
-    }
-}
-fn fn_item_6<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.bump_expect(Ident, &[])
-}
-fn fn_item_7<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[fn_item_6])
-}
-fn fn_item_12<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    if input.peek_expect(FragmentIdent) {
-        input.call_now(&[fn_item_9])
-    } else {
-        input.call_now(&[fn_item_11])
-    }
-}
-fn fn_item_8<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.bump_expect(FragmentIdent, &[])
-}
-fn fn_item_9<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[fn_item_8])
-}
-fn fn_item_10<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.error()
-}
-fn fn_item_11<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[fn_item_10])
-}
-fn fn_item_14<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.bump_expect(Fn, &[])
-}
-fn fn_item_15<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[fn_item_0, fn_item_4, fn_item_5, fn_item_13, fn_item_14])
-}
-fn fn_item<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[fn_item_15])
-}
-fn stmt_0<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[stmt_tail])
-}
-fn stmt_1<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[stmt_0])
-}
-fn stmt<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[stmt_1])
-}
-fn block_0<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.bump_expect(RBrace, &[])
-}
-fn block_1<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[stmt_tail])
-}
-fn block_2<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.bump_expect(LBrace, &[])
-}
-fn block_3<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[block_0, block_1, block_2])
-}
-fn block<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[block_3])
-}
-fn stmt_tail_29<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    if input.peek_noexpect() {
-        input.call_now(&[stmt_tail_28])
-    } else {
-        input.call_now(&[])
-    }
-}
-fn stmt_tail_27<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    if input.peek_expect(RBrace) {
-        input.call_now(&[stmt_tail_0])
-    } else {
-        input.call_now(&[stmt_tail_26])
-    }
-}
-fn stmt_tail_0<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[])
-}
-fn stmt_tail_26<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    if input.peek_expect(FragmentStmt) {
-        input.call_now(&[stmt_tail_2])
-    } else {
-        input.call_now(&[stmt_tail_25])
-    }
-}
-fn stmt_tail_1<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.bump_expect(FragmentStmt, &[])
-}
-fn stmt_tail_2<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[stmt_tail_1])
-}
-fn stmt_tail_25<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    if input.peek_expect(Semicolon) {
-        input.call_now(&[stmt_tail_5])
-    } else {
-        input.call_now(&[stmt_tail_24])
-    }
-}
-fn stmt_tail_3<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[stmt_tail])
-}
-fn stmt_tail_4<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.bump_expect(Semicolon, &[])
-}
-fn stmt_tail_5<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[stmt_tail_3, stmt_tail_4])
-}
-fn stmt_tail_24<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    if input.peek_expect(Let) {
-        input.call_now(&[stmt_tail_16])
-    } else {
-        input.call_now(&[stmt_tail_23])
-    }
-}
-fn stmt_tail_6<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[stmt_tail])
-}
-fn stmt_tail_7<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.bump_expect(Semicolon, &[])
-}
-fn stmt_tail_8<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[expr])
-}
-fn stmt_tail_9<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.bump_expect(Equals, &[])
-}
-fn stmt_tail_13<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    if input.peek_expect(Colon) {
-        input.call_now(&[stmt_tail_12])
-    } else {
-        input.call_now(&[])
-    }
-}
-fn stmt_tail_10<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[ty])
-}
-fn stmt_tail_11<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.bump_expect(Colon, &[])
-}
-fn stmt_tail_12<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[stmt_tail_10, stmt_tail_11])
-}
-fn stmt_tail_14<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[pat])
-}
-fn stmt_tail_15<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.bump_expect(Let, &[])
-}
-fn stmt_tail_16<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[
-        stmt_tail_6,
-        stmt_tail_7,
-        stmt_tail_8,
-        stmt_tail_9,
-        stmt_tail_13,
-        stmt_tail_14,
-        stmt_tail_15,
-    ])
-}
-fn stmt_tail_21<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    if input.returned("ExprIf")
-        || input.returned("ExprBlock")
-        || input.returned("ExprLoop")
-        || input.returned("ExprFor")
-        || input.returned("ExprMatch")
-        || input.returned("MacroCallBrace")
-    {
-        input.call_now(&[stmt_tail_18])
-    } else {
-        input.call_now(&[stmt_tail_20])
-    }
-}
-fn stmt_tail_17<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[stmt_end_nosemi])
-}
-fn stmt_tail_18<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[stmt_tail_17])
-}
-fn stmt_tail_19<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[stmt_end_semi])
-}
-fn stmt_tail_20<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[stmt_tail_19])
-}
-fn stmt_tail_22<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[expr])
-}
-fn stmt_tail_23<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[stmt_tail_21, stmt_tail_22])
-}
-fn stmt_tail_28<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[stmt_tail_27])
-}
-fn stmt_tail_30<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[stmt_tail_29])
-}
-fn stmt_tail<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[stmt_tail_30])
-}
-fn stmt_end_semi_8<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    if input.peek_expect(Semicolon) {
-        input.call_now(&[stmt_end_semi_2])
-    } else {
-        input.call_now(&[stmt_end_semi_7])
-    }
-}
-fn stmt_end_semi_0<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[stmt_tail])
-}
-fn stmt_end_semi_1<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.bump_expect(Semicolon, &[])
-}
-fn stmt_end_semi_2<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[stmt_end_semi_0, stmt_end_semi_1])
-}
-fn stmt_end_semi_7<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    if input.peek_expect(RBrace) {
-        input.call_now(&[stmt_end_semi_3])
-    } else {
-        input.call_now(&[stmt_end_semi_6])
-    }
-}
-fn stmt_end_semi_3<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[])
-}
-fn stmt_end_semi_6<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    if input.peek_noexpect() {
-        input.call_now(&[stmt_end_semi_5])
-    } else {
-        input.call_now(&[])
-    }
-}
-fn stmt_end_semi_4<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.error()
-}
-fn stmt_end_semi_5<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[stmt_end_semi_4])
-}
-fn stmt_end_semi_9<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[stmt_end_semi_8])
-}
-fn stmt_end_semi<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[stmt_end_semi_9])
-}
-fn stmt_end_nosemi_3<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    if input.peek_expect(RBrace) {
-        input.call_now(&[stmt_end_nosemi_0])
-    } else {
-        input.call_now(&[stmt_end_nosemi_2])
-    }
-}
-fn stmt_end_nosemi_0<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[])
-}
-fn stmt_end_nosemi_1<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[stmt_tail])
-}
-fn stmt_end_nosemi_2<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[stmt_end_nosemi_1])
-}
-fn stmt_end_nosemi_4<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[stmt_end_nosemi_3])
-}
-fn stmt_end_nosemi<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[stmt_end_nosemi_4])
-}
-fn ty_15<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    if input.peek_expect(FragmentTy) {
-        input.call_now(&[ty_1])
-    } else {
-        input.call_now(&[ty_14])
-    }
-}
-fn ty_0<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.bump_expect(FragmentTy, &[])
-}
-fn ty_1<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[ty_0])
-}
-fn ty_14<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    if input.peek_expect(Underscore) {
-        input.call_now(&[ty_3])
-    } else {
-        input.call_now(&[ty_13])
-    }
-}
-fn ty_2<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.bump_expect(Underscore, &[])
-}
-fn ty_3<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[ty_2])
-}
-fn ty_13<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    if input.peek_expect(Ident)
-        || input.peek_expect(FragmentIdent)
-        || input.peek_expect(Self_)
-        || input.peek_expect(SelfUpper)
-        || input.peek_expect(Super)
-        || input.peek_expect(FragmentIdent)
-    {
-        input.call_now(&[ty_5])
-    } else {
-        input.call_now(&[ty_12])
-    }
-}
-fn ty_4<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[ty_path])
-}
-fn ty_5<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[ty_4])
-}
-fn ty_12<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    if input.peek_expect(LParen) {
-        input.call_now(&[ty_9])
-    } else {
-        input.call_now(&[ty_11])
-    }
-}
-fn ty_6<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.bump_expect(RParen, &[])
-}
-fn ty_7<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[ty])
-}
-fn ty_8<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.bump_expect(LParen, &[])
-}
-fn ty_9<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[ty_6, ty_7, ty_8])
-}
-fn ty_10<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.error()
-}
-fn ty_11<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[ty_10])
-}
-fn ty_16<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[ty_15])
-}
-fn ty<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[ty_16])
-}
-fn ty_no_bounds_0<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[ty])
-}
-fn ty_no_bounds_1<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[ty_no_bounds_0])
-}
-fn ty_no_bounds<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[ty_no_bounds_1])
-}
-fn ty_path_2<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    if input.peek_expect(Not) {
-        input.call_now(&[ty_path_1])
-    } else {
-        input.call_now(&[])
-    }
-}
-fn ty_path_0<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[macro_call_tail])
-}
-fn ty_path_1<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[ty_path_0])
-}
-fn ty_path_5<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    if input.peek_expect(ColonColon) {
-        input.call_now(&[ty_path_4])
-    } else {
-        input.call_now(&[])
-    }
-}
-fn ty_path_3<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[ty_path_])
-}
-fn ty_path_4<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[ty_path_3])
-}
-fn ty_path_6<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[ty_path_segment])
-}
-fn ty_path_9<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    if input.peek_expect(ColonColon) {
-        input.call_now(&[ty_path_8])
-    } else {
-        input.call_now(&[])
-    }
-}
-fn ty_path_7<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.bump_expect(ColonColon, &[])
-}
-fn ty_path_8<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[ty_path_7])
-}
-fn ty_path_10<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[ty_path_2, ty_path_5, ty_path_6, ty_path_9])
-}
-fn ty_path<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[ty_path_10])
-}
-fn ty_path__4<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    if input.peek_expect(ColonColon) {
-        input.call_now(&[ty_path__3])
-    } else {
-        input.call_now(&[])
-    }
-}
-fn ty_path__0<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[ty_path_])
-}
-fn ty_path__1<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[ty_path_segment])
-}
-fn ty_path__2<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.bump_expect(ColonColon, &[])
-}
-fn ty_path__3<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[ty_path__0, ty_path__1, ty_path__2])
-}
-fn ty_path__5<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[ty_path__4])
-}
-fn ty_path_<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[ty_path__5])
-}
-fn ty_path_segment_15<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    if input.peek_expect(ColonColon) {
-        input.call_now(&[ty_path_segment_8])
-    } else {
-        input.call_now(&[ty_path_segment_14])
-    }
-}
-fn ty_path_segment_7<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    if input.peek2_expect(LessThan) {
-        input.call_now(&[ty_path_segment_2])
-    } else {
-        input.call_now(&[ty_path_segment_6])
-    }
-}
-fn ty_path_segment_0<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[expr_angle_bracketed_generic_arguments])
-}
-fn ty_path_segment_1<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.bump_expect(ColonColon, &[])
-}
-fn ty_path_segment_2<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[ty_path_segment_0, ty_path_segment_1])
-}
-fn ty_path_segment_6<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    if input.peek_expect(LParen) {
-        input.call_now(&[ty_path_segment_5])
-    } else {
-        input.call_now(&[])
-    }
-}
-fn ty_path_segment_3<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[ty_path_fn])
-}
-fn ty_path_segment_4<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.bump_expect(ColonColon, &[])
-}
-fn ty_path_segment_5<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[ty_path_segment_3, ty_path_segment_4])
-}
-fn ty_path_segment_8<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[ty_path_segment_7])
-}
-fn ty_path_segment_14<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    if input.peek_expect(LessThan) {
-        input.call_now(&[ty_path_segment_10])
-    } else {
-        input.call_now(&[ty_path_segment_13])
-    }
-}
-fn ty_path_segment_9<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[expr_angle_bracketed_generic_arguments])
-}
-fn ty_path_segment_10<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[ty_path_segment_9])
-}
-fn ty_path_segment_13<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    if input.peek_expect(LParen) {
-        input.call_now(&[ty_path_segment_12])
-    } else {
-        input.call_now(&[])
-    }
-}
-fn ty_path_segment_11<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[ty_path_fn])
-}
-fn ty_path_segment_12<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[ty_path_segment_11])
-}
-fn ty_path_segment_16<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[path_ident_segment])
-}
-fn ty_path_segment_17<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[ty_path_segment_15, ty_path_segment_16])
-}
-fn ty_path_segment<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[ty_path_segment_17])
-}
-fn ty_path_fn_3<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    if input.peek_expect(RightArrow) {
-        input.call_now(&[ty_path_fn_2])
-    } else {
-        input.call_now(&[])
-    }
-}
-fn ty_path_fn_0<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[ty_no_bounds])
-}
-fn ty_path_fn_1<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.bump_expect(RightArrow, &[])
-}
-fn ty_path_fn_2<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[ty_path_fn_0, ty_path_fn_1])
-}
-fn ty_path_fn_9<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    if input.peek_expect(RParen) {
-        input.call_now(&[ty_path_fn_5])
-    } else {
-        input.call_now(&[ty_path_fn_8])
-    }
-}
-fn ty_path_fn_4<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.bump_expect(RParen, &[])
-}
-fn ty_path_fn_5<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[ty_path_fn_4])
-}
-fn ty_path_fn_6<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.bump_expect(RParen, &[])
-}
-fn ty_path_fn_7<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[ty_path_fn_inputs])
-}
-fn ty_path_fn_8<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[ty_path_fn_6, ty_path_fn_7])
-}
-fn ty_path_fn_10<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.bump_expect(LParen, &[])
-}
-fn ty_path_fn_11<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[ty_path_fn_3, ty_path_fn_9, ty_path_fn_10])
-}
-fn ty_path_fn<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[ty_path_fn_11])
-}
-fn ty_path_fn_inputs_7<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    if input.peek_expect(Comma) {
-        input.call_now(&[ty_path_fn_inputs_6])
-    } else {
-        input.call_now(&[])
-    }
-}
-fn ty_path_fn_inputs_4<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    if input.peek_expect(RParen) {
-        input.call_now(&[ty_path_fn_inputs_1])
-    } else {
-        input.call_now(&[ty_path_fn_inputs_3])
-    }
-}
-fn ty_path_fn_inputs_0<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.bump_expect(RParen, &[])
-}
-fn ty_path_fn_inputs_1<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[ty_path_fn_inputs_0])
-}
-fn ty_path_fn_inputs_2<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[ty_path_fn_inputs_])
-}
-fn ty_path_fn_inputs_3<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[ty_path_fn_inputs_2])
-}
-fn ty_path_fn_inputs_5<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.bump_expect(Comma, &[])
-}
-fn ty_path_fn_inputs_6<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[ty_path_fn_inputs_4, ty_path_fn_inputs_5])
-}
-fn ty_path_fn_inputs_8<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[ty])
-}
-fn ty_path_fn_inputs_9<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[ty_path_fn_inputs_7, ty_path_fn_inputs_8])
-}
-fn ty_path_fn_inputs<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[ty_path_fn_inputs_9])
-}
-fn ty_path_fn_inputs__9<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    if input.peek_expect(Comma) {
-        input.call_now(&[ty_path_fn_inputs__6])
-    } else {
-        input.call_now(&[ty_path_fn_inputs__8])
-    }
-}
-fn ty_path_fn_inputs__4<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    if input.peek_expect(RParen) {
-        input.call_now(&[ty_path_fn_inputs__1])
-    } else {
-        input.call_now(&[ty_path_fn_inputs__3])
-    }
-}
-fn ty_path_fn_inputs__0<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.bump_expect(RParen, &[])
-}
-fn ty_path_fn_inputs__1<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[ty_path_fn_inputs__0])
-}
-fn ty_path_fn_inputs__2<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[ty_path_fn_inputs_])
-}
-fn ty_path_fn_inputs__3<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[ty_path_fn_inputs__2])
-}
-fn ty_path_fn_inputs__5<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.bump_expect(Comma, &[])
-}
-fn ty_path_fn_inputs__6<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[ty_path_fn_inputs__4, ty_path_fn_inputs__5])
-}
-fn ty_path_fn_inputs__7<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.bump_expect(RParen, &[])
-}
-fn ty_path_fn_inputs__8<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[ty_path_fn_inputs__7])
-}
-fn ty_path_fn_inputs__10<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[ty])
-}
-fn ty_path_fn_inputs__11<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[ty_path_fn_inputs__9, ty_path_fn_inputs__10])
-}
-fn ty_path_fn_inputs_<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[ty_path_fn_inputs__11])
-}
-fn fn_args_4<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    if input.peek_expect(RParen) {
-        input.call_now(&[fn_args_1])
-    } else {
-        input.call_now(&[fn_args_3])
-    }
-}
-fn fn_args_0<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.bump_expect(RParen, &[])
-}
-fn fn_args_1<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[fn_args_0])
-}
-fn fn_args_2<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[fn_args_])
-}
-fn fn_args_3<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[fn_args_2])
-}
-fn fn_args_7<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    if input.peek_expect(Comma) {
-        input.call_now(&[fn_args_6])
-    } else {
-        input.call_now(&[])
-    }
-}
-fn fn_args_5<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.bump_expect(Comma, &[])
-}
-fn fn_args_6<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[fn_args_5])
-}
-fn fn_args_11<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    if input.peek_expect(RParen) {
-        input.call_now(&[fn_args_8])
-    } else {
-        input.call_now(&[fn_args_10])
-    }
-}
-fn fn_args_8<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[])
-}
-fn fn_args_9<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[fn_arg])
-}
-fn fn_args_10<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[fn_args_9])
-}
-fn fn_args_12<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.bump_expect(LParen, &[])
-}
-fn fn_args_13<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[fn_args_4, fn_args_7, fn_args_11, fn_args_12])
-}
-fn fn_args<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[fn_args_13])
-}
-fn fn_args__2<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    if input.peek_expect(RParen) {
-        input.call_now(&[fn_args__1])
-    } else {
-        input.call_now(&[])
-    }
-}
-fn fn_args__0<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.bump_expect(RParen, &[])
-}
-fn fn_args__1<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[fn_args__0])
-}
-fn fn_args__5<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    if input.peek_expect(Comma) {
-        input.call_now(&[fn_args__4])
-    } else {
-        input.call_now(&[])
-    }
-}
-fn fn_args__3<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.bump_expect(Comma, &[])
-}
-fn fn_args__4<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[fn_args__3])
-}
-fn fn_args__6<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[fn_arg])
-}
-fn fn_args__7<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[fn_args__2, fn_args__5, fn_args__6])
-}
-fn fn_args_<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[fn_args__7])
-}
-fn pat_0<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[pat_])
-}
-fn pat_1<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[pat_no_top_alt])
-}
-fn pat_4<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    if input.peek_expect(Or) {
-        input.call_now(&[pat_3])
-    } else {
-        input.call_now(&[])
-    }
-}
-fn pat_2<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.bump_expect(Or, &[])
-}
-fn pat_3<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[pat_2])
-}
-fn pat_5<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[pat_0, pat_1, pat_4])
-}
-fn pat<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[pat_5])
-}
-fn pat__4<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    if input.peek_expect(Or) {
-        input.call_now(&[pat__3])
-    } else {
-        input.call_now(&[])
-    }
-}
-fn pat__0<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[pat_])
-}
-fn pat__1<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[pat_no_top_alt])
-}
-fn pat__2<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.bump_expect(Or, &[])
-}
-fn pat__3<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[pat__0, pat__1, pat__2])
-}
-fn pat__5<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[pat__4])
-}
-fn pat_<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[pat__5])
-}
-fn pat_no_top_alt_38<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    if input.peek_expect(FragmentPat)
-        || input.peek_expect(FragmentPatParam)
-        || input.peek_expect(Underscore)
-        || input.peek_expect(DotDot)
-    {
-        input.call_now(&[pat_no_top_alt_1])
-    } else {
-        input.call_now(&[pat_no_top_alt_37])
-    }
-}
-fn pat_no_top_alt_0<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.bump_noexpect(&[])
-}
-fn pat_no_top_alt_1<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[pat_no_top_alt_0])
-}
-fn pat_no_top_alt_37<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    if input.peek_expect(Ref) || input.peek_expect(Mut) {
-        input.call_now(&[pat_no_top_alt_3])
-    } else {
-        input.call_now(&[pat_no_top_alt_36])
-    }
-}
-fn pat_no_top_alt_2<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[pat_ident])
-}
-fn pat_no_top_alt_3<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[pat_no_top_alt_2])
-}
-fn pat_no_top_alt_36<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    if input.peek_expect(Literal)
-        || input.peek_expect(FragmentLiteral)
-        || input.peek_expect(True)
-        || input.peek_expect(False)
-        || input.peek_expect(Minus)
-    {
-        input.call_now(&[pat_no_top_alt_6])
-    } else {
-        input.call_now(&[pat_no_top_alt_35])
-    }
-}
-fn pat_no_top_alt_4<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[pat_maybe_range_tail])
-}
-fn pat_no_top_alt_5<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[pat_literal])
-}
-fn pat_no_top_alt_6<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[pat_no_top_alt_4, pat_no_top_alt_5])
-}
-fn pat_no_top_alt_35<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    if input.peek_expect(DotDotEquals) {
-        input.call_now(&[pat_no_top_alt_9])
-    } else {
-        input.call_now(&[pat_no_top_alt_34])
-    }
-}
-fn pat_no_top_alt_7<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[pat_literal])
-}
-fn pat_no_top_alt_8<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.bump_expect(DotDotEquals, &[])
-}
-fn pat_no_top_alt_9<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[pat_no_top_alt_7, pat_no_top_alt_8])
-}
-fn pat_no_top_alt_34<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    if input.peek_expect(ColonColon) || input.peek_expect(FragmentPath) {
-        input.call_now(&[pat_no_top_alt_11])
-    } else {
-        input.call_now(&[pat_no_top_alt_33])
-    }
-}
-fn pat_no_top_alt_10<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[pat_starting_with_path])
-}
-fn pat_no_top_alt_11<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[pat_no_top_alt_10])
-}
-fn pat_no_top_alt_33<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    if input.peek_expect(Ident) || input.peek_expect(FragmentIdent) {
-        input.call_now(&[pat_no_top_alt_17])
-    } else {
-        input.call_now(&[pat_no_top_alt_32])
-    }
-}
-fn pat_no_top_alt_16<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    if input.peek2_expect(At) {
-        input.call_now(&[pat_no_top_alt_13])
-    } else {
-        input.call_now(&[pat_no_top_alt_15])
-    }
-}
-fn pat_no_top_alt_12<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[pat_ident])
-}
-fn pat_no_top_alt_13<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[pat_no_top_alt_12])
-}
-fn pat_no_top_alt_14<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[pat_starting_with_path])
-}
-fn pat_no_top_alt_15<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[pat_no_top_alt_14])
-}
-fn pat_no_top_alt_17<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[pat_no_top_alt_16])
-}
-fn pat_no_top_alt_32<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    if input.peek_expect(And) {
-        input.call_now(&[pat_no_top_alt_23])
-    } else {
-        input.call_now(&[pat_no_top_alt_31])
-    }
-}
-fn pat_no_top_alt_18<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[pat_no_top_alt])
-}
-fn pat_no_top_alt_21<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    if input.peek_expect(And) {
-        input.call_now(&[pat_no_top_alt_20])
-    } else {
-        input.call_now(&[])
-    }
-}
-fn pat_no_top_alt_19<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.bump_expect(And, &[])
-}
-fn pat_no_top_alt_20<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[pat_no_top_alt_19])
-}
-fn pat_no_top_alt_22<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.bump_expect(And, &[])
-}
-fn pat_no_top_alt_23<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[pat_no_top_alt_18, pat_no_top_alt_21, pat_no_top_alt_22])
-}
-fn pat_no_top_alt_31<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    if input.peek_expect(LParen) {
-        input.call_now(&[pat_no_top_alt_25])
-    } else {
-        input.call_now(&[pat_no_top_alt_30])
-    }
-}
-fn pat_no_top_alt_24<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[pat_tuple])
-}
-fn pat_no_top_alt_25<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[pat_no_top_alt_24])
-}
-fn pat_no_top_alt_30<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    if input.peek_expect(LBracket) {
-        input.call_now(&[pat_no_top_alt_27])
-    } else {
-        input.call_now(&[pat_no_top_alt_29])
-    }
-}
-fn pat_no_top_alt_26<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[pat_slice])
-}
-fn pat_no_top_alt_27<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[pat_no_top_alt_26])
-}
-fn pat_no_top_alt_28<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.error()
-}
-fn pat_no_top_alt_29<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[pat_no_top_alt_28])
-}
-fn pat_no_top_alt_39<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[pat_no_top_alt_38])
-}
-fn pat_no_top_alt<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[pat_no_top_alt_39])
-}
-fn pat_starting_with_path_11<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    if input.peek_expect(LBrace) {
-        input.call_now(&[pat_starting_with_path_1])
-    } else {
-        input.call_now(&[pat_starting_with_path_10])
-    }
-}
-fn pat_starting_with_path_0<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[pat_struct_tail])
-}
-fn pat_starting_with_path_1<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[pat_starting_with_path_0])
-}
-fn pat_starting_with_path_10<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    if input.peek_expect(LParen) {
-        input.call_now(&[pat_starting_with_path_3])
-    } else {
-        input.call_now(&[pat_starting_with_path_9])
-    }
-}
-fn pat_starting_with_path_2<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[pat_tuple])
-}
-fn pat_starting_with_path_3<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[pat_starting_with_path_2])
-}
-fn pat_starting_with_path_9<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    if input.peek_expect(Not) {
-        input.call_now(&[pat_starting_with_path_6])
-    } else {
-        input.call_now(&[pat_starting_with_path_8])
-    }
-}
-fn pat_starting_with_path_4<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[pat_maybe_range_tail])
-}
-fn pat_starting_with_path_5<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[macro_call_tail])
-}
-fn pat_starting_with_path_6<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[pat_starting_with_path_4, pat_starting_with_path_5])
-}
-fn pat_starting_with_path_7<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[pat_maybe_range_tail])
-}
-fn pat_starting_with_path_8<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[pat_starting_with_path_7])
-}
-fn pat_starting_with_path_12<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[expr_path])
-}
-fn pat_starting_with_path_13<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[pat_starting_with_path_11, pat_starting_with_path_12])
-}
-fn pat_starting_with_path<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[pat_starting_with_path_13])
-}
-fn pat_maybe_range_tail_10<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    if input.peek_expect(DotDotEquals) {
-        input.call_now(&[pat_maybe_range_tail_6])
-    } else {
-        input.call_now(&[pat_maybe_range_tail_9])
-    }
-}
-fn pat_maybe_range_tail_4<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    if input.peek_expect(Ident)
-        || input.peek_expect(FragmentIdent)
-        || input.peek_expect(ColonColon)
-        || input.peek_expect(FragmentPath)
-        || input.peek_expect(LessThan)
-    {
-        input.call_now(&[pat_maybe_range_tail_1])
-    } else {
-        input.call_now(&[pat_maybe_range_tail_3])
-    }
-}
-fn pat_maybe_range_tail_0<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[expr_path])
-}
-fn pat_maybe_range_tail_1<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[pat_maybe_range_tail_0])
-}
-fn pat_maybe_range_tail_2<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[pat_literal])
-}
-fn pat_maybe_range_tail_3<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[pat_maybe_range_tail_2])
-}
-fn pat_maybe_range_tail_5<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.bump_expect(DotDotEquals, &[])
-}
-fn pat_maybe_range_tail_6<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[pat_maybe_range_tail_4, pat_maybe_range_tail_5])
-}
-fn pat_maybe_range_tail_9<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    if input.peek_expect(DotDot) {
-        input.call_now(&[pat_maybe_range_tail_8])
-    } else {
-        input.call_now(&[])
-    }
-}
-fn pat_maybe_range_tail_7<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.bump_noexpect(&[])
-}
-fn pat_maybe_range_tail_8<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[pat_maybe_range_tail_7])
-}
-fn pat_maybe_range_tail_11<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[pat_maybe_range_tail_10])
-}
-fn pat_maybe_range_tail<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[pat_maybe_range_tail_11])
-}
-fn pat_struct_tail_13<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    if input.peek_expect(DotDot) {
-        input.call_now(&[pat_struct_tail_2])
-    } else {
-        input.call_now(&[pat_struct_tail_12])
-    }
-}
-fn pat_struct_tail_0<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.bump_expect(RBrace, &[])
-}
-fn pat_struct_tail_1<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.bump_expect(DotDot, &[])
-}
-fn pat_struct_tail_2<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[pat_struct_tail_0, pat_struct_tail_1])
-}
-fn pat_struct_tail_12<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    if input.peek_expect(RBrace) {
-        input.call_now(&[pat_struct_tail_4])
-    } else {
-        input.call_now(&[pat_struct_tail_11])
-    }
-}
-fn pat_struct_tail_3<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.bump_expect(RBrace, &[])
-}
-fn pat_struct_tail_4<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[pat_struct_tail_3])
-}
-fn pat_struct_tail_9<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    if input.peek_expect(RBrace) {
-        input.call_now(&[pat_struct_tail_6])
-    } else {
-        input.call_now(&[pat_struct_tail_8])
-    }
-}
-fn pat_struct_tail_5<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.bump_expect(RBrace, &[])
-}
-fn pat_struct_tail_6<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[pat_struct_tail_5])
-}
-fn pat_struct_tail_7<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[pat_struct_tail_])
-}
-fn pat_struct_tail_8<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[pat_struct_tail_7])
-}
-fn pat_struct_tail_10<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[pat_struct_field])
-}
-fn pat_struct_tail_11<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[pat_struct_tail_9, pat_struct_tail_10])
-}
-fn pat_struct_tail_14<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.bump_expect(LBrace, &[])
-}
-fn pat_struct_tail_15<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[pat_struct_tail_13, pat_struct_tail_14])
-}
-fn pat_struct_tail<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[pat_struct_tail_15])
-}
-fn pat_struct_tail__14<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    if input.peek_expect(DotDot) {
-        input.call_now(&[pat_struct_tail__2])
-    } else {
-        input.call_now(&[pat_struct_tail__13])
-    }
-}
-fn pat_struct_tail__0<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.bump_expect(RBrace, &[])
-}
-fn pat_struct_tail__1<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.bump_expect(DotDot, &[])
-}
-fn pat_struct_tail__2<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[pat_struct_tail__0, pat_struct_tail__1])
-}
-fn pat_struct_tail__13<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    if input.peek_expect(Comma) {
-        input.call_now(&[pat_struct_tail__10])
-    } else {
-        input.call_now(&[pat_struct_tail__12])
-    }
-}
-fn pat_struct_tail__8<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    if input.peek_expect(RBrace) {
-        input.call_now(&[pat_struct_tail__4])
-    } else {
-        input.call_now(&[pat_struct_tail__7])
-    }
-}
-fn pat_struct_tail__3<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.bump_expect(RBrace, &[])
-}
-fn pat_struct_tail__4<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[pat_struct_tail__3])
-}
-fn pat_struct_tail__5<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[pat_struct_tail_])
-}
-fn pat_struct_tail__6<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[pat_struct_field])
-}
-fn pat_struct_tail__7<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[pat_struct_tail__5, pat_struct_tail__6])
-}
-fn pat_struct_tail__9<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.bump_expect(Comma, &[])
-}
-fn pat_struct_tail__10<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[pat_struct_tail__8, pat_struct_tail__9])
-}
-fn pat_struct_tail__11<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.bump_expect(RBrace, &[])
-}
-fn pat_struct_tail__12<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[pat_struct_tail__11])
-}
-fn pat_struct_tail__15<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[pat_struct_tail__14])
-}
-fn pat_struct_tail_<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[pat_struct_tail__15])
-}
-fn pat_tuple_9<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    if input.peek_expect(RParen) {
-        input.call_now(&[pat_tuple_1])
-    } else {
-        input.call_now(&[pat_tuple_8])
-    }
-}
-fn pat_tuple_0<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.bump_expect(RParen, &[])
-}
-fn pat_tuple_1<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[pat_tuple_0])
-}
-fn pat_tuple_6<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    if input.peek_expect(RParen) {
-        input.call_now(&[pat_tuple_3])
-    } else {
-        input.call_now(&[pat_tuple_5])
-    }
-}
-fn pat_tuple_2<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.bump_expect(RParen, &[])
-}
-fn pat_tuple_3<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[pat_tuple_2])
-}
-fn pat_tuple_4<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[pat_tuple_])
-}
-fn pat_tuple_5<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[pat_tuple_4])
-}
-fn pat_tuple_7<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[pat_tuple_field])
-}
-fn pat_tuple_8<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[pat_tuple_6, pat_tuple_7])
-}
-fn pat_tuple_10<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.bump_expect(LParen, &[])
-}
-fn pat_tuple_11<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[pat_tuple_9, pat_tuple_10])
-}
-fn pat_tuple<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[pat_tuple_11])
-}
-fn pat_tuple__10<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    if input.peek_expect(Comma) {
-        input.call_now(&[pat_tuple__7])
-    } else {
-        input.call_now(&[pat_tuple__9])
-    }
-}
-fn pat_tuple__5<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    if input.peek_expect(RParen) {
-        input.call_now(&[pat_tuple__1])
-    } else {
-        input.call_now(&[pat_tuple__4])
-    }
-}
-fn pat_tuple__0<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.bump_expect(RParen, &[])
-}
-fn pat_tuple__1<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[pat_tuple__0])
-}
-fn pat_tuple__2<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[pat_tuple_])
-}
-fn pat_tuple__3<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[pat_tuple_field])
-}
-fn pat_tuple__4<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[pat_tuple__2, pat_tuple__3])
-}
-fn pat_tuple__6<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.bump_expect(Comma, &[])
-}
-fn pat_tuple__7<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[pat_tuple__5, pat_tuple__6])
-}
-fn pat_tuple__8<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.bump_expect(RParen, &[])
-}
-fn pat_tuple__9<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[pat_tuple__8])
-}
-fn pat_tuple__11<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[pat_tuple__10])
-}
-fn pat_tuple_<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[pat_tuple__11])
-}
-fn pat_struct_field_16<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    if input.peek_expect(Literal) {
-        input.call_now(&[pat_struct_field_3])
-    } else {
-        input.call_now(&[pat_struct_field_15])
-    }
-}
-fn pat_struct_field_0<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[pat])
-}
-fn pat_struct_field_1<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.bump_expect(Colon, &[])
-}
-fn pat_struct_field_2<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.bump_expect(Literal, &[])
-}
-fn pat_struct_field_3<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[pat_struct_field_0, pat_struct_field_1, pat_struct_field_2])
-}
-fn pat_struct_field_15<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    if input.peek_expect(Ident) {
-        input.call_now(&[pat_struct_field_11])
-    } else {
-        input.call_now(&[pat_struct_field_14])
-    }
-}
-fn pat_struct_field_10<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    if input.peek2_expect(Colon) {
-        input.call_now(&[pat_struct_field_7])
-    } else {
-        input.call_now(&[pat_struct_field_9])
-    }
-}
-fn pat_struct_field_4<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[pat])
-}
-fn pat_struct_field_5<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.bump_expect(Colon, &[])
-}
-fn pat_struct_field_6<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.bump_expect(Ident, &[])
-}
-fn pat_struct_field_7<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[pat_struct_field_4, pat_struct_field_5, pat_struct_field_6])
-}
-fn pat_struct_field_8<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.bump_expect(Ident, &[])
-}
-fn pat_struct_field_9<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[pat_struct_field_8])
-}
-fn pat_struct_field_11<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[pat_struct_field_10])
-}
-fn pat_struct_field_14<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    if input.peek_expect(Ref) || input.peek_expect(Mut) {
-        input.call_now(&[pat_struct_field_13])
-    } else {
-        input.call_now(&[])
-    }
-}
-fn pat_struct_field_12<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[pat_ident])
-}
-fn pat_struct_field_13<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[pat_struct_field_12])
-}
-fn pat_struct_field_17<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[pat_struct_field_16])
-}
-fn pat_struct_field<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[pat_struct_field_17])
-}
-fn pat_tuple_field_0<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[pat])
-}
-fn pat_tuple_field_1<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[pat_tuple_field_0])
-}
-fn pat_tuple_field<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[pat_tuple_field_1])
-}
-fn pat_slice_5<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    if input.peek_expect(RBracket) {
-        input.call_now(&[pat_slice_1])
-    } else {
-        input.call_now(&[pat_slice_4])
-    }
-}
-fn pat_slice_0<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.bump_expect(RBracket, &[])
-}
-fn pat_slice_1<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[pat_slice_0])
-}
-fn pat_slice_2<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[pat_slice_])
-}
-fn pat_slice_3<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[pat])
-}
-fn pat_slice_4<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[pat_slice_2, pat_slice_3])
-}
-fn pat_slice_6<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.bump_expect(LBracket, &[])
-}
-fn pat_slice_7<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[pat_slice_5, pat_slice_6])
-}
-fn pat_slice<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[pat_slice_7])
-}
-fn pat_slice__10<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    if input.peek_expect(Comma) {
-        input.call_now(&[pat_slice__7])
-    } else {
-        input.call_now(&[pat_slice__9])
-    }
-}
-fn pat_slice__5<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    if input.peek_expect(RBracket) {
-        input.call_now(&[pat_slice__1])
-    } else {
-        input.call_now(&[pat_slice__4])
-    }
-}
-fn pat_slice__0<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.bump_expect(RBracket, &[])
-}
-fn pat_slice__1<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[pat_slice__0])
-}
-fn pat_slice__2<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[pat_slice_])
-}
-fn pat_slice__3<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[pat])
-}
-fn pat_slice__4<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[pat_slice__2, pat_slice__3])
-}
-fn pat_slice__6<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.bump_expect(Comma, &[])
-}
-fn pat_slice__7<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[pat_slice__5, pat_slice__6])
-}
-fn pat_slice__8<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.bump_expect(RBracket, &[])
-}
-fn pat_slice__9<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[pat_slice__8])
-}
-fn pat_slice__11<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[pat_slice__10])
-}
-fn pat_slice_<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[pat_slice__11])
-}
-fn pat_range_bound_8<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    if input.peek_expect(Minus) {
-        input.call_now(&[pat_range_bound_1])
-    } else {
-        input.call_now(&[pat_range_bound_7])
-    }
-}
-fn pat_range_bound_0<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[pat_literal])
-}
-fn pat_range_bound_1<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[pat_range_bound_0])
-}
-fn pat_range_bound_7<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    if input.peek_expect(Literal) || input.peek_expect(FragmentLiteral) {
-        input.call_now(&[pat_range_bound_3])
-    } else {
-        input.call_now(&[pat_range_bound_6])
-    }
-}
-fn pat_range_bound_2<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[pat_literal])
-}
-fn pat_range_bound_3<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[pat_range_bound_2])
-}
-fn pat_range_bound_6<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    if input.peek_expect(Ident)
-        || input.peek_expect(FragmentIdent)
-        || input.peek_expect(FragmentPath)
-        || input.peek_expect(LessThan)
-    {
-        input.call_now(&[pat_range_bound_5])
-    } else {
-        input.call_now(&[])
-    }
-}
-fn pat_range_bound_4<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[expr_path])
-}
-fn pat_range_bound_5<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[pat_range_bound_4])
-}
-fn pat_range_bound_9<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[pat_range_bound_8])
-}
-fn pat_range_bound<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[pat_range_bound_9])
-}
-fn pat_literal_4<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    if input.peek_expect(Literal)
-        || input.peek_expect(FragmentLiteral)
-        || input.peek_expect(True)
-        || input.peek_expect(False)
-    {
-        input.call_now(&[pat_literal_1])
-    } else {
-        input.call_now(&[pat_literal_3])
-    }
-}
-fn pat_literal_0<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.bump_noexpect(&[])
-}
-fn pat_literal_1<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[pat_literal_0])
-}
-fn pat_literal_2<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.error()
-}
-fn pat_literal_3<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[pat_literal_2])
-}
-fn pat_literal_7<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    if input.peek_expect(Minus) {
-        input.call_now(&[pat_literal_6])
-    } else {
-        input.call_now(&[])
-    }
-}
-fn pat_literal_5<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.bump_expect(Minus, &[])
-}
-fn pat_literal_6<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[pat_literal_5])
-}
-fn pat_literal_8<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[pat_literal_4, pat_literal_7])
-}
-fn pat_literal<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[pat_literal_8])
-}
-fn pat_ident_3<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    if input.peek_expect(At) {
-        input.call_now(&[pat_ident_2])
-    } else {
-        input.call_now(&[])
-    }
-}
-fn pat_ident_0<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[pat_no_top_alt])
-}
-fn pat_ident_1<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.bump_expect(At, &[])
-}
-fn pat_ident_2<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[pat_ident_0, pat_ident_1])
-}
-fn pat_ident_11<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    if input.peek_expect(Ident) {
-        input.call_now(&[pat_ident_5])
-    } else {
-        input.call_now(&[pat_ident_10])
-    }
-}
-fn pat_ident_4<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.bump_expect(Ident, &[])
-}
-fn pat_ident_5<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[pat_ident_4])
-}
-fn pat_ident_10<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    if input.peek_expect(FragmentIdent) {
-        input.call_now(&[pat_ident_7])
-    } else {
-        input.call_now(&[pat_ident_9])
-    }
-}
-fn pat_ident_6<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.bump_expect(FragmentIdent, &[])
-}
-fn pat_ident_7<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[pat_ident_6])
-}
-fn pat_ident_8<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.error()
-}
-fn pat_ident_9<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[pat_ident_8])
-}
-fn pat_ident_14<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    if input.peek_expect(Mut) {
-        input.call_now(&[pat_ident_13])
-    } else {
-        input.call_now(&[])
-    }
-}
-fn pat_ident_12<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.bump_expect(Mut, &[])
-}
-fn pat_ident_13<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[pat_ident_12])
-}
-fn pat_ident_17<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    if input.peek_expect(Ref) {
-        input.call_now(&[pat_ident_16])
-    } else {
-        input.call_now(&[])
-    }
-}
-fn pat_ident_15<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.bump_expect(Ref, &[])
-}
-fn pat_ident_16<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[pat_ident_15])
-}
-fn pat_ident_18<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[pat_ident_3, pat_ident_11, pat_ident_14, pat_ident_17])
-}
-fn pat_ident<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[pat_ident_18])
-}
-fn fn_arg_0<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[ty])
-}
-fn fn_arg_1<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.bump_expect(Colon, &[])
-}
-fn fn_arg_2<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[pat])
-}
-fn fn_arg_3<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[fn_arg_0, fn_arg_1, fn_arg_2])
-}
-fn fn_arg<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[fn_arg_3])
-}
-fn expr_0<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[expr_after_atom])
-}
-fn expr_1<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[expr_atom])
-}
-fn expr_2<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[expr_prefixed_unary_op])
-}
-fn expr_3<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[expr_0, expr_1, expr_2])
-}
-fn expr<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[expr_3])
-}
-fn expr_after_atom_34<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    if input.peek_expect(Plus)
-        || input.peek_expect(Minus)
-        || input.peek_expect(Star)
-        || input.peek_expect(Slash)
-        || input.peek_expect(Percent)
-        || input.peek_expect(And)
-        || input.peek_expect(Or)
-        || input.peek_expect(Caret)
-        || input.peek_expect(Shl)
-        || input.peek_expect(Shr)
-    {
-        input.call_now(&[expr_after_atom_3])
-    } else {
-        input.call_now(&[expr_after_atom_33])
-    }
-}
-fn expr_after_atom_0<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[expr])
-}
-fn expr_after_atom_1<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.bump_noexpect(&[])
-}
-fn expr_after_atom_2<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.set_retval("ExprBinop")
-}
-fn expr_after_atom_3<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[expr_after_atom_2, expr_after_atom_0, expr_after_atom_1])
-}
-fn expr_after_atom_33<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    if input.peek_expect(EqualsEquals)
-        || input.peek_expect(NotEquals)
-        || input.peek_expect(GreaterThan)
-        || input.peek_expect(LessThan)
-        || input.peek_expect(GreaterThanEquals)
-        || input.peek_expect(LessThanEquals)
-    {
-        input.call_now(&[expr_after_atom_7])
-    } else {
-        input.call_now(&[expr_after_atom_32])
-    }
-}
-fn expr_after_atom_4<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[expr])
-}
-fn expr_after_atom_5<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.bump_noexpect(&[])
-}
-fn expr_after_atom_6<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.set_retval("ExprBinop")
-}
-fn expr_after_atom_7<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[expr_after_atom_6, expr_after_atom_4, expr_after_atom_5])
-}
-fn expr_after_atom_32<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    if input.peek_expect(OrOr) || input.peek_expect(AndAnd) {
-        input.call_now(&[expr_after_atom_11])
-    } else {
-        input.call_now(&[expr_after_atom_31])
-    }
-}
-fn expr_after_atom_8<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[expr])
-}
-fn expr_after_atom_9<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.bump_noexpect(&[])
-}
-fn expr_after_atom_10<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.set_retval("ExprBinop")
-}
-fn expr_after_atom_11<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[expr_after_atom_10, expr_after_atom_8, expr_after_atom_9])
-}
-fn expr_after_atom_31<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    if input.peek_expect(DotDot) || input.peek_expect(DotDotEquals) {
-        input.call_now(&[expr_after_atom_15])
-    } else {
-        input.call_now(&[expr_after_atom_30])
-    }
-}
-fn expr_after_atom_12<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[expr])
-}
-fn expr_after_atom_13<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.bump_noexpect(&[])
-}
-fn expr_after_atom_14<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.set_retval("ExprBinop")
-}
-fn expr_after_atom_15<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[expr_after_atom_14, expr_after_atom_12, expr_after_atom_13])
-}
-fn expr_after_atom_30<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    if input.peek_expect(LParen) {
-        input.call_now(&[expr_after_atom_19])
-    } else {
-        input.call_now(&[expr_after_atom_29])
-    }
-}
-fn expr_after_atom_16<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[expr_after_atom])
-}
-fn expr_after_atom_17<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[expr_call])
-}
-fn expr_after_atom_18<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.set_retval("ExprCall")
-}
-fn expr_after_atom_19<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[expr_after_atom_18, expr_after_atom_16, expr_after_atom_17])
-}
-fn expr_after_atom_29<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    if input.peek_expect(LBracket) {
-        input.call_now(&[expr_after_atom_24])
-    } else {
-        input.call_now(&[expr_after_atom_28])
-    }
-}
-fn expr_after_atom_20<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.bump_expect(RBracket, &[])
-}
-fn expr_after_atom_21<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[expr])
-}
-fn expr_after_atom_22<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.bump_expect(LBracket, &[])
-}
-fn expr_after_atom_23<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.set_retval("ExprIndex")
-}
-fn expr_after_atom_24<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[
-        expr_after_atom_23,
-        expr_after_atom_20,
-        expr_after_atom_21,
-        expr_after_atom_22,
-    ])
-}
-fn expr_after_atom_28<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    if input.peek_expect(Dot) {
-        input.call_now(&[expr_after_atom_27])
-    } else {
-        input.call_now(&[])
-    }
-}
-fn expr_after_atom_25<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[expr_after_atom])
-}
-fn expr_after_atom_26<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[expr_dot_expr])
-}
-fn expr_after_atom_27<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[expr_after_atom_25, expr_after_atom_26])
-}
-fn expr_after_atom_35<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[expr_after_atom_34])
-}
-fn expr_after_atom<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[expr_after_atom_35])
-}
-fn expr_atom_56<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    if input.peek_expect(Return) || input.peek_expect(Break) {
-        input.call_now(&[expr_atom_1])
-    } else {
-        input.call_now(&[expr_atom_55])
-    }
-}
-fn expr_atom_0<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[expr_return_or_break])
-}
-fn expr_atom_1<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[expr_atom_0])
-}
-fn expr_atom_55<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    if input.peek_expect(Ident)
-        || input.peek_expect(Self_)
-        || input.peek_expect(SelfUpper)
-        || input.peek_expect(Super)
-        || input.peek_expect(Crate)
-        || input.peek_expect(FragmentIdent)
-        || input.peek_expect(ColonColon)
-        || input.peek_expect(LessThan)
-        || input.peek_expect(FragmentPath)
-    {
-        input.call_now(&[expr_atom_8])
-    } else {
-        input.call_now(&[expr_atom_54])
-    }
-}
-fn expr_atom_6<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    if input.peek_expect(Not) {
-        input.call_now(&[expr_atom_3])
-    } else {
-        input.call_now(&[expr_atom_5])
-    }
-}
-fn expr_atom_2<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[macro_call_tail])
-}
-fn expr_atom_3<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[expr_atom_2])
-}
-fn expr_atom_4<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.set_retval("ExprPath")
-}
-fn expr_atom_5<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[expr_atom_4])
-}
-fn expr_atom_7<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[expr_path])
-}
-fn expr_atom_8<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[expr_atom_6, expr_atom_7])
-}
-fn expr_atom_54<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    if input.peek_expect(Literal) {
-        input.call_now(&[expr_atom_11])
-    } else {
-        input.call_now(&[expr_atom_53])
-    }
-}
-fn expr_atom_9<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.bump_noexpect(&[])
-}
-fn expr_atom_10<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.set_retval("ExprLit")
-}
-fn expr_atom_11<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[expr_atom_10, expr_atom_9])
-}
-fn expr_atom_53<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    if input.peek_expect(FragmentExpr) {
-        input.call_now(&[expr_atom_14])
-    } else {
-        input.call_now(&[expr_atom_52])
-    }
-}
-fn expr_atom_12<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.bump_noexpect(&[])
-}
-fn expr_atom_13<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.set_retval("ExprExprFragment")
-}
-fn expr_atom_14<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[expr_atom_13, expr_atom_12])
-}
-fn expr_atom_52<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    if input.peek_expect(FragmentBlock) {
-        input.call_now(&[expr_atom_17])
-    } else {
-        input.call_now(&[expr_atom_51])
-    }
-}
-fn expr_atom_15<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.bump_noexpect(&[])
-}
-fn expr_atom_16<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.set_retval("ExprBlockFragment")
-}
-fn expr_atom_17<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[expr_atom_16, expr_atom_15])
-}
-fn expr_atom_51<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    if input.peek_expect(If) {
-        input.call_now(&[expr_atom_20])
-    } else {
-        input.call_now(&[expr_atom_50])
-    }
-}
-fn expr_atom_18<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[expr_if])
-}
-fn expr_atom_19<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.set_retval("ExprIf")
-}
-fn expr_atom_20<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[expr_atom_19, expr_atom_18])
-}
-fn expr_atom_50<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    if input.peek_expect(LParen) {
-        input.call_now(&[expr_atom_23])
-    } else {
-        input.call_now(&[expr_atom_49])
-    }
-}
-fn expr_atom_21<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[expr_tuple])
-}
-fn expr_atom_22<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.set_retval("ExprTuple")
-}
-fn expr_atom_23<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[expr_atom_22, expr_atom_21])
-}
-fn expr_atom_49<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    if input.peek_expect(LBracket) {
-        input.call_now(&[expr_atom_26])
-    } else {
-        input.call_now(&[expr_atom_48])
-    }
-}
-fn expr_atom_24<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[expr_array])
-}
-fn expr_atom_25<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.set_retval("ExprArray")
-}
-fn expr_atom_26<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[expr_atom_25, expr_atom_24])
-}
-fn expr_atom_48<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    if input.peek_expect(LBrace) {
-        input.call_now(&[expr_atom_29])
-    } else {
-        input.call_now(&[expr_atom_47])
-    }
-}
-fn expr_atom_27<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[block])
-}
-fn expr_atom_28<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.set_retval("ExprBlock")
-}
-fn expr_atom_29<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[expr_atom_28, expr_atom_27])
-}
-fn expr_atom_47<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    if input.peek_expect(Loop) || input.peek_expect(FragmentLifetime) {
-        input.call_now(&[expr_atom_32])
-    } else {
-        input.call_now(&[expr_atom_46])
-    }
-}
-fn expr_atom_30<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[expr_loop])
-}
-fn expr_atom_31<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.set_retval("ExprLoop")
-}
-fn expr_atom_32<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[expr_atom_31, expr_atom_30])
-}
-fn expr_atom_46<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    if input.peek_expect(While) {
-        input.call_now(&[expr_atom_35])
-    } else {
-        input.call_now(&[expr_atom_45])
-    }
-}
-fn expr_atom_33<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[expr_while])
-}
-fn expr_atom_34<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.set_retval("ExprWhile")
-}
-fn expr_atom_35<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[expr_atom_34, expr_atom_33])
-}
-fn expr_atom_45<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    if input.peek_expect(For) {
-        input.call_now(&[expr_atom_38])
-    } else {
-        input.call_now(&[expr_atom_44])
-    }
-}
-fn expr_atom_36<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[expr_for])
-}
-fn expr_atom_37<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.set_retval("ExprFor")
-}
-fn expr_atom_38<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[expr_atom_37, expr_atom_36])
-}
-fn expr_atom_44<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    if input.peek_expect(Match) {
-        input.call_now(&[expr_atom_41])
-    } else {
-        input.call_now(&[expr_atom_43])
-    }
-}
-fn expr_atom_39<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[expr_match])
-}
-fn expr_atom_40<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.set_retval("ExprMatch")
-}
-fn expr_atom_41<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[expr_atom_40, expr_atom_39])
-}
-fn expr_atom_42<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.error()
-}
-fn expr_atom_43<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[expr_atom_42])
-}
-fn expr_atom_57<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[expr_atom_56])
-}
-fn expr_atom<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[expr_atom_57])
-}
-fn expr_return_or_break_2<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    if input.peek_expect(Async)
-        || input.peek_expect(Break)
-        || input.peek_expect(Continue)
-        || input.peek_expect(Crate)
-        || input.peek_expect(False)
-        || input.peek_expect(For)
-        || input.peek_expect(Let)
-        || input.peek_expect(Loop)
-        || input.peek_expect(Match)
-        || input.peek_expect(Move)
-        || input.peek_expect(Return)
-        || input.peek_expect(Self_)
-        || input.peek_expect(SelfUpper)
-        || input.peek_expect(True)
-        || input.peek_expect(Union)
-        || input.peek_expect(While)
-        || input.peek_expect(Yield)
-        || input.peek_expect(Ident)
-        || input.peek_expect(FragmentIdent)
-        || input.peek_expect(LParen)
-        || input.peek_expect(LBracket)
-        || input.peek_expect(LBrace)
-        || input.peek_expect(Literal)
-        || input.peek_expect(FragmentLiteral)
-        || input.peek_expect(Not)
-        || input.peek_expect(Star)
-        || input.peek_expect(Or)
-        || input.peek_expect(And)
-        || input.peek_expect(DotDot)
-        || input.peek_expect(LessThan)
-        || input.peek_expect(ColonColon)
-        || input.peek_expect(Pound)
-        || input.peek_expect(FragmentExpr)
-    {
-        input.call_now(&[expr_return_or_break_1])
-    } else {
-        input.call_now(&[])
-    }
-}
-fn expr_return_or_break_0<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[expr_atom])
-}
-fn expr_return_or_break_1<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[expr_return_or_break_0])
-}
-fn expr_return_or_break_10<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    if input.peek_expect(Return) {
-        input.call_now(&[expr_return_or_break_4])
-    } else {
-        input.call_now(&[expr_return_or_break_9])
-    }
-}
-fn expr_return_or_break_3<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.bump_expect(Return, &[])
-}
-fn expr_return_or_break_4<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[expr_return_or_break_3])
-}
-fn expr_return_or_break_9<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    if input.peek_expect(Break) {
-        input.call_now(&[expr_return_or_break_6])
-    } else {
-        input.call_now(&[expr_return_or_break_8])
-    }
-}
-fn expr_return_or_break_5<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.bump_expect(Break, &[])
-}
-fn expr_return_or_break_6<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[expr_return_or_break_5])
-}
-fn expr_return_or_break_7<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.error()
-}
-fn expr_return_or_break_8<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[expr_return_or_break_7])
-}
-fn expr_return_or_break_11<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[expr_return_or_break_2, expr_return_or_break_10])
-}
-fn expr_return_or_break<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[expr_return_or_break_11])
-}
-fn expr_path_10<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    if input.peek_expect(FragmentPath) {
-        input.call_now(&[expr_path_1])
-    } else {
-        input.call_now(&[expr_path_9])
-    }
-}
-fn expr_path_0<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.bump_expect(FragmentPath, &[])
-}
-fn expr_path_1<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[expr_path_0])
-}
-fn expr_path_9<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    if input.peek_expect(LessThan) {
-        input.call_now(&[expr_path_3])
-    } else {
-        input.call_now(&[expr_path_8])
-    }
-}
-fn expr_path_2<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[expr_qualified_path])
-}
-fn expr_path_3<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[expr_path_2])
-}
-fn expr_path_8<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    if input.peek_expect(Ident)
-        || input.peek_expect(FragmentIdent)
-        || input.peek_expect(Super)
-        || input.peek_expect(Self_)
-        || input.peek_expect(SelfUpper)
-        || input.peek_expect(Crate)
-        || input.peek_expect(ColonColon)
-    {
-        input.call_now(&[expr_path_5])
-    } else {
-        input.call_now(&[expr_path_7])
-    }
-}
-fn expr_path_4<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[expr_path_in])
-}
-fn expr_path_5<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[expr_path_4])
-}
-fn expr_path_6<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.error()
-}
-fn expr_path_7<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[expr_path_6])
-}
-fn expr_path_11<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[expr_path_10])
-}
-fn expr_path<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[expr_path_11])
-}
-fn expr_qualified_path_0<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[expr_path_segment])
-}
-fn expr_qualified_path_1<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.bump_expect(ColonColon, &[])
-}
-fn expr_qualified_path_2<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.bump_expect(GreaterThan, &[])
-}
-fn expr_qualified_path_6<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    if input.peek_expect(As) {
-        input.call_now(&[expr_qualified_path_5])
-    } else {
-        input.call_now(&[])
-    }
-}
-fn expr_qualified_path_3<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[ty_path])
-}
-fn expr_qualified_path_4<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.bump_expect(As, &[])
-}
-fn expr_qualified_path_5<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[expr_qualified_path_3, expr_qualified_path_4])
-}
-fn expr_qualified_path_7<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[ty])
-}
-fn expr_qualified_path_8<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.bump_expect(LessThan, &[])
-}
-fn expr_qualified_path_9<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[
-        expr_qualified_path_0,
-        expr_qualified_path_1,
-        expr_qualified_path_2,
-        expr_qualified_path_6,
-        expr_qualified_path_7,
-        expr_qualified_path_8,
-    ])
-}
-fn expr_qualified_path<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[expr_qualified_path_9])
-}
-fn expr_path_in_2<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    if input.peek_expect(ColonColon) {
-        input.call_now(&[expr_path_in_1])
-    } else {
-        input.call_now(&[])
-    }
-}
-fn expr_path_in_0<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[expr_path_in_])
-}
-fn expr_path_in_1<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[expr_path_in_0])
-}
-fn expr_path_in_3<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[expr_path_segment])
-}
-fn expr_path_in_6<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    if input.peek_expect(ColonColon) {
-        input.call_now(&[expr_path_in_5])
-    } else {
-        input.call_now(&[])
-    }
-}
-fn expr_path_in_4<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.bump_expect(ColonColon, &[])
-}
-fn expr_path_in_5<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[expr_path_in_4])
-}
-fn expr_path_in_7<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[expr_path_in_2, expr_path_in_3, expr_path_in_6])
-}
-fn expr_path_in<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[expr_path_in_7])
-}
-fn expr_path_in__2<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    if input.peek_expect(ColonColon) {
-        input.call_now(&[expr_path_in__1])
-    } else {
-        input.call_now(&[])
-    }
-}
-fn expr_path_in__0<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[expr_path_in_])
-}
-fn expr_path_in__1<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[expr_path_in__0])
-}
-fn expr_path_in__3<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[expr_path_segment])
-}
-fn expr_path_in__4<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.bump_expect(ColonColon, &[])
-}
-fn expr_path_in__5<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[expr_path_in__2, expr_path_in__3, expr_path_in__4])
-}
-fn expr_path_in_<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[expr_path_in__5])
-}
-fn expr_path_segment_5<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    if input.peek_expect(ColonColon) {
-        input.call_now(&[expr_path_segment_4])
-    } else {
-        input.call_now(&[])
-    }
-}
-fn expr_path_segment_3<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    if input.peek2_expect(LessThan) {
-        input.call_now(&[expr_path_segment_2])
-    } else {
-        input.call_now(&[])
-    }
-}
-fn expr_path_segment_0<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[expr_angle_bracketed_generic_arguments])
-}
-fn expr_path_segment_1<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.bump_expect(ColonColon, &[])
-}
-fn expr_path_segment_2<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[expr_path_segment_0, expr_path_segment_1])
-}
-fn expr_path_segment_4<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[expr_path_segment_3])
-}
-fn expr_path_segment_6<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[path_ident_segment])
-}
-fn expr_path_segment_7<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[expr_path_segment_5, expr_path_segment_6])
-}
-fn expr_path_segment<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[expr_path_segment_7])
-}
-fn path_ident_segment_4<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    if input.peek_expect(Ident)
-        || input.peek_expect(FragmentIdent)
-        || input.peek_expect(SelfUpper)
-        || input.peek_expect(Self_)
-        || input.peek_expect(Super)
-        || input.peek_expect(Crate)
-    {
-        input.call_now(&[path_ident_segment_1])
-    } else {
-        input.call_now(&[path_ident_segment_3])
-    }
-}
-fn path_ident_segment_0<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.bump_noexpect(&[])
-}
-fn path_ident_segment_1<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[path_ident_segment_0])
-}
-fn path_ident_segment_2<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.error()
-}
-fn path_ident_segment_3<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[path_ident_segment_2])
-}
-fn path_ident_segment_5<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[path_ident_segment_4])
-}
-fn path_ident_segment<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[path_ident_segment_5])
-}
-fn expr_if_3<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    if input.peek_expect(Else) {
-        input.call_now(&[expr_if_2])
-    } else {
-        input.call_now(&[])
-    }
-}
-fn expr_if_0<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[expr_block])
-}
-fn expr_if_1<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.bump_expect(Else, &[])
-}
-fn expr_if_2<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[expr_if_0, expr_if_1])
-}
-fn expr_if_4<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[expr_block])
-}
-fn expr_if_5<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[expr])
-}
-fn expr_if_6<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.bump_expect(If, &[])
-}
-fn expr_if_7<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[expr_if_3, expr_if_4, expr_if_5, expr_if_6])
-}
-fn expr_if<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[expr_if_7])
-}
-fn expr_array_11<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    if input.peek_expect(RBracket) {
-        input.call_now(&[expr_array_1])
-    } else {
-        input.call_now(&[expr_array_10])
-    }
-}
-fn expr_array_0<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.bump_expect(RBracket, &[])
-}
-fn expr_array_1<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[expr_array_0])
-}
-fn expr_array_8<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    if input.peek_expect(Semicolon) {
-        input.call_now(&[expr_array_5])
-    } else {
-        input.call_now(&[expr_array_7])
-    }
-}
-fn expr_array_2<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.bump_expect(RBracket, &[])
-}
-fn expr_array_3<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[expr])
-}
-fn expr_array_4<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.bump_expect(Semicolon, &[])
-}
-fn expr_array_5<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[expr_array_2, expr_array_3, expr_array_4])
-}
-fn expr_array_6<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[expr_array_])
-}
-fn expr_array_7<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[expr_array_6])
-}
-fn expr_array_9<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[expr])
-}
-fn expr_array_10<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[expr_array_8, expr_array_9])
-}
-fn expr_array_12<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.bump_expect(LBracket, &[])
-}
-fn expr_array_13<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[expr_array_11, expr_array_12])
-}
-fn expr_array<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[expr_array_13])
-}
-fn expr_array__10<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    if input.peek_expect(Comma) {
-        input.call_now(&[expr_array__7])
-    } else {
-        input.call_now(&[expr_array__9])
-    }
-}
-fn expr_array__5<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    if input.peek_expect(RBracket) {
-        input.call_now(&[expr_array__1])
-    } else {
-        input.call_now(&[expr_array__4])
-    }
-}
-fn expr_array__0<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.bump_expect(RBracket, &[])
-}
-fn expr_array__1<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[expr_array__0])
-}
-fn expr_array__2<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[expr_array_])
-}
-fn expr_array__3<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[expr])
-}
-fn expr_array__4<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[expr_array__2, expr_array__3])
-}
-fn expr_array__6<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.bump_expect(Comma, &[])
-}
-fn expr_array__7<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[expr_array__5, expr_array__6])
-}
-fn expr_array__8<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.bump_expect(RBracket, &[])
-}
-fn expr_array__9<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[expr_array__8])
-}
-fn expr_array__11<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[expr_array__10])
-}
-fn expr_array_<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[expr_array__11])
-}
-fn expr_block_0<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[block])
-}
-fn expr_block_1<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[expr_block_0])
-}
-fn expr_block<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[expr_block_1])
-}
-fn expr_call_5<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    if input.peek_expect(RParen) {
-        input.call_now(&[expr_call_1])
-    } else {
-        input.call_now(&[expr_call_4])
-    }
-}
-fn expr_call_0<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.bump_expect(RParen, &[])
-}
-fn expr_call_1<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[expr_call_0])
-}
-fn expr_call_2<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[expr_call_])
-}
-fn expr_call_3<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[expr])
-}
-fn expr_call_4<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[expr_call_2, expr_call_3])
-}
-fn expr_call_6<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.bump_expect(LParen, &[])
-}
-fn expr_call_7<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[expr_call_5, expr_call_6])
-}
-fn expr_call<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[expr_call_7])
-}
-fn expr_call__10<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    if input.peek_expect(Comma) {
-        input.call_now(&[expr_call__7])
-    } else {
-        input.call_now(&[expr_call__9])
-    }
-}
-fn expr_call__5<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    if input.peek_expect(RParen) {
-        input.call_now(&[expr_call__1])
-    } else {
-        input.call_now(&[expr_call__4])
-    }
-}
-fn expr_call__0<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.bump_expect(RParen, &[])
-}
-fn expr_call__1<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[expr_call__0])
-}
-fn expr_call__2<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[expr_call_])
-}
-fn expr_call__3<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[expr])
-}
-fn expr_call__4<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[expr_call__2, expr_call__3])
-}
-fn expr_call__6<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.bump_expect(Comma, &[])
-}
-fn expr_call__7<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[expr_call__5, expr_call__6])
-}
-fn expr_call__8<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.bump_expect(RParen, &[])
-}
-fn expr_call__9<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[expr_call__8])
-}
-fn expr_call__11<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[expr_call__10])
-}
-fn expr_call_<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[expr_call__11])
-}
-fn expr_dot_expr_20<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    if input.peek_expect(Await) {
-        input.call_now(&[expr_dot_expr_1])
-    } else {
-        input.call_now(&[expr_dot_expr_19])
-    }
-}
-fn expr_dot_expr_0<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.bump_expect(Await, &[])
-}
-fn expr_dot_expr_1<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[expr_dot_expr_0])
-}
-fn expr_dot_expr_19<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    if input.peek_expect(Ident) {
-        input.call_now(&[expr_dot_expr_4])
-    } else {
-        input.call_now(&[expr_dot_expr_18])
-    }
-}
-fn expr_dot_expr_2<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[expr_field_or_method])
-}
-fn expr_dot_expr_3<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.bump_expect(Ident, &[])
-}
-fn expr_dot_expr_4<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[expr_dot_expr_2, expr_dot_expr_3])
-}
-fn expr_dot_expr_18<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    if input.peek_expect(FragmentIdent) {
-        input.call_now(&[expr_dot_expr_7])
-    } else {
-        input.call_now(&[expr_dot_expr_17])
-    }
-}
-fn expr_dot_expr_5<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[expr_field_or_method])
-}
-fn expr_dot_expr_6<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.bump_expect(FragmentIdent, &[])
-}
-fn expr_dot_expr_7<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[expr_dot_expr_5, expr_dot_expr_6])
-}
-fn expr_dot_expr_17<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    if input.peek_expect(Literal) {
-        input.call_now(&[expr_dot_expr_10])
-    } else {
-        input.call_now(&[expr_dot_expr_16])
-    }
-}
-fn expr_dot_expr_8<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[expr_field_or_method])
-}
-fn expr_dot_expr_9<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.bump_expect(Literal, &[])
-}
-fn expr_dot_expr_10<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[expr_dot_expr_8, expr_dot_expr_9])
-}
-fn expr_dot_expr_16<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    if input.peek_expect(FragmentLiteral) {
-        input.call_now(&[expr_dot_expr_13])
-    } else {
-        input.call_now(&[expr_dot_expr_15])
-    }
-}
-fn expr_dot_expr_11<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[expr_field_or_method])
-}
-fn expr_dot_expr_12<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.bump_expect(FragmentLiteral, &[])
-}
-fn expr_dot_expr_13<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[expr_dot_expr_11, expr_dot_expr_12])
-}
-fn expr_dot_expr_14<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.error()
-}
-fn expr_dot_expr_15<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[expr_dot_expr_14])
-}
-fn expr_dot_expr_21<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.bump_expect(Dot, &[])
-}
-fn expr_dot_expr_22<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[expr_dot_expr_20, expr_dot_expr_21])
-}
-fn expr_dot_expr<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[expr_dot_expr_22])
-}
-fn expr_field_or_method_2<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    if input.peek_expect(LParen) {
-        input.call_now(&[expr_field_or_method_1])
-    } else {
-        input.call_now(&[])
-    }
-}
-fn expr_field_or_method_0<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[expr_call])
-}
-fn expr_field_or_method_1<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[expr_field_or_method_0])
-}
-fn expr_field_or_method_7<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    if input.peek_expect(ColonColon) {
-        input.call_now(&[expr_field_or_method_6])
-    } else {
-        input.call_now(&[])
-    }
-}
-fn expr_field_or_method_3<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[expr_call])
-}
-fn expr_field_or_method_4<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[expr_angle_bracketed_generic_arguments])
-}
-fn expr_field_or_method_5<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.bump_expect(ColonColon, &[])
-}
-fn expr_field_or_method_6<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[
-        expr_field_or_method_3,
-        expr_field_or_method_4,
-        expr_field_or_method_5,
-    ])
-}
-fn expr_field_or_method_8<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[expr_field_or_method_2, expr_field_or_method_7])
-}
-fn expr_field_or_method<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[expr_field_or_method_8])
-}
-fn expr_angle_bracketed_generic_arguments_5<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    if input.peek_expect(GreaterThan) {
-        input.call_now(&[expr_angle_bracketed_generic_arguments_1])
-    } else {
-        input.call_now(&[expr_angle_bracketed_generic_arguments_4])
-    }
-}
-fn expr_angle_bracketed_generic_arguments_0<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.bump_expect(GreaterThan, &[])
-}
-fn expr_angle_bracketed_generic_arguments_1<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[expr_angle_bracketed_generic_arguments_0])
-}
-fn expr_angle_bracketed_generic_arguments_2<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[expr_angle_bracketed_generic_arguments_])
-}
-fn expr_angle_bracketed_generic_arguments_3<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[expr_generic_argument])
-}
-fn expr_angle_bracketed_generic_arguments_4<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[
-        expr_angle_bracketed_generic_arguments_2,
-        expr_angle_bracketed_generic_arguments_3,
-    ])
-}
-fn expr_angle_bracketed_generic_arguments_6<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.bump_expect(LessThan, &[])
-}
-fn expr_angle_bracketed_generic_arguments_7<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[
-        expr_angle_bracketed_generic_arguments_5,
-        expr_angle_bracketed_generic_arguments_6,
-    ])
-}
-fn expr_angle_bracketed_generic_arguments<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[expr_angle_bracketed_generic_arguments_7])
-}
-fn expr_angle_bracketed_generic_arguments__11<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    if input.peek_expect(GreaterThan) {
-        input.call_now(&[expr_angle_bracketed_generic_arguments__1])
-    } else {
-        input.call_now(&[expr_angle_bracketed_generic_arguments__10])
-    }
-}
-fn expr_angle_bracketed_generic_arguments__0<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.bump_expect(GreaterThan, &[])
-}
-fn expr_angle_bracketed_generic_arguments__1<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[expr_angle_bracketed_generic_arguments__0])
-}
-fn expr_angle_bracketed_generic_arguments__10<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    if input.peek_expect(Comma) {
-        input.call_now(&[expr_angle_bracketed_generic_arguments__9])
-    } else {
-        input.call_now(&[])
-    }
-}
-fn expr_angle_bracketed_generic_arguments__7<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    if input.peek_expect(GreaterThan) {
-        input.call_now(&[expr_angle_bracketed_generic_arguments__3])
-    } else {
-        input.call_now(&[expr_angle_bracketed_generic_arguments__6])
-    }
-}
-fn expr_angle_bracketed_generic_arguments__2<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.bump_expect(GreaterThan, &[])
-}
-fn expr_angle_bracketed_generic_arguments__3<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[expr_angle_bracketed_generic_arguments__2])
-}
-fn expr_angle_bracketed_generic_arguments__4<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[expr_angle_bracketed_generic_arguments_])
-}
-fn expr_angle_bracketed_generic_arguments__5<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[expr_generic_argument])
-}
-fn expr_angle_bracketed_generic_arguments__6<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[
-        expr_angle_bracketed_generic_arguments__4,
-        expr_angle_bracketed_generic_arguments__5,
-    ])
-}
-fn expr_angle_bracketed_generic_arguments__8<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.bump_expect(Comma, &[])
-}
-fn expr_angle_bracketed_generic_arguments__9<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[
-        expr_angle_bracketed_generic_arguments__7,
-        expr_angle_bracketed_generic_arguments__8,
-    ])
-}
-fn expr_angle_bracketed_generic_arguments__12<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[expr_angle_bracketed_generic_arguments__11])
-}
-fn expr_angle_bracketed_generic_arguments_<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[expr_angle_bracketed_generic_arguments__12])
-}
-fn expr_generic_argument_17<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    if input.peek_expect(Literal) || input.peek_expect(FragmentLiteral) {
-        input.call_now(&[expr_generic_argument_1])
-    } else {
-        input.call_now(&[expr_generic_argument_16])
-    }
-}
-fn expr_generic_argument_0<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.bump_noexpect(&[])
-}
-fn expr_generic_argument_1<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[expr_generic_argument_0])
-}
-fn expr_generic_argument_16<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    if input.peek_expect(Minus) {
-        input.call_now(&[expr_generic_argument_3])
-    } else {
-        input.call_now(&[expr_generic_argument_15])
-    }
-}
-fn expr_generic_argument_2<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[minus_prefixed_literal])
-}
-fn expr_generic_argument_3<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[expr_generic_argument_2])
-}
-fn expr_generic_argument_15<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    if input.peek_expect(FragmentIdent) || input.peek_expect(Ident) {
-        input.call_now(&[expr_generic_argument_9])
-    } else {
-        input.call_now(&[expr_generic_argument_14])
-    }
-}
-fn expr_generic_argument_4<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[ty])
-}
-fn expr_generic_argument_8<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    if input.peek2_expect(Equals) {
-        input.call_now(&[expr_generic_argument_7])
-    } else {
-        input.call_now(&[])
-    }
-}
-fn expr_generic_argument_5<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.bump_expect(Equals, &[])
-}
-fn expr_generic_argument_6<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.bump_noexpect(&[])
-}
-fn expr_generic_argument_7<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[expr_generic_argument_5, expr_generic_argument_6])
-}
-fn expr_generic_argument_9<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[expr_generic_argument_4, expr_generic_argument_8])
-}
-fn expr_generic_argument_14<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    if input.peek_expect(LBrace) {
-        input.call_now(&[expr_generic_argument_11])
-    } else {
-        input.call_now(&[expr_generic_argument_13])
-    }
-}
-fn expr_generic_argument_10<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[block])
-}
-fn expr_generic_argument_11<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[expr_generic_argument_10])
-}
-fn expr_generic_argument_12<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[ty])
-}
-fn expr_generic_argument_13<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[expr_generic_argument_12])
-}
-fn expr_generic_argument_18<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[expr_generic_argument_17])
-}
-fn expr_generic_argument<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[expr_generic_argument_18])
-}
-fn minus_prefixed_literal_11<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    if input.peek_expect(Minus) {
-        input.call_now(&[minus_prefixed_literal_2])
-    } else {
-        input.call_now(&[minus_prefixed_literal_10])
-    }
-}
-fn minus_prefixed_literal_0<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[minus_prefixed_literal])
-}
-fn minus_prefixed_literal_1<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.bump_expect(Minus, &[])
-}
-fn minus_prefixed_literal_2<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[minus_prefixed_literal_0, minus_prefixed_literal_1])
-}
-fn minus_prefixed_literal_10<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    if input.peek_expect(Literal) {
-        input.call_now(&[minus_prefixed_literal_4])
-    } else {
-        input.call_now(&[minus_prefixed_literal_9])
-    }
-}
-fn minus_prefixed_literal_3<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.bump_expect(Literal, &[])
-}
-fn minus_prefixed_literal_4<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[minus_prefixed_literal_3])
-}
-fn minus_prefixed_literal_9<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    if input.peek_expect(FragmentLiteral) {
-        input.call_now(&[minus_prefixed_literal_6])
-    } else {
-        input.call_now(&[minus_prefixed_literal_8])
-    }
-}
-fn minus_prefixed_literal_5<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.bump_expect(FragmentLiteral, &[])
-}
-fn minus_prefixed_literal_6<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[minus_prefixed_literal_5])
-}
-fn minus_prefixed_literal_7<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.error()
-}
-fn minus_prefixed_literal_8<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[minus_prefixed_literal_7])
-}
-fn minus_prefixed_literal_12<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[minus_prefixed_literal_11])
-}
-fn minus_prefixed_literal<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[minus_prefixed_literal_12])
-}
-fn expr_prefixed_unary_op_0<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[])
-}
-fn expr_prefixed_unary_op<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[expr_prefixed_unary_op_0])
-}
-fn expr_tuple_5<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    if input.peek_expect(RParen) {
-        input.call_now(&[expr_tuple_1])
-    } else {
-        input.call_now(&[expr_tuple_4])
-    }
-}
-fn expr_tuple_0<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.bump_expect(RParen, &[])
-}
-fn expr_tuple_1<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[expr_tuple_0])
-}
-fn expr_tuple_2<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[expr_tuple_])
-}
-fn expr_tuple_3<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[expr])
-}
-fn expr_tuple_4<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[expr_tuple_2, expr_tuple_3])
-}
-fn expr_tuple_6<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.bump_expect(LParen, &[])
-}
-fn expr_tuple_7<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[expr_tuple_5, expr_tuple_6])
-}
-fn expr_tuple<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[expr_tuple_7])
-}
-fn expr_tuple__10<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    if input.peek_expect(RParen) {
-        input.call_now(&[expr_tuple__1])
-    } else {
-        input.call_now(&[expr_tuple__9])
-    }
-}
-fn expr_tuple__0<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.bump_expect(RParen, &[])
-}
-fn expr_tuple__1<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[expr_tuple__0])
-}
-fn expr_tuple__7<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    if input.peek_expect(RParen) {
-        input.call_now(&[expr_tuple__3])
-    } else {
-        input.call_now(&[expr_tuple__6])
-    }
-}
-fn expr_tuple__2<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.bump_expect(RParen, &[])
-}
-fn expr_tuple__3<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[expr_tuple__2])
-}
-fn expr_tuple__4<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[expr_tuple_])
-}
-fn expr_tuple__5<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[expr])
-}
-fn expr_tuple__6<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[expr_tuple__4, expr_tuple__5])
-}
-fn expr_tuple__8<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.bump_expect(Comma, &[])
-}
-fn expr_tuple__9<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[expr_tuple__7, expr_tuple__8])
-}
-fn expr_tuple__11<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[expr_tuple__10])
-}
-fn expr_tuple_<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[expr_tuple__11])
-}
-fn expr_loop_0<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[block])
-}
-fn expr_loop_1<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.bump_expect(Loop, &[])
-}
-fn expr_loop_4<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    if input.peek_expect(FragmentLifetime) {
-        input.call_now(&[expr_loop_3])
-    } else {
-        input.call_now(&[])
-    }
-}
-fn expr_loop_2<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.bump_expect(FragmentLifetime, &[])
-}
-fn expr_loop_3<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[expr_loop_2])
-}
-fn expr_loop_5<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[expr_loop_0, expr_loop_1, expr_loop_4])
-}
-fn expr_loop<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[expr_loop_5])
-}
-fn expr_while_0<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[block])
-}
-fn expr_while_1<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[expr])
-}
-fn expr_while_2<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.bump_expect(While, &[])
-}
-fn expr_while_3<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[expr_while_0, expr_while_1, expr_while_2])
-}
-fn expr_while<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[expr_while_3])
-}
-fn expr_for_0<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[block])
-}
-fn expr_for_1<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[expr])
-}
-fn expr_for_2<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.bump_expect(In, &[])
-}
-fn expr_for_3<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[pat])
-}
-fn expr_for_4<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.bump_expect(For, &[])
-}
-fn expr_for_5<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[expr_for_0, expr_for_1, expr_for_2, expr_for_3, expr_for_4])
-}
-fn expr_for<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[expr_for_5])
-}
-fn expr_match_0<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.bump_expect(RBrace, &[])
-}
-fn expr_match_1<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[match_arms])
-}
-fn expr_match_2<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.bump_expect(LBrace, &[])
-}
-fn expr_match_3<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[expr])
-}
-fn expr_match_4<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.bump_expect(Match, &[])
-}
-fn expr_match_5<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[
-        expr_match_0,
-        expr_match_1,
-        expr_match_2,
-        expr_match_3,
-        expr_match_4,
-    ])
-}
-fn expr_match<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[expr_match_5])
-}
-fn match_arms_4<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    if input.peek_expect(RBrace) {
-        input.call_now(&[match_arms_0])
-    } else {
-        input.call_now(&[match_arms_3])
-    }
-}
-fn match_arms_0<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[])
-}
-fn match_arms_1<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[match_arms])
-}
-fn match_arms_2<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[match_arm])
-}
-fn match_arms_3<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[match_arms_1, match_arms_2])
-}
-fn match_arms_5<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[match_arms_4])
-}
-fn match_arms<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[match_arms_5])
-}
-fn match_arm_0<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.bump_expect(Comma, &[])
-}
-fn match_arm_1<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[expr])
-}
-fn match_arm_2<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.bump_expect(FatArrow, &[])
-}
-fn match_arm_6<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    if input.peek_expect(If) {
-        input.call_now(&[match_arm_5])
-    } else {
-        input.call_now(&[])
-    }
-}
-fn match_arm_3<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[expr])
-}
-fn match_arm_4<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.bump_expect(If, &[])
-}
-fn match_arm_5<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[match_arm_3, match_arm_4])
-}
-fn match_arm_7<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[pat])
-}
-fn match_arm_8<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[
-        match_arm_0,
-        match_arm_1,
-        match_arm_2,
-        match_arm_6,
-        match_arm_7,
-    ])
-}
-fn match_arm<Span: Copy>(input: &mut RustParser<Span>) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[match_arm_8])
-}
-fn macro_call_tail_8<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    if input.returned("TokenStreamGroupParen") {
-        input.call_now(&[macro_call_tail_1])
-    } else {
-        input.call_now(&[macro_call_tail_7])
-    }
-}
-fn macro_call_tail_0<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.set_retval("MacroCallParen")
-}
-fn macro_call_tail_1<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[macro_call_tail_0])
-}
-fn macro_call_tail_7<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    if input.returned("TokenStreamGroupBracket") {
-        input.call_now(&[macro_call_tail_3])
-    } else {
-        input.call_now(&[macro_call_tail_6])
-    }
-}
-fn macro_call_tail_2<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.set_retval("MacroCallBracket")
-}
-fn macro_call_tail_3<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[macro_call_tail_2])
-}
-fn macro_call_tail_6<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    if input.returned("TokenStreamGroupBrace") {
-        input.call_now(&[macro_call_tail_5])
-    } else {
-        input.call_now(&[])
-    }
-}
-fn macro_call_tail_4<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.set_retval("MacroCallBrace")
-}
-fn macro_call_tail_5<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[macro_call_tail_4])
-}
-fn macro_call_tail_9<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[token_stream_group])
-}
-fn macro_call_tail_10<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.bump_expect(Not, &[])
-}
-fn macro_call_tail_11<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[macro_call_tail_8, macro_call_tail_9, macro_call_tail_10])
-}
-fn macro_call_tail<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[macro_call_tail_11])
-}
-fn token_stream_group_13<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    if input.peek_expect(LParen) {
-        input.call_now(&[token_stream_group_2])
-    } else {
-        input.call_now(&[token_stream_group_12])
-    }
-}
-fn token_stream_group_0<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[token_stream_group_paren])
-}
-fn token_stream_group_1<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.set_retval("TokenStreamGroupParen")
-}
-fn token_stream_group_2<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[token_stream_group_1, token_stream_group_0])
-}
-fn token_stream_group_12<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    if input.peek_expect(LBracket) {
-        input.call_now(&[token_stream_group_5])
-    } else {
-        input.call_now(&[token_stream_group_11])
-    }
-}
-fn token_stream_group_3<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[token_stream_group_bracket])
-}
-fn token_stream_group_4<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.set_retval("TokenStreamGroupBracket")
-}
-fn token_stream_group_5<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[token_stream_group_4, token_stream_group_3])
-}
-fn token_stream_group_11<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    if input.peek_expect(LBrace) {
-        input.call_now(&[token_stream_group_8])
-    } else {
-        input.call_now(&[token_stream_group_10])
-    }
-}
-fn token_stream_group_6<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[token_stream_group_brace])
-}
-fn token_stream_group_7<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.set_retval("TokenStreamGroupBrace")
-}
-fn token_stream_group_8<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[token_stream_group_7, token_stream_group_6])
-}
-fn token_stream_group_9<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.error()
-}
-fn token_stream_group_10<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[token_stream_group_9])
-}
-fn token_stream_group_14<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[token_stream_group_13])
-}
-fn token_stream_group<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[token_stream_group_14])
-}
-fn token_stream_group_or_token_7<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    if input.peek_expect(LParen) || input.peek_expect(LBracket) || input.peek_expect(LBrace) {
-        input.call_now(&[token_stream_group_or_token_1])
-    } else {
-        input.call_now(&[token_stream_group_or_token_6])
-    }
-}
-fn token_stream_group_or_token_0<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[token_stream_group])
-}
-fn token_stream_group_or_token_1<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[token_stream_group_or_token_0])
-}
-fn token_stream_group_or_token_6<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    if input.peek_expect(RParen) || input.peek_expect(RBracket) || input.peek_expect(RBrace) {
-        input.call_now(&[token_stream_group_or_token_3])
-    } else {
-        input.call_now(&[token_stream_group_or_token_5])
-    }
-}
-fn token_stream_group_or_token_2<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.error()
-}
-fn token_stream_group_or_token_3<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[token_stream_group_or_token_2])
-}
-fn token_stream_group_or_token_4<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.bump_noexpect(&[])
-}
-fn token_stream_group_or_token_5<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[token_stream_group_or_token_4])
-}
-fn token_stream_group_or_token_8<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[token_stream_group_or_token_7])
-}
-fn token_stream_group_or_token<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[token_stream_group_or_token_8])
-}
-fn token_stream_group_paren_0<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[token_stream_group_paren_])
-}
-fn token_stream_group_paren_1<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.bump_expect(LParen, &[])
-}
-fn token_stream_group_paren_2<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[token_stream_group_paren_0, token_stream_group_paren_1])
-}
-fn token_stream_group_paren<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[token_stream_group_paren_2])
-}
-fn token_stream_group_paren__5<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    if input.peek_expect(RParen) {
-        input.call_now(&[token_stream_group_paren__1])
-    } else {
-        input.call_now(&[token_stream_group_paren__4])
-    }
-}
-fn token_stream_group_paren__0<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.bump_expect(RParen, &[])
-}
-fn token_stream_group_paren__1<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[token_stream_group_paren__0])
-}
-fn token_stream_group_paren__2<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[token_stream_group_paren_])
-}
-fn token_stream_group_paren__3<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[token_stream_group_or_token])
-}
-fn token_stream_group_paren__4<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[token_stream_group_paren__2, token_stream_group_paren__3])
-}
-fn token_stream_group_paren__6<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[token_stream_group_paren__5])
-}
-fn token_stream_group_paren_<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[token_stream_group_paren__6])
-}
-fn token_stream_group_bracket_0<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[token_stream_group_bracket_])
-}
-fn token_stream_group_bracket_1<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.bump_expect(LBracket, &[])
-}
-fn token_stream_group_bracket_2<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[token_stream_group_bracket_0, token_stream_group_bracket_1])
-}
-fn token_stream_group_bracket<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[token_stream_group_bracket_2])
-}
-fn token_stream_group_bracket__5<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    if input.peek_expect(RBracket) {
-        input.call_now(&[token_stream_group_bracket__1])
-    } else {
-        input.call_now(&[token_stream_group_bracket__4])
-    }
-}
-fn token_stream_group_bracket__0<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.bump_expect(RBracket, &[])
-}
-fn token_stream_group_bracket__1<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[token_stream_group_bracket__0])
-}
-fn token_stream_group_bracket__2<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[token_stream_group_bracket_])
-}
-fn token_stream_group_bracket__3<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[token_stream_group_or_token])
-}
-fn token_stream_group_bracket__4<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[token_stream_group_bracket__2, token_stream_group_bracket__3])
-}
-fn token_stream_group_bracket__6<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[token_stream_group_bracket__5])
-}
-fn token_stream_group_bracket_<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[token_stream_group_bracket__6])
-}
-fn token_stream_group_brace_0<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[token_stream_group_brace_])
-}
-fn token_stream_group_brace_1<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.bump_expect(LBrace, &[])
-}
-fn token_stream_group_brace_2<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[token_stream_group_brace_0, token_stream_group_brace_1])
-}
-fn token_stream_group_brace<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[token_stream_group_brace_2])
-}
-fn token_stream_group_brace__5<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    if input.peek_expect(RBrace) {
-        input.call_now(&[token_stream_group_brace__1])
-    } else {
-        input.call_now(&[token_stream_group_brace__4])
-    }
-}
-fn token_stream_group_brace__0<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.bump_expect(RBrace, &[])
-}
-fn token_stream_group_brace__1<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[token_stream_group_brace__0])
-}
-fn token_stream_group_brace__2<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[token_stream_group_brace_])
-}
-fn token_stream_group_brace__3<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[token_stream_group_or_token])
-}
-fn token_stream_group_brace__4<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[token_stream_group_brace__2, token_stream_group_brace__3])
-}
-fn token_stream_group_brace__6<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[token_stream_group_brace__5])
-}
-fn token_stream_group_brace_<Span: Copy>(
-    input: &mut RustParser<Span>,
-) -> Result<Transition<Span>, Option<Span>> {
-    input.call_now(&[token_stream_group_brace__6])
+    Interpreter::new(&PROGRAM, FunctionId(43u32))
 }

@@ -1,4 +1,3 @@
-use crate::generated::RustParser;
 macro_rules! check_parse {
     (
         $( #[$attr:meta] )*
@@ -13,7 +12,7 @@ macro_rules! check_parse {
         #[test]
         $( #[$attr] )*
         fn $test_name() {
-            let mut parser = RustParser::$start_state();
+            let mut parser = crate::generated::$start_state();
 
             #[allow(unused_mut)]
             let input = quote! {
@@ -24,14 +23,14 @@ macro_rules! check_parse {
                 match parser.step(token, idx) {
                     Ok(_) => {},
 
-                    Err((idx, expected)) => {
+                    Err((expected, idx)) => {
                         panic!("Failed to parse token `{:?}` at index {}. Expected {:?}", token, idx, expected);
                     }
                 }
             }
 
-            match parser.finish() {
-                Ok(()) => {},
+            match parser.finish(42101) {
+                Ok(_) => {},
 
                 Err(e) => {
                     panic!("Failed to finish parsing: {:?}", e);
@@ -43,7 +42,7 @@ macro_rules! check_parse {
 
 check_parse! {
     fn empty_function() {
-        item,
+        new_item,
         {
             fn foo() {}
         }
@@ -52,7 +51,7 @@ check_parse! {
 
 check_parse! {
     fn moar_complex_function() {
-        item,
+        new_item,
         {
             pub(crate) fn foo() -> i32 {}
         }
@@ -61,7 +60,7 @@ check_parse! {
 
 check_parse! {
     fn function_with_args() {
-        item,
+        new_item,
         {
             fn foo(a: i32, b: i32) {}
         }
@@ -70,7 +69,7 @@ check_parse! {
 
 check_parse! {
     fn fn_trailing_comma() {
-        item,
+        new_item,
         {
             fn foo(a: u8,) {}
         }
@@ -79,7 +78,7 @@ check_parse! {
 
 check_parse! {
     fn fn_trailing_comma_2() {
-        item,
+        new_item,
         {
             fn foo(a: u8, b: u8,) {}
         }
@@ -88,7 +87,7 @@ check_parse! {
 
 check_parse! {
     fn expr_ident() {
-        expr,
+        new_expr,
         {
             foo
         }
@@ -97,7 +96,7 @@ check_parse! {
 
 check_parse! {
     fn expr_chained_binop() {
-        expr,
+        new_expr,
         {
             foo + bar * baz / qux
         }
@@ -106,7 +105,7 @@ check_parse! {
 
 check_parse! {
     fn function_without_fragment() {
-        item,
+        new_item,
         {
             fn foo() { a }
         }
@@ -115,7 +114,7 @@ check_parse! {
 
 check_parse! {
     fn very_simple_block() {
-        expr,
+        new_expr,
         {
             { }
         }
@@ -124,7 +123,7 @@ check_parse! {
 
 check_parse! {
     fn simple_block_2() {
-        expr,
+        new_expr,
         {
             { a }
         }
@@ -133,7 +132,7 @@ check_parse! {
 
 check_parse! {
     fn array_1() {
-        expr,
+        new_expr,
         {
             [ ]
         }
@@ -142,7 +141,7 @@ check_parse! {
 
 check_parse! {
     fn array_2() {
-        expr,
+        new_expr,
         {
             [ a ]
         }
@@ -151,7 +150,7 @@ check_parse! {
 
 check_parse! {
     fn array_3() {
-        expr,
+        new_expr,
         {
             [ a, ]
         }
@@ -160,7 +159,7 @@ check_parse! {
 
 check_parse! {
     fn array_4() {
-        expr,
+        new_expr,
         {
             [ a, b ]
         }
@@ -169,16 +168,16 @@ check_parse! {
 
 check_parse! {
     fn array_5() {
-        expr,
+        new_expr,
         {
-            [ a,b, ]
+            [ a, b, ]
         }
     }
 }
 
 check_parse! {
     fn with_repetition_plus_1() {
-        expr,
+        new_expr,
         {
             a * c
         }
@@ -187,7 +186,7 @@ check_parse! {
 
 check_parse! {
     fn with_repetition_plus_2() {
-        expr,
+        new_expr,
         {
             a * b * c
         }
@@ -196,7 +195,7 @@ check_parse! {
 
 check_parse! {
     fn with_repetition_plus_3() {
-        expr,
+        new_expr,
         {
             a * b * b * c
         }
@@ -205,7 +204,7 @@ check_parse! {
 
 check_parse! {
     fn with_repetition_plus_4() {
-        expr,
+        new_expr,
         {
             a * b * b * b * c
         }
@@ -215,14 +214,14 @@ check_parse! {
 check_parse! {
     #[should_panic]
     fn empty_expr() {
-        expr,
+        new_expr,
         {}
     }
 }
 
 check_parse! {
     fn fn_call_no_arg() {
-        expr,
+        new_expr,
         {
             function()
         }
@@ -231,7 +230,7 @@ check_parse! {
 
 check_parse! {
     fn numeric_range() {
-        expr,
+        new_expr,
         {
             {
                 let (13..=19, _) = ();
@@ -242,7 +241,7 @@ check_parse! {
 
 check_parse! {
     fn head_tail_pat() {
-        expr,
+        new_expr,
         {
             {
                 let [head, tail @ ..] = ();
@@ -253,7 +252,7 @@ check_parse! {
 
 check_parse! {
     fn weird_path_error() {
-        expr,
+        new_expr,
         {
             (0..10).collect::<Vec<_>>()
         }
@@ -262,7 +261,7 @@ check_parse! {
 
 check_parse! {
     fn path_starting_with_crate() {
-        expr,
+        new_expr,
         {
             self::foo()
         }
@@ -271,7 +270,7 @@ check_parse! {
 
 check_parse! {
     fn braced_macro_nosemi() {
-        expr,
+        new_expr,
         {
             {
                 macro_call! {}
@@ -283,7 +282,7 @@ check_parse! {
 
 check_parse! {
     fn stmt_entry_point() {
-        stmt,
+        new_stmt,
         {
             let _ = 42;
         }
@@ -292,7 +291,7 @@ check_parse! {
 
 check_parse! {
     fn stmt_without_semicolon() {
-        expr,
+        new_expr,
         {
             {
                 loop {}
@@ -304,7 +303,7 @@ check_parse! {
 
 check_parse! {
     fn something_is_wrong_with_block_initialization() {
-        item,
+        new_item,
         {
             fn foo() {
                 loop {}
@@ -316,12 +315,21 @@ check_parse! {
 
 check_parse! {
     fn match_arms_are_broken() {
-        expr,
+        new_expr,
         {
             match () {
                 () => {},
                 () => {},
             }
+        }
+    }
+}
+
+check_parse! {
+    fn dot_await_syntax() {
+        new_expr,
+        {
+            42.await
         }
     }
 }
