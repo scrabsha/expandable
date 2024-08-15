@@ -206,13 +206,13 @@ fn stmt_tail() {
 
             stmt_tail();
         } else {
-            expr();
-            if returned(ExprIf)
-                || returned(ExprBlock)
-                || returned(ExprLoop)
-                || returned(ExprFor)
-                || returned(ExprMatch)
-                || returned(MacroCallBrace)
+            let expr_kind = expr();
+            if returned(expr_kind, ExprIf)
+                || returned(expr_kind, ExprBlock)
+                || returned(expr_kind, ExprLoop)
+                || returned(expr_kind, ExprFor)
+                || returned(expr_kind, ExprMatch)
+                || returned(expr_kind, MacroCallBrace)
             {
                 // Block expressions/braced macro stmts don't need a trailing semicolon.
                 stmt_end_nosemi();
@@ -1170,12 +1170,12 @@ fn macro_call_tail() {
     // THIS MUST BE DOCUMENTED.
     bump(Not);
 
-    token_stream_group();
-    if returned(TokenStreamGroupParen) {
+    let group_kind = token_stream_group();
+    if returned(group_kind, TokenStreamGroupParen) {
         return MacroCallParen;
-    } else if returned(TokenStreamGroupBracket) {
+    } else if returned(group_kind, TokenStreamGroupBracket) {
         return MacroCallBracket;
-    } else if returned(TokenStreamGroupBrace) {
+    } else if returned(group_kind, TokenStreamGroupBrace) {
         return MacroCallBrace;
     }
 }
