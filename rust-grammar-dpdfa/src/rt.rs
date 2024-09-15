@@ -807,14 +807,29 @@ impl Transition {
 
 impl AddAssign for Transition {
     fn add_assign(&mut self, rhs: Transition) {
-        // TODO: this is O(m*n*o*p*q*r) at this point. Maybe sets may help?
-        let mut to_append = rhs
-            .buffer
-            .into_iter()
-            .filter(|(_, id)| self.buffer.iter().all(|(_, id_)| id != id_))
-            .collect::<SmallVec<[(TokenDescription, DescrId); 16]>>();
+        // We find the first token that is common to both the `self` and `rhs`,
+        // then we push everything that comes after in `rhs` to `self`.
+        let last_known_descr_id = self.buffer.last().map(|(_, id)| id);
 
-        self.buffer.append(&mut to_append);
+        let to_append = match last_known_descr_id {
+            Some(id) => {
+                let idx_to_start_from = rhs
+                    .buffer
+                    .iter()
+                    .enumerate()
+                    .find(|(_, (_, id_))| id_ == id)
+                    .map(|(idx, _)| idx);
+
+                match idx_to_start_from {
+                    Some(idx) if idx + 1 < rhs.buffer.len() => &rhs.buffer[idx + 1..],
+                    Some(_) => &[],
+                    None => &rhs.buffer,
+                }
+            }
+            None => rhs.buffer.as_slice(),
+        };
+
+        self.buffer.extend_from_slice(to_append);
 
         let mut to_append = rhs
             .stack_top_rev
