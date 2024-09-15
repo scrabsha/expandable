@@ -1,10 +1,12 @@
 use std::{
     cmp::Ordering,
-    iter, mem,
+    iter,
+    marker::Copy,
+    mem,
     ops::{Add, AddAssign, Index, IndexMut, Sub},
 };
 
-use smallvec::{smallvec, SmallVec};
+use smallvec::SmallVec;
 
 use crate::token::TokenDescription;
 
@@ -477,7 +479,10 @@ where
     }
 }
 
-impl<Span> PartialEq for Interpreter<'_, Span> {
+impl<Span> PartialEq for Interpreter<'_, Span>
+where
+    Span: Copy,
+{
     fn eq(&self, other: &Interpreter<'_, Span>) -> bool {
         // Let's assume we can skip the program part - it will always be the same.
 
@@ -488,15 +493,21 @@ impl<Span> PartialEq for Interpreter<'_, Span> {
             && self.next_call_args.eq(&other.next_call_args)
     }
 }
-impl<Span> Eq for Interpreter<'_, Span> {}
+impl<Span> Eq for Interpreter<'_, Span> where Span: Copy {}
 
-impl<Span> PartialOrd for Interpreter<'_, Span> {
+impl<Span> PartialOrd for Interpreter<'_, Span>
+where
+    Span: Copy,
+{
     fn partial_cmp(&self, other: &Interpreter<'_, Span>) -> Option<Ordering> {
         Some(self.cmp(other))
     }
 }
 
-impl<Span> Ord for Interpreter<'_, Span> {
+impl<Span> Ord for Interpreter<'_, Span>
+where
+    Span: Copy,
+{
     fn cmp(&self, other: &Interpreter<'_, Span>) -> Ordering {
         // Skipping the `program` field - it is and will always be - the same.
         //
@@ -571,89 +582,38 @@ pub(crate) struct StackFrameId(pub(crate) usize);
 
 #[derive(Clone, Copy, Debug)]
 enum TokenBuffer<Span> {
-    Empty,
-    One(TokenDescription, Span, DescrId),
-    Two(
-        TokenDescription,
-        Span,
-        DescrId,
-        TokenDescription,
-        Span,
-        DescrId,
-    ),
-    Three(
-        TokenDescription,
-        Span,
-        DescrId,
-        TokenDescription,
-        Span,
-        DescrId,
-        TokenDescription,
-        Span,
-        DescrId,
-    ),
+    Zero([TokenBufferSlot<Span>; 0]),
+    One([TokenBufferSlot<Span>; 1]),
+    Two([TokenBufferSlot<Span>; 2]),
+    Three([TokenBufferSlot<Span>; 3]),
 }
 
-impl<Span> Eq for TokenBuffer<Span> {}
+impl<Span> Eq for TokenBuffer<Span> where Span: Copy {}
 
-impl<Span> PartialEq for TokenBuffer<Span> {
+impl<Span> PartialEq for TokenBuffer<Span>
+where
+    Span: Copy,
+{
     fn eq(&self, other: &Self) -> bool {
-        if std::mem::discriminant(self).ne(&std::mem::discriminant(other)) {
-            return false;
-        }
-
-        match (self, other) {
-            (TokenBuffer::Empty, TokenBuffer::Empty) => true,
-
-            (TokenBuffer::One(a, _, c), TokenBuffer::One(a_, _, c_)) => a.eq(a_) && c.eq(c_),
-
-            (TokenBuffer::Two(a, _, c, d, _, f), TokenBuffer::Two(a_, _, c_, d_, _, f_)) => {
-                a.eq(a_) && c.eq(c_) && d.eq(d_) && f.eq(f_)
-            }
-            (
-                TokenBuffer::Three(a, _, c, d, _, f, g, _, i),
-                TokenBuffer::Three(a_, _, c_, d_, _, f_, g_, _, i_),
-            ) => a.eq(a_) && c.eq(c_) && d.eq(d_) && f.eq(f_) && g.eq(g_) && i.eq(i_),
-
-            _ => false,
-        }
+        self.as_slice().eq(other.as_slice())
     }
 }
 
-impl<Span> PartialOrd for TokenBuffer<Span> {
+impl<Span> PartialOrd for TokenBuffer<Span>
+where
+    Span: Copy,
+{
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
         Some(self.cmp(other))
     }
 }
 
-impl<Span> Ord for TokenBuffer<Span> {
+impl<Span> Ord for TokenBuffer<Span>
+where
+    Span: Copy,
+{
     fn cmp(&self, other: &Self) -> Ordering {
-        match (self, other) {
-            // Trivial ones
-            (
-                TokenBuffer::Empty,
-                TokenBuffer::One(..) | TokenBuffer::Two(..) | TokenBuffer::Three(..),
-            ) => Ordering::Less,
-            (TokenBuffer::One(_, _, _), TokenBuffer::Empty) => Ordering::Greater,
-            (TokenBuffer::One(..), TokenBuffer::Two(..) | TokenBuffer::Three(..)) => Ordering::Less,
-            (TokenBuffer::Two(..), TokenBuffer::Empty | TokenBuffer::One(..)) => Ordering::Greater,
-            (TokenBuffer::Two(..), TokenBuffer::Three(..)) => Ordering::Less,
-            (
-                TokenBuffer::Three(..),
-                TokenBuffer::Empty | TokenBuffer::One(..) | TokenBuffer::Two(..),
-            ) => Ordering::Greater,
-
-            (TokenBuffer::Empty, TokenBuffer::Empty) => Ordering::Equal,
-
-            (TokenBuffer::One(a, _, _), TokenBuffer::One(a_, _, _)) => a.cmp(a_),
-            (TokenBuffer::Two(a, _, _, d, _, _), TokenBuffer::Two(a_, _, _, d_, _, _)) => {
-                a.cmp(a_).then_with(|| d.cmp(d_))
-            }
-            (
-                TokenBuffer::Three(a, _, _, d, _, _, g, _, _),
-                TokenBuffer::Three(a_, _, _, d_, _, _, g_, _, _),
-            ) => a.cmp(a_).then_with(|| d.cmp(d_)).then_with(|| g.cmp(g_)),
-        }
+        self.as_slice().cmp(other.as_slice())
     }
 }
 
@@ -664,103 +624,140 @@ impl<Span> TokenBuffer<Span>
 where
     Span: Copy,
 {
-    const EMPTY: TokenBuffer<Span> = TokenBuffer::Empty;
+    const EMPTY: TokenBuffer<Span> = TokenBuffer::Zero([]);
 
-    fn status(&self) -> TokenBufferStatus {
+    fn as_slice(&self) -> &[TokenBufferSlot<Span>] {
         match self {
-            TokenBuffer::Empty => TokenBufferStatus::Empty,
-            TokenBuffer::One(_, _, _) => TokenBufferStatus::One,
-            TokenBuffer::Two(_, _, _, _, _, _) => TokenBufferStatus::Two,
-            TokenBuffer::Three(_, _, _, _, _, _, _, _, _) => TokenBufferStatus::Full,
+            TokenBuffer::Zero(inner) => inner,
+            TokenBuffer::One(inner) => inner,
+            TokenBuffer::Two(inner) => inner,
+            TokenBuffer::Three(inner) => inner,
         }
     }
 
-    fn push(&mut self, token_description: TokenDescription, span: Span, id: DescrId) {
+    fn status(&self) -> TokenBufferStatus {
         match self {
-            TokenBuffer::Empty => {
-                *self = TokenBuffer::One(token_description, span, id);
+            TokenBuffer::Zero(_) => TokenBufferStatus::Empty,
+            TokenBuffer::One(_) => TokenBufferStatus::One,
+            TokenBuffer::Two(_) => TokenBufferStatus::Two,
+            TokenBuffer::Three(_) => TokenBufferStatus::Full,
+        }
+    }
+
+    fn push(&mut self, descr: TokenDescription, span: Span, id: DescrId) {
+        let slot = TokenBufferSlot { descr, span, id };
+
+        match self {
+            TokenBuffer::Zero([]) => {
+                *self = TokenBuffer::One([slot]);
             }
-            TokenBuffer::One(a, b, c) => {
-                *self = TokenBuffer::Two(*a, *b, *c, token_description, span, id);
+            TokenBuffer::One([a]) => {
+                *self = TokenBuffer::Two([*a, slot]);
             }
-            TokenBuffer::Two(a, b, c, d, e, f) => {
-                *self = TokenBuffer::Three(*a, *b, *c, *d, *e, *f, token_description, span, id);
+            TokenBuffer::Two([a, b]) => {
+                *self = TokenBuffer::Three([*a, *b, slot]);
             }
-            TokenBuffer::Three(_, _, _, _, _, _, _, _, _) => {
+            TokenBuffer::Three(_) => {
                 panic!("Token buffer is full");
             }
         }
     }
 
     fn first(&self) -> Option<(TokenDescription, Span)> {
-        match self {
-            TokenBuffer::Empty => None,
-            TokenBuffer::One(a, b, _)
-            | TokenBuffer::Two(a, b, ..)
-            | TokenBuffer::Three(a, b, ..) => Some((*a, *b)),
+        match self.as_slice() {
+            [] => None,
+            [TokenBufferSlot { descr, span, .. }, ..] => Some((*descr, *span)),
         }
     }
 
     pub(crate) fn second(&self) -> Option<(TokenDescription, Span)> {
-        match self {
-            TokenBuffer::Empty | TokenBuffer::One(..) => None,
-            TokenBuffer::Two(.., c, d, _) | TokenBuffer::Three(_, _, _, c, d, ..) => Some((*c, *d)),
+        match self.as_slice() {
+            [] | [_] => None,
+            [_, TokenBufferSlot { descr, span, .. }, ..] => Some((*descr, *span)),
         }
     }
 
     pub(crate) fn third(&self) -> Option<(TokenDescription, Span)> {
-        match self {
-            TokenBuffer::Empty | TokenBuffer::One(..) | TokenBuffer::Two(..) => None,
-            TokenBuffer::Three(.., e, f, _) => Some((*e, *f)),
-        }
-    }
-
-    #[expect(dead_code)]
-    pub(crate) fn third_span(&self) -> Option<Span> {
-        match self {
-            TokenBuffer::Empty => None,
-            TokenBuffer::One(_, _, _) => None,
-            TokenBuffer::Two(_, _, _, _, _, _) => None,
-            TokenBuffer::Three(_, _, _, _, _, _, _, f, _) => Some(*f),
+        match self.as_slice() {
+            [] | [_] | [_, _] => None,
+            [_, _, TokenBufferSlot { descr, span, .. }, ..] => Some((*descr, *span)),
         }
     }
 
     fn pop_front(&mut self) {
         match self {
-            TokenBuffer::Empty => unreachable!(),
-            TokenBuffer::One(_, _, _) => {
-                *self = TokenBuffer::Empty;
+            TokenBuffer::Zero([]) => unreachable!(),
+
+            TokenBuffer::One([_, remaining @ ..]) => {
+                *self = TokenBuffer::Zero(*remaining);
             }
-            TokenBuffer::Two(_, _, _, c, d, e) => {
-                *self = TokenBuffer::One(*c, *d, *e);
+
+            TokenBuffer::Two([_, remaining @ ..]) => {
+                *self = TokenBuffer::One(*remaining);
             }
-            TokenBuffer::Three(_, _, _, c, d, e, f, g, h) => {
-                *self = TokenBuffer::Two(*c, *d, *e, *f, *g, *h);
+
+            TokenBuffer::Three([_, remaining @ ..]) => {
+                *self = TokenBuffer::Two(*remaining);
             }
         }
     }
 
-    fn set_head(&mut self, descr: TokenDescription, id_: DescrId) {
+    fn set_head(&mut self, descr_: TokenDescription, id_: DescrId) {
         match self {
-            TokenBuffer::Empty => panic!("`set_head` called en empty buffer"),
-            TokenBuffer::One(head, _, id)
-            | TokenBuffer::Two(head, _, id, _, _, _)
-            | TokenBuffer::Three(head, _, id, _, _, _, _, _, _) => {
-                *head = descr;
+            TokenBuffer::Zero([]) => panic!("`set_head` called en empty buffer"),
+
+            TokenBuffer::One([TokenBufferSlot { descr, id, .. }])
+            | TokenBuffer::Two([TokenBufferSlot { descr, id, .. }, _])
+            | TokenBuffer::Three([TokenBufferSlot { descr, id, .. }, _, _]) => {
+                *descr = descr_;
                 *id = id_;
             }
         }
     }
 
     fn as_small_vec(&self) -> SmallVec<[(TokenDescription, DescrId); 16]> {
-        match self {
-            TokenBuffer::Empty => smallvec![],
-            TokenBuffer::One(a, _, c) => smallvec![(*a, *c)],
-            TokenBuffer::Two(a, _, c, d, _, f) => smallvec![(*a, *c), (*d, *f)],
-            TokenBuffer::Three(a, _, c, d, _, f, g, _, i) => {
-                smallvec![(*a, *c), (*d, *f), (*g, *i)]
-            }
-        }
+        self.as_slice()
+            .iter()
+            .copied()
+            .map(TokenBufferSlot::forget_span)
+            .collect()
+    }
+}
+
+#[derive(Clone, Copy, Debug)]
+struct TokenBufferSlot<Span> {
+    descr: TokenDescription,
+    span: Span,
+    id: DescrId,
+}
+
+impl<Span> PartialEq for TokenBufferSlot<Span> {
+    fn eq(&self, other: &TokenBufferSlot<Span>) -> bool {
+        (self.descr, self.id).eq(&(other.descr, other.id))
+    }
+}
+
+impl<Span> Eq for TokenBufferSlot<Span> {}
+
+impl<Span> Ord for TokenBufferSlot<Span> {
+    fn cmp(&self, other: &TokenBufferSlot<Span>) -> Ordering {
+        // Skipping the `span` field. We are generic over this :).
+        //
+        // Skipping the `id` field - it is only used for token deduplication
+        // when two transitions are added.
+        self.descr.cmp(&other.descr)
+    }
+}
+
+impl<Span> PartialOrd for TokenBufferSlot<Span> {
+    fn partial_cmp(&self, other: &TokenBufferSlot<Span>) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl<Span> TokenBufferSlot<Span> {
+    fn forget_span(self) -> (TokenDescription, DescrId) {
+        (self.descr, self.id)
     }
 }
 
