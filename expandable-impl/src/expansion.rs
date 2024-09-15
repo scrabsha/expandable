@@ -48,7 +48,7 @@ where
     //
     // Parsing code is so fragile that a low value should be enough for us to
     // either find the fixed-point or detect a syntax error.
-    const FIXED_POINT_ITERATIONS_FUEL: usize = 16
+    const FIXED_POINT_ITERATIONS_FUEL: usize = 16;
 
     fn check_rule(
         bindings: HashMap<String, BindingData<Span>>,
