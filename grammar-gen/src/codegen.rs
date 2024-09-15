@@ -228,8 +228,8 @@ fn codegen_condition_eval(
                 ctxt.cg_peek3(reg, &pred.ident);
             }
 
-            (pred @ (Builtin::Peek | Builtin::Peek2 | Builtin::Peek3), preds) => {
-                report_wrong_argcount(pred, preds.len(), 1)
+            (builtin @ (Builtin::Peek | Builtin::Peek2 | Builtin::Peek3), preds) => {
+                report_wrong_argcount(builtin, preds.len(), 1)
             }
 
             (Builtin::Error, _) => unreachable!(),
