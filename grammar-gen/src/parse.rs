@@ -29,6 +29,7 @@ pub(crate) struct Function {
 #[derive(Clone, Debug, PartialEq)]
 pub(crate) struct Signature {
     pub(crate) paren_token: Paren,
+    pub(crate) args: Vec<Ident>,
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -122,9 +123,13 @@ impl Parse for Function {
 
 impl Parse for Signature {
     fn parse(input: syn::parse::ParseStream) -> syn::Result<Self> {
-        let _inner;
+        let inner;
         Ok(Signature {
-            paren_token: parenthesized!(_inner in input),
+            paren_token: parenthesized!(inner in input),
+            args: {
+                let args: Punctuated<Ident, Token![,]> = Punctuated::parse_terminated(&inner)?;
+                args.into_iter().collect()
+            },
         })
     }
 }

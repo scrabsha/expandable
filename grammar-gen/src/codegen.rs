@@ -57,6 +57,10 @@ fn codegen_fn(gctxt: &GlobalCtxt, f: &Function) -> EncodableFunction {
     let name = f.name.to_string();
     let ret_reg = ctxt.register();
 
+    for parameter in &f.signature.args {
+        ctxt.variable(&parameter.to_string());
+    }
+
     codegen_block(&mut ctxt, &f.body, ret_reg, None);
     ctxt.cg_return(ret_reg);
 
