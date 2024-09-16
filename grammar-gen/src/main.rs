@@ -2,7 +2,6 @@ use std::{env, fs};
 
 mod codegen;
 mod fmt;
-mod mir;
 mod opt;
 mod parse;
 
@@ -21,10 +20,9 @@ fn main() {
         }
     };
 
-    let productions = mir::productions_from_document(grammar);
-    let productions = opt::optimize_grammar(productions);
+    let grammar = codegen::codegen_document(&grammar);
 
-    let tokens = codegen::generate_code(productions);
+    let tokens = codegen::to_stream(grammar);
 
     let raw_output_str = tokens.to_string();
     let formatted_output = fmt::fmt(&raw_output_str);
