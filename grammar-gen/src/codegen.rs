@@ -702,7 +702,7 @@ impl EncodableInstruction {
                 quote! { Instruction::Bump }
             }
 
-            Instruction::Error {} => {
+            Instruction::Error => {
                 quote! { Instruction::Error }
             }
         }

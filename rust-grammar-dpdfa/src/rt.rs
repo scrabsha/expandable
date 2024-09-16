@@ -429,7 +429,7 @@ where
                 self.token_buffer.pop_front();
             }
 
-            Instruction::Error {} => {
+            Instruction::Error => {
                 return Err(self.token_buffer.first().unwrap().1);
             }
         }
