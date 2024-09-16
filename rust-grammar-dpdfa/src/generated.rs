@@ -322,9 +322,7 @@ const PROGRAM: Program = Program {
                 Instruction::Jump {
                     address: Address(46u32),
                 },
-                Instruction::Error {
-                    message: "<sample message>",
-                },
+                Instruction::Error,
                 Instruction::LoadConst(Register(12u8), Value(0i8)),
                 Instruction::PeekAny {
                     reg: Register(12u8),
@@ -380,9 +378,7 @@ const PROGRAM: Program = Program {
                 Instruction::Jump {
                     address: Address(11u32),
                 },
-                Instruction::Error {
-                    message: "<sample message>",
-                },
+                Instruction::Error,
                 Instruction::LoadConst(Register(3u8), Value(0i8)),
                 Instruction::Peek {
                     tok: TokenDescription::LParen,
@@ -667,9 +663,7 @@ const PROGRAM: Program = Program {
                 Instruction::Jump {
                     address: Address(10u32),
                 },
-                Instruction::Error {
-                    message: "<sample message>",
-                },
+                Instruction::Error,
                 Instruction::BumpToken {
                     tok: TokenDescription::Colon,
                 },
@@ -725,9 +719,7 @@ const PROGRAM: Program = Program {
                 Instruction::Jump {
                     address: Address(14u32),
                 },
-                Instruction::Error {
-                    message: "<sample message>",
-                },
+                Instruction::Error,
                 Instruction::Call {
                     function: FunctionId(24u32),
                     result: Register(3u8),
@@ -1074,9 +1066,7 @@ const PROGRAM: Program = Program {
                     cond: Register(4u8),
                     address: Address(17u32),
                 },
-                Instruction::Error {
-                    message: "<sample message>",
-                },
+                Instruction::Error,
                 Instruction::Return(Register(0u8)),
             ],
             reg_num: 5usize,
@@ -1235,9 +1225,7 @@ const PROGRAM: Program = Program {
                 Instruction::Jump {
                     address: Address(37u32),
                 },
-                Instruction::Error {
-                    message: "<sample message>",
-                },
+                Instruction::Error,
                 Instruction::Return(Register(0u8)),
             ],
             reg_num: 7usize,
@@ -2094,9 +2082,7 @@ const PROGRAM: Program = Program {
                 Instruction::Jump {
                     address: Address(89u32),
                 },
-                Instruction::Error {
-                    message: "<sample message>",
-                },
+                Instruction::Error,
                 Instruction::Return(Register(0u8)),
             ],
             reg_num: 22usize,
@@ -2907,9 +2893,7 @@ const PROGRAM: Program = Program {
                 Instruction::Jump {
                     address: Address(18u32),
                 },
-                Instruction::Error {
-                    message: "<sample message>",
-                },
+                Instruction::Error,
                 Instruction::Return(Register(0u8)),
             ],
             reg_num: 3usize,
@@ -2987,9 +2971,7 @@ const PROGRAM: Program = Program {
                 Instruction::Jump {
                     address: Address(23u32),
                 },
-                Instruction::Error {
-                    message: "<sample message>",
-                },
+                Instruction::Error,
                 Instruction::LoadConst(Register(5u8), Value(0i8)),
                 Instruction::Peek {
                     tok: TokenDescription::At,
@@ -3680,9 +3662,7 @@ const PROGRAM: Program = Program {
                 },
                 Instruction::LoadConst(Register(0u8), Value(4i8)),
                 Instruction::Return(Register(0u8)),
-                Instruction::Error {
-                    message: "<sample message>",
-                },
+                Instruction::Error,
                 Instruction::Return(Register(0u8)),
             ],
             reg_num: 26usize,
@@ -3728,9 +3708,7 @@ const PROGRAM: Program = Program {
                 Instruction::Jump {
                     address: Address(13u32),
                 },
-                Instruction::Error {
-                    message: "<sample message>",
-                },
+                Instruction::Error,
                 Instruction::LoadConst(Register(3u8), Value(0i8)),
                 Instruction::Peek {
                     tok: TokenDescription::Async,
@@ -4118,9 +4096,7 @@ const PROGRAM: Program = Program {
                 Instruction::Jump {
                     address: Address(31u32),
                 },
-                Instruction::Error {
-                    message: "<sample message>",
-                },
+                Instruction::Error,
                 Instruction::Return(Register(0u8)),
             ],
             reg_num: 6usize,
@@ -4348,9 +4324,7 @@ const PROGRAM: Program = Program {
                 Instruction::Jump {
                     address: Address(17u32),
                 },
-                Instruction::Error {
-                    message: "<sample message>",
-                },
+                Instruction::Error,
                 Instruction::Return(Register(0u8)),
             ],
             reg_num: 2usize,
@@ -4733,9 +4707,7 @@ const PROGRAM: Program = Program {
                 Instruction::Jump {
                     address: Address(36u32),
                 },
-                Instruction::Error {
-                    message: "<sample message>",
-                },
+                Instruction::Error,
                 Instruction::Return(Register(0u8)),
             ],
             reg_num: 10usize,
@@ -5079,9 +5051,7 @@ const PROGRAM: Program = Program {
                 Instruction::Jump {
                     address: Address(20u32),
                 },
-                Instruction::Error {
-                    message: "<sample message>",
-                },
+                Instruction::Error,
                 Instruction::Return(Register(0u8)),
             ],
             reg_num: 5usize,
@@ -5490,9 +5460,7 @@ const PROGRAM: Program = Program {
                 },
                 Instruction::LoadConst(Register(0u8), Value(20i8)),
                 Instruction::Return(Register(0u8)),
-                Instruction::Error {
-                    message: "<sample message>",
-                },
+                Instruction::Error,
                 Instruction::Return(Register(0u8)),
             ],
             reg_num: 7usize,
@@ -5565,9 +5533,7 @@ const PROGRAM: Program = Program {
                     cond: Register(3u8),
                     address: Address(20u32),
                 },
-                Instruction::Error {
-                    message: "<sample message>",
-                },
+                Instruction::Error,
                 Instruction::Jump {
                     address: Address(21u32),
                 },
