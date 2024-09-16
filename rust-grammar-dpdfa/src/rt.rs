@@ -96,9 +96,7 @@ pub(crate) enum Instruction {
         tok: TokenDescription,
     },
     Bump,
-    Error {
-        message: &'static str,
-    },
+    Error,
 }
 
 #[derive(Clone, Copy, Debug, Eq, Ord, PartialEq, PartialOrd)]
@@ -237,7 +235,7 @@ where
 
             match self.run_instruction(&mut trans, &mut tried) {
                 Ok(()) => {}
-                Err((_, span)) => return Err((tried, span)),
+                Err(span) => return Err((tried, span)),
             };
 
             // Safety measure: make sure the buffer is full before doing anything.
@@ -266,7 +264,7 @@ where
 
             match self.run_instruction(&mut trans, &mut tried) {
                 Ok(()) => {}
-                Err((_, span)) => return Err((tried, span)),
+                Err(span) => return Err((tried, span)),
             }
         }
 
@@ -277,14 +275,11 @@ where
         &mut self,
         transition: &mut Transition,
         tried: &mut Vec<TokenDescription>,
-    ) -> Result<(), (String, Span)> {
+    ) -> Result<(), Span> {
         let current_frame = match self.stack.last_mut() {
             Some(frame) => frame,
             None => {
-                return Err((
-                    "Expected EOF".to_string(),
-                    self.token_buffer.first().unwrap().1,
-                ));
+                return Err(self.token_buffer.first().unwrap().1);
             }
         };
 
@@ -426,7 +421,7 @@ where
                     let reserved_id = self.descr_id();
                     self.token_buffer.set_head(head, reserved_id);
                 } else {
-                    return Err(("Unexpected token".to_string(), span));
+                    return Err(span);
                 }
             }
 
@@ -434,8 +429,8 @@ where
                 self.token_buffer.pop_front();
             }
 
-            Instruction::Error { message } => {
-                return Err((message.to_string(), self.token_buffer.first().unwrap().1));
+            Instruction::Error {} => {
+                return Err(self.token_buffer.first().unwrap().1);
             }
         }
 

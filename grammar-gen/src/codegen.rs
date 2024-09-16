@@ -388,7 +388,7 @@ impl<'global> CodegenCtxt<'global> {
             Instruction::Peek3 { tok, reg } => Instruction::Peek3 { tok, reg },
             Instruction::BumpToken { tok } => Instruction::BumpToken { tok },
             Instruction::Bump => Instruction::Bump,
-            Instruction::Error { message } => Instruction::Error { message },
+            Instruction::Error => Instruction::Error,
         }
     }
 }
@@ -449,7 +449,7 @@ codegen_fns! {
         Instruction::BumpToken { tok }
     }
 
-    fn cg_error() = Instruction::Error { message: "<sample message>" }
+    fn cg_error() = Instruction::Error {}
 
     fn cg_sub(lhs: Register, rhs: Register, out: Register) = Instruction::Sub { lhs, rhs, out }
 
@@ -603,9 +603,7 @@ enum Instruction<Addr> {
         tok: TokenDescription,
     },
     Bump,
-    Error {
-        message: &'static str,
-    },
+    Error,
 }
 
 impl EncodableInstruction {
@@ -704,8 +702,8 @@ impl EncodableInstruction {
                 quote! { Instruction::Bump }
             }
 
-            Instruction::Error { message } => {
-                quote! { Instruction::Error { message: #message } }
+            Instruction::Error {} => {
+                quote! { Instruction::Error }
             }
         }
     }
