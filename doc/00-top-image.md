@@ -1,6 +1,6 @@
 <p style="text-align:center" align="center">
 <img src="https://cdn.githubraw.com/scrabsha/expendable/main/assets/top_image.png"
-     width=70%
      style="text-align:center"
-     alt="Sylvester Stallone in Rambo: First Blood Part II. The image has been edited such that his two hands are thumbsup-ing. His body is covered with dust and sweat and a bit of blood (not his). At the bottom of the image is written 'POV: #[expandable::expr] stops complaining'." />
+     alt="A young hedgehog standing on top of a hill. They are looking at the moon through a telescope. The moon is surrounded by $( on its left and )* on its right. The sky is clear, plenty of stars are visible. In the background, there's a forest, and a treehouse, and a bunch of mountains." />
+<small>Image: <a href="https://ayanelaichi.myportfolio.com/">Ayan El Aichi</a>.</small>
 </p>
