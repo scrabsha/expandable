@@ -1,6 +1,7 @@
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Ord, PartialOrd)]
 pub enum TokenDescription {
     Ident,
+    Lifetime,
     As,
     Async,
     Await,
