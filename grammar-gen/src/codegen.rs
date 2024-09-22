@@ -216,6 +216,8 @@ fn codegen_expr(ctxt: &mut CodegenCtxt<'_>, expr: &Expr, ret_reg: Register) {
         Expr::Block(block) => codegen_block(ctxt, block, ret_reg, None),
 
         Expr::Binop(_) => panic!("Unexpected binop in statement position"),
+
+        Expr::Neg(_) => panic!("Unexpected negation in statement position"),
     };
 }
 
@@ -246,6 +248,11 @@ fn codegen_condition_eval(ctxt: &mut CodegenCtxt, cond: &Expr, reg: Register) {
             }
 
             codegen_condition_eval(ctxt, rhs, reg);
+        }
+
+        Expr::Neg(expr) => {
+            codegen_condition_eval(ctxt, &expr.inner, reg);
+            ctxt.cg_invert(reg, reg);
         }
     }
 

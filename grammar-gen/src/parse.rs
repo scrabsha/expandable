@@ -58,6 +58,7 @@ pub(crate) enum Expr {
     Builtin(BuiltinExpr),
     Block(Block),
     Binop(BinopExpr),
+    Neg(NegExpr),
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -81,6 +82,12 @@ pub(crate) struct BinopExpr {
     pub(crate) lhs: Box<Expr>,
     pub(crate) op: Binop,
     pub(crate) rhs: Box<Expr>,
+}
+
+#[derive(Clone, Debug, PartialEq)]
+pub(crate) struct NegExpr {
+    pub(crate) bang: Token![!],
+    pub(crate) inner: Box<Expr>,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -261,6 +268,8 @@ impl Expr {
             Expr::Builtin(input.parse()?)
         } else if input.peek(Token![if]) {
             Expr::Condition(input.parse()?)
+        } else if input.peek(Token![!]) {
+            Expr::Neg(input.parse()?)
         } else {
             Expr::Call(input.parse()?)
         })
@@ -341,6 +350,15 @@ impl Parse for Predicate {
     fn parse(input: syn::parse::ParseStream) -> syn::Result<Self> {
         Ok(Predicate {
             ident: input.parse()?,
+        })
+    }
+}
+
+impl Parse for NegExpr {
+    fn parse(input: syn::parse::ParseStream) -> Result<Self> {
+        Ok(NegExpr {
+            bang: input.parse()?,
+            inner: Box::new(input.parse()?),
         })
     }
 }
