@@ -237,6 +237,11 @@ fn codegen_expr(ctxt: &mut CodegenCtxt<'_>, expr: &Expr, ret_reg: Register) {
         Expr::Neg(_) => panic!("Unexpected negation in expression position"),
 
         Expr::Paren(_) => panic!("Unexpected parenthesis in expression position"),
+
+        Expr::Loop(loop_) => {
+            let label = ctxt.label();
+            codegen_block(ctxt, &loop_.body, ret_reg, Some(label));
+        }
     };
 }
 
@@ -281,6 +286,8 @@ fn codegen_condition_eval(ctxt: &mut CodegenCtxt, cond: &Expr, reg: Register) {
         Expr::Ident(_) => panic!("Unexpected ident in condition position"),
 
         Expr::Paren(p_expr) => codegen_condition_eval(ctxt, &p_expr.inner, reg),
+
+        Expr::Loop(_) => panic!("Unexpected loop expression in condition position"),
     }
 
     ctxt.set_label(after_eval);
