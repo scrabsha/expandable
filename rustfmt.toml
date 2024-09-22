@@ -6,5 +6,5 @@ group_imports = "StdExternalCrate"
 imports_granularity = "Crate"
 reorder_impl_items = true
 unstable_features = true
-version = "Two"
+style_edition = "2024"
 wrap_comments = true

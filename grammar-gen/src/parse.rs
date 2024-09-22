@@ -1,11 +1,10 @@
 use proc_macro2::Ident;
 use smallvec::SmallVec;
 use syn::{
-    parenthesized,
+    Error, Result, Token, parenthesized,
     parse::Parse,
     punctuated::Punctuated,
     token::{self, Paren, Pub},
-    Error, Result, Token,
 };
 
 pub(crate) fn parse(content: &str) -> Result<Document> {

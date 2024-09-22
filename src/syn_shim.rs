@@ -1,12 +1,11 @@
 // Architecture invariant: this module contains the definition of various AST
 // nodes that are used to represent the parsed Rust code.
 
-use proc_macro2::{extra::DelimSpan, Delimiter, Ident, TokenStream};
+use proc_macro2::{Delimiter, Ident, TokenStream, extra::DelimSpan};
 use syn::{
-    bracketed,
-    parse::{discouraged::AnyDelimiter, Parse, ParseStream},
+    Token, bracketed,
+    parse::{Parse, ParseStream, discouraged::AnyDelimiter},
     token::Bracket,
-    Token,
 };
 
 pub(crate) struct ItemMacroRules {

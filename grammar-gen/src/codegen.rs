@@ -4,7 +4,7 @@ use std::{cell::RefCell, collections::HashMap};
 
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
-use syn::{punctuated::Punctuated, Ident, Token};
+use syn::{Ident, Token, punctuated::Punctuated};
 
 use crate::parse::{Block, Builtin, BuiltinExpr, Document, Expr, Function, Predicate, Stmt};
 

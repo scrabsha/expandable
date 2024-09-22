@@ -39,16 +39,13 @@
 //! Let's use it on `js_concat`:
 //!
 //! ```
-//! use expandable_impl::{quote, InvocationContext};
+//! use expandable_impl::{InvocationContext, quote};
 //!
-//! let err = expandable_impl::check_macro(
-//!     InvocationContext::Item,
-//!     quote! {
-//!         (@left:expr, @right:expr) => {
-//!            @left ++ @right
-//!         };
-//!     },
-//! )
+//! let err = expandable_impl::check_macro(InvocationContext::Item, quote! {
+//!     (@left:expr, @right:expr) => {
+//!        @left ++ @right
+//!     };
+//! })
 //! .unwrap_err();
 //!
 //! assert!(matches!(
