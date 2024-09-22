@@ -57,6 +57,7 @@ pub(crate) enum Expr {
     Condition(CondExpr),
     Builtin(BuiltinExpr),
     Block(Block),
+    Binop(BinopExpr),
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -70,9 +71,22 @@ pub(crate) struct CallExpr {
 #[derive(Clone, Debug, PartialEq)]
 pub(crate) struct CondExpr {
     pub(crate) if_: Token![if],
-    pub(crate) cond: Punctuated<BuiltinExpr, Token![||]>,
+    pub(crate) cond: Box<Expr>,
     pub(crate) consequence: Block,
     pub(crate) alternative: Option<(Token![else], Box<Expr>)>,
+}
+
+#[derive(Clone, Debug, PartialEq)]
+pub(crate) struct BinopExpr {
+    pub(crate) lhs: Box<Expr>,
+    pub(crate) op: Binop,
+    pub(crate) rhs: Box<Expr>,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub(crate) enum Binop {
+    LogicAnd,
+    LogicOr,
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -186,23 +200,70 @@ impl Parse for Return {
 
 impl Parse for Expr {
     fn parse(input: syn::parse::ParseStream) -> syn::Result<Self> {
-        let lookahead = input.lookahead1();
-        if input.peek(token::Brace) {
-            Ok(Expr::Block(input.parse()?))
-        } else if lookahead.peek(kw::bump)
-            || lookahead.peek(kw::read)
-            || lookahead.peek(kw::peek)
-            || lookahead.peek(kw::peek2)
-            || lookahead.peek(kw::peek3)
-            || lookahead.peek(kw::error)
-            || lookahead.peek(kw::returned)
-        {
-            Ok(Expr::Builtin(input.parse()?))
-        } else if lookahead.peek(Token![if]) {
-            Ok(Expr::Condition(input.parse()?))
-        } else {
-            Ok(Expr::Call(input.parse()?))
+        Expr::parse_ors(input)
+    }
+}
+
+impl Expr {
+    fn parse_ors(input: syn::parse::ParseStream) -> syn::Result<Self> {
+        let op = Binop::LogicOr;
+        let sep = Token![||];
+        let inner: fn(syn::parse::ParseStream) -> syn::Result<Self> = Self::parse_ands;
+        let mut lhs = inner(input)?;
+
+        while input.peek(sep) {
+            input.parse::<Token![||]>().unwrap();
+
+            let rhs = inner(input)?;
+
+            lhs = Expr::Binop(BinopExpr {
+                lhs: Box::new(lhs),
+                op,
+                rhs: Box::new(rhs),
+            });
         }
+
+        Ok(lhs)
+    }
+
+    fn parse_ands(input: syn::parse::ParseStream) -> syn::Result<Self> {
+        let op = Binop::LogicAnd;
+        let sep = Token![&&];
+        let inner: fn(syn::parse::ParseStream) -> syn::Result<Self> = Self::parse_atom;
+        let mut lhs = inner(input)?;
+
+        while input.peek(sep) {
+            input.parse::<Token![&&]>().unwrap();
+
+            let rhs = inner(input)?;
+
+            lhs = Expr::Binop(BinopExpr {
+                lhs: Box::new(lhs),
+                op,
+                rhs: Box::new(rhs),
+            });
+        }
+
+        Ok(lhs)
+    }
+
+    fn parse_atom(input: syn::parse::ParseStream) -> syn::Result<Self> {
+        Ok(if input.peek(token::Brace) {
+            Expr::Block(input.parse()?)
+        } else if input.peek(kw::bump)
+            || input.peek(kw::read)
+            || input.peek(kw::peek)
+            || input.peek(kw::peek2)
+            || input.peek(kw::peek3)
+            || input.peek(kw::error)
+            || input.peek(kw::returned)
+        {
+            Expr::Builtin(input.parse()?)
+        } else if input.peek(Token![if]) {
+            Expr::Condition(input.parse()?)
+        } else {
+            Expr::Call(input.parse()?)
+        })
     }
 }
 
@@ -229,7 +290,7 @@ impl Parse for CondExpr {
     fn parse(input: syn::parse::ParseStream) -> syn::Result<Self> {
         Ok(CondExpr {
             if_: input.parse()?,
-            cond: Punctuated::parse_separated_nonempty(input)?,
+            cond: input.parse()?,
             consequence: input.parse()?,
             alternative: {
                 if input.peek(Token![else]) {

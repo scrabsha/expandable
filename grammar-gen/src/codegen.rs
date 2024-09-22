@@ -4,9 +4,11 @@ use std::{cell::RefCell, collections::HashMap};
 
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
-use syn::{Ident, Token, punctuated::Punctuated};
+use syn::Ident;
 
-use crate::parse::{Block, Builtin, BuiltinExpr, Document, Expr, Function, Predicate, Stmt};
+use crate::parse::{
+    Binop, BinopExpr, Block, Builtin, BuiltinExpr, Document, Expr, Function, Predicate, Stmt,
+};
 
 pub(crate) fn to_stream(program: Program) -> TokenStream {
     let fns = program.fns.iter().map(EncodableFunction::to_stream);
@@ -85,10 +87,16 @@ fn codegen_block(
         .for_each(|stmt| codegen_stmt(ctxt, stmt, ret_reg));
 
     if let Some(ret) = &block.ret {
-        let val = ctxt.atom_val(&ret.symbol.to_string());
-        let val = Value(val.0);
-        ctxt.cg_load_const(ret_reg, val);
-        ctxt.cg_return(ret_reg);
+        let reg = if ident_is_atom(&ret.symbol) {
+            let AtomId(val) = ctxt.atom_val(&ret.symbol.to_string());
+            let val = Value(val);
+            ctxt.cg_load_const(ret_reg, val);
+            ret_reg
+        } else {
+            ctxt.get_variable(&ret.symbol.to_string())
+        };
+
+        ctxt.cg_return(reg);
     } else if let Some(label) = jump_at_end {
         ctxt.cg_jump(label);
     }
@@ -153,7 +161,17 @@ fn codegen_expr(ctxt: &mut CodegenCtxt<'_>, expr: &Expr, ret_reg: Register) {
             let fn_ = ctxt.fn_id(&call.func.to_string());
 
             for arg in &call.args {
-                let arg_reg = ctxt.get_variable(&arg.to_string());
+                let arg_reg = if ident_is_atom(arg) {
+                    let reg = ctxt.register();
+                    let AtomId(val) = ctxt.atom_val(&arg.to_string());
+                    let val = Value(val);
+                    ctxt.cg_load_const(reg, val);
+
+                    reg
+                } else {
+                    ctxt.get_variable(&arg.to_string())
+                };
+
                 ctxt.cg_push_arg(arg_reg);
             }
 
@@ -194,79 +212,96 @@ fn codegen_expr(ctxt: &mut CodegenCtxt<'_>, expr: &Expr, ret_reg: Register) {
         Expr::Builtin(builtin) => {
             codegen_builtin(ctxt, builtin);
         }
+
         Expr::Block(block) => codegen_block(ctxt, block, ret_reg, None),
+
+        Expr::Binop(_) => panic!("Unexpected binop in statement position"),
     };
 }
 
-fn codegen_condition_eval(
-    ctxt: &mut CodegenCtxt,
-    cond: &Punctuated<BuiltinExpr, Token![||]>,
-    reg: Register,
-) {
-    let report_wrong_argcount = |builtin, left: usize, right: usize| {
-        panic!("{builtin:?}: expected {right} arguments but got {left}")
-    };
-
+fn codegen_condition_eval(ctxt: &mut CodegenCtxt, cond: &Expr, reg: Register) {
     ctxt.cg_load_const(reg, Value(0));
 
     let after_eval = ctxt.label();
 
-    for cond in cond {
-        match (cond.builtin, cond.predicate.as_slice()) {
-            (Builtin::Bump, _) => unreachable!(),
-            (Builtin::Read, _) => unreachable!(),
+    match cond {
+        Expr::Call(_) | Expr::Block(_) | Expr::Condition(_) => {
+            panic!("Unexpected expression kind")
+        }
 
-            (Builtin::Peek, [pred]) => {
-                ctxt.cg_peek(reg, &pred.ident);
-            }
+        Expr::Builtin(cond) => {
+            codegen_builtin_expression_eval(ctxt, cond, reg);
+        }
 
-            (Builtin::Peek, []) => {
-                ctxt.cg_peek_any(reg);
-            }
+        Expr::Binop(BinopExpr { lhs, op, rhs }) => {
+            codegen_condition_eval(ctxt, lhs, reg);
 
-            (Builtin::Peek2, [pred]) => {
-                ctxt.cg_peek2(reg, &pred.ident);
-            }
-
-            (Builtin::Peek3, [pred]) => {
-                ctxt.cg_peek3(reg, &pred.ident);
-            }
-
-            (builtin @ (Builtin::Peek | Builtin::Peek2 | Builtin::Peek3), preds) => {
-                report_wrong_argcount(builtin, preds.len(), 1)
-            }
-
-            (Builtin::Error, _) => unreachable!(),
-
-            (Builtin::Returned, [lhs, rhs]) => {
-                let is_atom = |pred: &Predicate| {
-                    pred.ident
-                        .to_string()
-                        .chars()
-                        .next()
-                        .unwrap()
-                        .is_uppercase()
-                };
-
-                match (is_atom(lhs), is_atom(rhs)) {
-                    (true, true) => {
-                        panic!("Attempt to compare two atoms: {}, {}", lhs.ident, rhs.ident)
-                    }
-
-                    (true, false) => codegen_atom_and_variable_comparison(ctxt, lhs, rhs, reg),
-                    (false, true) => codegen_atom_and_variable_comparison(ctxt, rhs, lhs, reg),
-
-                    (false, false) => panic!("Open an issue if this is *really* needed"),
+            match op {
+                Binop::LogicAnd => {
+                    ctxt.cg_jump_if_zero(reg, after_eval);
+                }
+                Binop::LogicOr => {
+                    ctxt.cg_jump_if_nonzero(reg, after_eval);
                 }
             }
 
-            (Builtin::Returned, preds) => report_wrong_argcount(Builtin::Returned, preds.len(), 2),
+            codegen_condition_eval(ctxt, rhs, reg);
         }
-
-        ctxt.cg_jump_if_nonzero(reg, after_eval);
     }
 
     ctxt.set_label(after_eval);
+}
+
+fn codegen_builtin_expression_eval(ctxt: &mut CodegenCtxt, cond: &BuiltinExpr, reg: Register) {
+    fn report_wrong_argcount(builtin: Builtin, left: usize, right: usize) {
+        panic!("{builtin:?}: expected {right} arguments but got {left}")
+    }
+
+    match (cond.builtin, cond.predicate.as_slice()) {
+        (Builtin::Bump, _) => unreachable!(),
+        (Builtin::Read, _) => unreachable!(),
+
+        (Builtin::Peek, [pred]) => {
+            ctxt.cg_peek(reg, &pred.ident);
+        }
+
+        (Builtin::Peek, []) => {
+            ctxt.cg_peek_any(reg);
+        }
+
+        (Builtin::Peek2, [pred]) => {
+            ctxt.cg_peek2(reg, &pred.ident);
+        }
+
+        (Builtin::Peek3, [pred]) => {
+            ctxt.cg_peek3(reg, &pred.ident);
+        }
+
+        (builtin @ (Builtin::Peek | Builtin::Peek2 | Builtin::Peek3), preds) => {
+            report_wrong_argcount(builtin, preds.len(), 1)
+        }
+
+        (Builtin::Error, _) => unreachable!(),
+
+        (Builtin::Returned, [lhs, rhs]) => {
+            match (ident_is_atom(&lhs.ident), ident_is_atom(&rhs.ident)) {
+                (true, true) => {
+                    panic!("Attempt to compare two atoms: {}, {}", lhs.ident, rhs.ident)
+                }
+
+                (true, false) => codegen_atom_and_variable_comparison(ctxt, lhs, rhs, reg),
+                (false, true) => codegen_atom_and_variable_comparison(ctxt, rhs, lhs, reg),
+
+                (false, false) => panic!("Open an issue if this is *really* needed"),
+            }
+        }
+
+        (Builtin::Returned, preds) => report_wrong_argcount(Builtin::Returned, preds.len(), 2),
+    }
+}
+
+fn ident_is_atom(ident: &Ident) -> bool {
+    ident.to_string().chars().next().unwrap().is_uppercase()
 }
 
 fn codegen_atom_and_variable_comparison(
@@ -479,7 +514,10 @@ impl GlobalCtxt {
     }
 
     fn fn_id(&self, name: &str) -> FunctionId {
-        self.fns[name]
+        match self.fns.get(name) {
+            Some(v) => *v,
+            None => panic!("Function `{name}` not found"),
+        }
     }
 
     fn atom_value(&self, name: &str) -> AtomId {
