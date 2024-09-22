@@ -4,7 +4,7 @@ use syn::{
     Error, Result, Token, parenthesized,
     parse::Parse,
     punctuated::Punctuated,
-    token::{self, Paren, Pub},
+    token::{self, Let, Paren, Pub},
 };
 
 pub(crate) fn parse(content: &str) -> Result<Document> {
@@ -40,6 +40,7 @@ pub(crate) struct Block {
 
 #[derive(Clone, Debug, PartialEq)]
 pub(crate) struct Stmt {
+    pub(crate) declare: Option<(Let, Ident, Token![=])>,
     pub(crate) expr: Expr,
     pub(crate) semi: Option<Token![;]>,
 }
@@ -59,11 +60,11 @@ pub(crate) enum Expr {
     Block(Block),
     Binop(BinopExpr),
     Neg(NegExpr),
+    Ident(IdentExpr),
 }
 
 #[derive(Clone, Debug, PartialEq)]
 pub(crate) struct CallExpr {
-    pub(crate) assign: Option<(Token![let], Ident, Token![=])>,
     pub(crate) func: Ident,
     pub(crate) paren: Paren,
     pub(crate) args: SmallVec<[Ident; 2]>,
@@ -90,10 +91,16 @@ pub(crate) struct NegExpr {
     pub(crate) inner: Box<Expr>,
 }
 
+#[derive(Clone, Debug, PartialEq)]
+pub(crate) struct IdentExpr {
+    pub(crate) ident: Ident,
+}
+
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub(crate) enum Binop {
     LogicAnd,
     LogicOr,
+    Assign,
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -185,13 +192,23 @@ impl Parse for Block {
 
 impl Parse for Stmt {
     fn parse(input: syn::parse::ParseStream) -> syn::Result<Self> {
+        let declare = if input.peek(Token![let]) {
+            Some((input.parse()?, input.parse()?, input.parse()?))
+        } else {
+            None
+        };
+
         let expr = input.parse()?;
         let semi = match &expr {
             Expr::Condition(_) => None,
             _ => Some(input.parse()?),
         };
 
-        Ok(Stmt { expr, semi })
+        Ok(Stmt {
+            declare,
+            expr,
+            semi,
+        })
     }
 }
 
@@ -207,7 +224,23 @@ impl Parse for Return {
 
 impl Parse for Expr {
     fn parse(input: syn::parse::ParseStream) -> syn::Result<Self> {
-        Expr::parse_ors(input)
+        let expr = Expr::parse_ors(input)?;
+
+        Ok(if input.peek(Token![=]) {
+            let lhs = expr;
+
+            input.parse::<Token![=]>().unwrap();
+
+            let rhs = input.parse::<Expr>()?;
+
+            Expr::Binop(BinopExpr {
+                lhs: Box::new(lhs),
+                op: Binop::Assign,
+                rhs: Box::new(rhs),
+            })
+        } else {
+            expr
+        })
     }
 }
 
@@ -271,7 +304,12 @@ impl Expr {
         } else if input.peek(Token![!]) {
             Expr::Neg(input.parse()?)
         } else {
-            Expr::Call(input.parse()?)
+            // Distinguish between function call and ident expr.
+            if input.peek2(token::Paren) {
+                Expr::Call(input.parse()?)
+            } else {
+                Expr::Ident(input.parse()?)
+            }
         })
     }
 }
@@ -280,11 +318,6 @@ impl Parse for CallExpr {
     fn parse(input: syn::parse::ParseStream) -> syn::Result<Self> {
         let _inner;
         Ok(CallExpr {
-            assign: if input.peek(Token![let]) {
-                Some((input.parse()?, input.parse()?, input.parse()?))
-            } else {
-                None
-            },
             func: input.parse()?,
             paren: parenthesized!(_inner in input),
             args: {
@@ -359,6 +392,14 @@ impl Parse for NegExpr {
         Ok(NegExpr {
             bang: input.parse()?,
             inner: Box::new(input.parse()?),
+        })
+    }
+}
+
+impl Parse for IdentExpr {
+    fn parse(input: syn::parse::ParseStream) -> Result<Self> {
+        Ok(IdentExpr {
+            ident: input.parse()?,
         })
     }
 }

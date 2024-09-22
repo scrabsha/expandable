@@ -12,54 +12,54 @@ const PROGRAM: Program = Program {
         Function {
             name: "vis",
             code: &[
-                Instruction::LoadConst(Register(1u8), Value(0i8)),
+                Instruction::LoadConst(Register(2u8), Value(0i8)),
                 Instruction::Peek {
                     tok: TokenDescription::Pub,
-                    reg: Register(1u8),
+                    reg: Register(2u8),
                 },
                 Instruction::JumpIfZero {
-                    cond: Register(1u8),
+                    cond: Register(2u8),
                     address: Address(30u32),
                 },
                 Instruction::BumpToken {
                     tok: TokenDescription::Pub,
                 },
-                Instruction::LoadConst(Register(2u8), Value(0i8)),
+                Instruction::LoadConst(Register(5u8), Value(0i8)),
                 Instruction::Peek {
                     tok: TokenDescription::LParen,
-                    reg: Register(2u8),
+                    reg: Register(5u8),
                 },
                 Instruction::JumpIfZero {
-                    cond: Register(2u8),
+                    cond: Register(5u8),
                     address: Address(29u32),
                 },
-                Instruction::LoadConst(Register(3u8), Value(0i8)),
-                Instruction::LoadConst(Register(3u8), Value(0i8)),
-                Instruction::LoadConst(Register(3u8), Value(0i8)),
+                Instruction::LoadConst(Register(7u8), Value(0i8)),
+                Instruction::LoadConst(Register(7u8), Value(0i8)),
+                Instruction::LoadConst(Register(7u8), Value(0i8)),
                 Instruction::Peek2 {
                     tok: TokenDescription::Crate,
-                    reg: Register(3u8),
+                    reg: Register(7u8),
                 },
                 Instruction::JumpIfNonZero {
-                    cond: Register(3u8),
+                    cond: Register(7u8),
                     address: Address(14u32),
                 },
-                Instruction::LoadConst(Register(3u8), Value(0i8)),
+                Instruction::LoadConst(Register(7u8), Value(0i8)),
                 Instruction::Peek2 {
                     tok: TokenDescription::Self_,
-                    reg: Register(3u8),
+                    reg: Register(7u8),
                 },
                 Instruction::JumpIfNonZero {
-                    cond: Register(3u8),
+                    cond: Register(7u8),
                     address: Address(17u32),
                 },
-                Instruction::LoadConst(Register(3u8), Value(0i8)),
+                Instruction::LoadConst(Register(7u8), Value(0i8)),
                 Instruction::Peek2 {
                     tok: TokenDescription::Super,
-                    reg: Register(3u8),
+                    reg: Register(7u8),
                 },
                 Instruction::JumpIfZero {
-                    cond: Register(3u8),
+                    cond: Register(7u8),
                     address: Address(22u32),
                 },
                 Instruction::BumpToken {
@@ -72,13 +72,13 @@ const PROGRAM: Program = Program {
                 Instruction::Jump {
                     address: Address(29u32),
                 },
-                Instruction::LoadConst(Register(4u8), Value(0i8)),
+                Instruction::LoadConst(Register(11u8), Value(0i8)),
                 Instruction::Peek2 {
                     tok: TokenDescription::In,
-                    reg: Register(4u8),
+                    reg: Register(11u8),
                 },
                 Instruction::JumpIfZero {
-                    cond: Register(4u8),
+                    cond: Register(11u8),
                     address: Address(29u32),
                 },
                 Instruction::BumpToken {
@@ -89,7 +89,7 @@ const PROGRAM: Program = Program {
                 },
                 Instruction::Call {
                     function: FunctionId(47u32),
-                    result: Register(5u8),
+                    result: Register(14u8),
                 },
                 Instruction::BumpToken {
                     tok: TokenDescription::RParen,
@@ -97,13 +97,13 @@ const PROGRAM: Program = Program {
                 Instruction::Jump {
                     address: Address(34u32),
                 },
-                Instruction::LoadConst(Register(6u8), Value(0i8)),
+                Instruction::LoadConst(Register(16u8), Value(0i8)),
                 Instruction::Peek {
                     tok: TokenDescription::FragmentVis,
-                    reg: Register(6u8),
+                    reg: Register(16u8),
                 },
                 Instruction::JumpIfZero {
-                    cond: Register(6u8),
+                    cond: Register(16u8),
                     address: Address(34u32),
                 },
                 Instruction::BumpToken {
@@ -111,133 +111,133 @@ const PROGRAM: Program = Program {
                 },
                 Instruction::Return(Register(0u8)),
             ],
-            reg_num: 7usize,
+            reg_num: 18usize,
         },
         Function {
             name: "vis_opt",
             code: &[
-                Instruction::LoadConst(Register(1u8), Value(0i8)),
-                Instruction::LoadConst(Register(1u8), Value(0i8)),
+                Instruction::LoadConst(Register(2u8), Value(0i8)),
+                Instruction::LoadConst(Register(2u8), Value(0i8)),
                 Instruction::Peek {
                     tok: TokenDescription::Pub,
-                    reg: Register(1u8),
+                    reg: Register(2u8),
                 },
                 Instruction::JumpIfNonZero {
-                    cond: Register(1u8),
+                    cond: Register(2u8),
                     address: Address(6u32),
                 },
-                Instruction::LoadConst(Register(1u8), Value(0i8)),
+                Instruction::LoadConst(Register(2u8), Value(0i8)),
                 Instruction::Peek {
                     tok: TokenDescription::FragmentVis,
-                    reg: Register(1u8),
+                    reg: Register(2u8),
                 },
                 Instruction::JumpIfZero {
-                    cond: Register(1u8),
+                    cond: Register(2u8),
                     address: Address(8u32),
                 },
                 Instruction::Call {
                     function: FunctionId(0u32),
-                    result: Register(2u8),
+                    result: Register(3u8),
                 },
                 Instruction::Return(Register(0u8)),
             ],
-            reg_num: 3usize,
+            reg_num: 4usize,
         },
         Function {
             name: "item",
             code: &[
-                Instruction::LoadConst(Register(1u8), Value(0i8)),
-                Instruction::LoadConst(Register(1u8), Value(0i8)),
-                Instruction::LoadConst(Register(1u8), Value(0i8)),
-                Instruction::LoadConst(Register(1u8), Value(0i8)),
-                Instruction::LoadConst(Register(1u8), Value(0i8)),
-                Instruction::LoadConst(Register(1u8), Value(0i8)),
-                Instruction::LoadConst(Register(1u8), Value(0i8)),
+                Instruction::LoadConst(Register(2u8), Value(0i8)),
+                Instruction::LoadConst(Register(2u8), Value(0i8)),
+                Instruction::LoadConst(Register(2u8), Value(0i8)),
+                Instruction::LoadConst(Register(2u8), Value(0i8)),
+                Instruction::LoadConst(Register(2u8), Value(0i8)),
+                Instruction::LoadConst(Register(2u8), Value(0i8)),
+                Instruction::LoadConst(Register(2u8), Value(0i8)),
                 Instruction::Peek {
                     tok: TokenDescription::ColonColon,
-                    reg: Register(1u8),
+                    reg: Register(2u8),
                 },
                 Instruction::JumpIfNonZero {
-                    cond: Register(1u8),
+                    cond: Register(2u8),
                     address: Address(11u32),
                 },
-                Instruction::LoadConst(Register(1u8), Value(0i8)),
+                Instruction::LoadConst(Register(2u8), Value(0i8)),
                 Instruction::Peek {
                     tok: TokenDescription::Ident,
-                    reg: Register(1u8),
+                    reg: Register(2u8),
                 },
                 Instruction::JumpIfNonZero {
-                    cond: Register(1u8),
+                    cond: Register(2u8),
                     address: Address(14u32),
                 },
-                Instruction::LoadConst(Register(1u8), Value(0i8)),
+                Instruction::LoadConst(Register(2u8), Value(0i8)),
                 Instruction::Peek {
                     tok: TokenDescription::FragmentIdent,
-                    reg: Register(1u8),
+                    reg: Register(2u8),
                 },
                 Instruction::JumpIfNonZero {
-                    cond: Register(1u8),
+                    cond: Register(2u8),
                     address: Address(17u32),
                 },
-                Instruction::LoadConst(Register(1u8), Value(0i8)),
+                Instruction::LoadConst(Register(2u8), Value(0i8)),
                 Instruction::Peek {
                     tok: TokenDescription::Super,
-                    reg: Register(1u8),
+                    reg: Register(2u8),
                 },
                 Instruction::JumpIfNonZero {
-                    cond: Register(1u8),
+                    cond: Register(2u8),
                     address: Address(20u32),
                 },
-                Instruction::LoadConst(Register(1u8), Value(0i8)),
+                Instruction::LoadConst(Register(2u8), Value(0i8)),
                 Instruction::Peek {
                     tok: TokenDescription::Self_,
-                    reg: Register(1u8),
+                    reg: Register(2u8),
                 },
                 Instruction::JumpIfNonZero {
-                    cond: Register(1u8),
+                    cond: Register(2u8),
                     address: Address(23u32),
                 },
-                Instruction::LoadConst(Register(1u8), Value(0i8)),
+                Instruction::LoadConst(Register(2u8), Value(0i8)),
                 Instruction::Peek {
                     tok: TokenDescription::Crate,
-                    reg: Register(1u8),
+                    reg: Register(2u8),
                 },
                 Instruction::JumpIfNonZero {
-                    cond: Register(1u8),
+                    cond: Register(2u8),
                     address: Address(26u32),
                 },
-                Instruction::LoadConst(Register(1u8), Value(0i8)),
+                Instruction::LoadConst(Register(2u8), Value(0i8)),
                 Instruction::Peek {
                     tok: TokenDescription::FragmentPath,
-                    reg: Register(1u8),
+                    reg: Register(2u8),
                 },
                 Instruction::JumpIfZero {
-                    cond: Register(1u8),
+                    cond: Register(2u8),
                     address: Address(36u32),
                 },
                 Instruction::Call {
                     function: FunctionId(47u32),
-                    result: Register(2u8),
+                    result: Register(3u8),
                 },
-                Instruction::LoadConst(Register(3u8), Value(0i8)),
+                Instruction::LoadConst(Register(5u8), Value(0i8)),
                 Instruction::Peek2 {
                     tok: TokenDescription::LBrace,
-                    reg: Register(3u8),
+                    reg: Register(5u8),
                 },
                 Instruction::JumpIfZero {
-                    cond: Register(3u8),
+                    cond: Register(5u8),
                     address: Address(33u32),
                 },
                 Instruction::Call {
                     function: FunctionId(74u32),
-                    result: Register(4u8),
+                    result: Register(6u8),
                 },
                 Instruction::Jump {
                     address: Address(35u32),
                 },
                 Instruction::Call {
                     function: FunctionId(74u32),
-                    result: Register(5u8),
+                    result: Register(7u8),
                 },
                 Instruction::BumpToken {
                     tok: TokenDescription::Semicolon,
@@ -245,13 +245,13 @@ const PROGRAM: Program = Program {
                 Instruction::Jump {
                     address: Address(53u32),
                 },
-                Instruction::LoadConst(Register(6u8), Value(0i8)),
+                Instruction::LoadConst(Register(9u8), Value(0i8)),
                 Instruction::Peek {
                     tok: TokenDescription::FragmentItem,
-                    reg: Register(6u8),
+                    reg: Register(9u8),
                 },
                 Instruction::JumpIfZero {
-                    cond: Register(6u8),
+                    cond: Register(9u8),
                     address: Address(41u32),
                 },
                 Instruction::BumpToken {
@@ -262,56 +262,56 @@ const PROGRAM: Program = Program {
                 },
                 Instruction::Call {
                     function: FunctionId(1u32),
-                    result: Register(7u8),
+                    result: Register(11u8),
                 },
-                Instruction::LoadConst(Register(8u8), Value(0i8)),
+                Instruction::LoadConst(Register(13u8), Value(0i8)),
                 Instruction::Peek {
                     tok: TokenDescription::Fn,
-                    reg: Register(8u8),
+                    reg: Register(13u8),
                 },
                 Instruction::JumpIfZero {
-                    cond: Register(8u8),
+                    cond: Register(13u8),
                     address: Address(47u32),
                 },
                 Instruction::Call {
                     function: FunctionId(10u32),
-                    result: Register(9u8),
+                    result: Register(14u8),
                 },
                 Instruction::Jump {
                     address: Address(53u32),
                 },
-                Instruction::LoadConst(Register(10u8), Value(0i8)),
+                Instruction::LoadConst(Register(15u8), Value(0i8)),
                 Instruction::Peek {
                     tok: TokenDescription::Struct,
-                    reg: Register(10u8),
+                    reg: Register(15u8),
                 },
                 Instruction::JumpIfZero {
-                    cond: Register(10u8),
+                    cond: Register(15u8),
                     address: Address(52u32),
                 },
                 Instruction::Call {
                     function: FunctionId(3u32),
-                    result: Register(11u8),
+                    result: Register(16u8),
                 },
                 Instruction::Jump {
                     address: Address(53u32),
                 },
                 Instruction::Error,
-                Instruction::LoadConst(Register(12u8), Value(0i8)),
+                Instruction::LoadConst(Register(19u8), Value(0i8)),
                 Instruction::PeekAny {
-                    reg: Register(12u8),
+                    reg: Register(19u8),
                 },
                 Instruction::JumpIfZero {
-                    cond: Register(12u8),
+                    cond: Register(19u8),
                     address: Address(57u32),
                 },
                 Instruction::Call {
                     function: FunctionId(2u32),
-                    result: Register(13u8),
+                    result: Register(20u8),
                 },
                 Instruction::Return(Register(0u8)),
             ],
-            reg_num: 14usize,
+            reg_num: 21usize,
         },
         Function {
             name: "struct_item",
@@ -323,23 +323,23 @@ const PROGRAM: Program = Program {
                 Instruction::BumpToken {
                     tok: TokenDescription::Struct,
                 },
-                Instruction::LoadConst(Register(2u8), Value(0i8)),
-                Instruction::LoadConst(Register(2u8), Value(0i8)),
+                Instruction::LoadConst(Register(4u8), Value(0i8)),
+                Instruction::LoadConst(Register(4u8), Value(0i8)),
                 Instruction::Peek {
                     tok: TokenDescription::Ident,
-                    reg: Register(2u8),
+                    reg: Register(4u8),
                 },
                 Instruction::JumpIfNonZero {
-                    cond: Register(2u8),
+                    cond: Register(4u8),
                     address: Address(8u32),
                 },
-                Instruction::LoadConst(Register(2u8), Value(0i8)),
+                Instruction::LoadConst(Register(4u8), Value(0i8)),
                 Instruction::Peek {
                     tok: TokenDescription::FragmentIdent,
-                    reg: Register(2u8),
+                    reg: Register(4u8),
                 },
                 Instruction::JumpIfZero {
-                    cond: Register(2u8),
+                    cond: Register(4u8),
                     address: Address(11u32),
                 },
                 Instruction::Bump,
@@ -347,13 +347,13 @@ const PROGRAM: Program = Program {
                     address: Address(12u32),
                 },
                 Instruction::Error,
-                Instruction::LoadConst(Register(3u8), Value(0i8)),
+                Instruction::LoadConst(Register(8u8), Value(0i8)),
                 Instruction::Peek {
                     tok: TokenDescription::LParen,
-                    reg: Register(3u8),
+                    reg: Register(8u8),
                 },
                 Instruction::JumpIfZero {
-                    cond: Register(3u8),
+                    cond: Register(8u8),
                     address: Address(20u32),
                 },
                 Instruction::BumpToken {
@@ -361,7 +361,7 @@ const PROGRAM: Program = Program {
                 },
                 Instruction::Call {
                     function: FunctionId(4u32),
-                    result: Register(4u8),
+                    result: Register(10u8),
                 },
                 Instruction::BumpToken {
                     tok: TokenDescription::RParen,
@@ -372,13 +372,13 @@ const PROGRAM: Program = Program {
                 Instruction::Jump {
                     address: Address(31u32),
                 },
-                Instruction::LoadConst(Register(5u8), Value(0i8)),
+                Instruction::LoadConst(Register(13u8), Value(0i8)),
                 Instruction::Peek {
                     tok: TokenDescription::LBrace,
-                    reg: Register(5u8),
+                    reg: Register(13u8),
                 },
                 Instruction::JumpIfZero {
-                    cond: Register(5u8),
+                    cond: Register(13u8),
                     address: Address(27u32),
                 },
                 Instruction::BumpToken {
@@ -386,7 +386,7 @@ const PROGRAM: Program = Program {
                 },
                 Instruction::Call {
                     function: FunctionId(6u32),
-                    result: Register(6u8),
+                    result: Register(15u8),
                 },
                 Instruction::BumpToken {
                     tok: TokenDescription::RBrace,
@@ -394,101 +394,101 @@ const PROGRAM: Program = Program {
                 Instruction::Jump {
                     address: Address(31u32),
                 },
-                Instruction::LoadConst(Register(7u8), Value(0i8)),
+                Instruction::LoadConst(Register(17u8), Value(0i8)),
                 Instruction::Peek {
                     tok: TokenDescription::Semicolon,
-                    reg: Register(7u8),
+                    reg: Register(17u8),
                 },
                 Instruction::JumpIfZero {
-                    cond: Register(7u8),
+                    cond: Register(17u8),
                     address: Address(31u32),
                 },
                 Instruction::BumpToken {
                     tok: TokenDescription::Semicolon,
+                },
+                Instruction::Return(Register(0u8)),
+            ],
+            reg_num: 19usize,
+        },
+        Function {
+            name: "tuple_struct_fields",
+            code: &[
+                Instruction::LoadConst(Register(2u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::RParen,
+                    reg: Register(2u8),
+                },
+                Instruction::JumpIfZero {
+                    cond: Register(2u8),
+                    address: Address(4u32),
+                },
+                Instruction::Jump {
+                    address: Address(6u32),
+                },
+                Instruction::Call {
+                    function: FunctionId(8u32),
+                    result: Register(3u8),
+                },
+                Instruction::Call {
+                    function: FunctionId(5u32),
+                    result: Register(4u8),
+                },
+                Instruction::Return(Register(0u8)),
+            ],
+            reg_num: 5usize,
+        },
+        Function {
+            name: "tuple_struct_fields_",
+            code: &[
+                Instruction::LoadConst(Register(2u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::RParen,
+                    reg: Register(2u8),
+                },
+                Instruction::JumpIfZero {
+                    cond: Register(2u8),
+                    address: Address(4u32),
+                },
+                Instruction::Jump {
+                    address: Address(11u32),
+                },
+                Instruction::BumpToken {
+                    tok: TokenDescription::Comma,
+                },
+                Instruction::LoadConst(Register(5u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::RParen,
+                    reg: Register(5u8),
+                },
+                Instruction::JumpIfZero {
+                    cond: Register(5u8),
+                    address: Address(9u32),
+                },
+                Instruction::Jump {
+                    address: Address(11u32),
+                },
+                Instruction::Call {
+                    function: FunctionId(8u32),
+                    result: Register(6u8),
+                },
+                Instruction::Call {
+                    function: FunctionId(5u32),
+                    result: Register(7u8),
                 },
                 Instruction::Return(Register(0u8)),
             ],
             reg_num: 8usize,
         },
         Function {
-            name: "tuple_struct_fields",
+            name: "struct_fields",
             code: &[
-                Instruction::LoadConst(Register(1u8), Value(0i8)),
-                Instruction::Peek {
-                    tok: TokenDescription::RParen,
-                    reg: Register(1u8),
-                },
-                Instruction::JumpIfZero {
-                    cond: Register(1u8),
-                    address: Address(4u32),
-                },
-                Instruction::Jump {
-                    address: Address(6u32),
-                },
-                Instruction::Call {
-                    function: FunctionId(8u32),
-                    result: Register(2u8),
-                },
-                Instruction::Call {
-                    function: FunctionId(5u32),
-                    result: Register(3u8),
-                },
-                Instruction::Return(Register(0u8)),
-            ],
-            reg_num: 4usize,
-        },
-        Function {
-            name: "tuple_struct_fields_",
-            code: &[
-                Instruction::LoadConst(Register(1u8), Value(0i8)),
-                Instruction::Peek {
-                    tok: TokenDescription::RParen,
-                    reg: Register(1u8),
-                },
-                Instruction::JumpIfZero {
-                    cond: Register(1u8),
-                    address: Address(4u32),
-                },
-                Instruction::Jump {
-                    address: Address(11u32),
-                },
-                Instruction::BumpToken {
-                    tok: TokenDescription::Comma,
-                },
                 Instruction::LoadConst(Register(2u8), Value(0i8)),
                 Instruction::Peek {
-                    tok: TokenDescription::RParen,
+                    tok: TokenDescription::RBrace,
                     reg: Register(2u8),
                 },
                 Instruction::JumpIfZero {
                     cond: Register(2u8),
-                    address: Address(9u32),
-                },
-                Instruction::Jump {
-                    address: Address(11u32),
-                },
-                Instruction::Call {
-                    function: FunctionId(8u32),
-                    result: Register(3u8),
-                },
-                Instruction::Call {
-                    function: FunctionId(5u32),
-                    result: Register(4u8),
-                },
-                Instruction::Return(Register(0u8)),
-            ],
-            reg_num: 5usize,
-        },
-        Function {
-            name: "struct_fields",
-            code: &[
-                Instruction::LoadConst(Register(1u8), Value(0i8)),
-                Instruction::Peek {
-                    tok: TokenDescription::RBrace,
-                    reg: Register(1u8),
-                },
-                Instruction::JumpIfZero {
-                    cond: Register(1u8),
                     address: Address(4u32),
                 },
                 Instruction::Jump {
@@ -496,26 +496,26 @@ const PROGRAM: Program = Program {
                 },
                 Instruction::Call {
                     function: FunctionId(9u32),
-                    result: Register(2u8),
+                    result: Register(3u8),
                 },
                 Instruction::Call {
                     function: FunctionId(7u32),
-                    result: Register(3u8),
+                    result: Register(4u8),
                 },
                 Instruction::Return(Register(0u8)),
             ],
-            reg_num: 4usize,
+            reg_num: 5usize,
         },
         Function {
             name: "struct_fields_",
             code: &[
-                Instruction::LoadConst(Register(1u8), Value(0i8)),
+                Instruction::LoadConst(Register(2u8), Value(0i8)),
                 Instruction::Peek {
                     tok: TokenDescription::RBrace,
-                    reg: Register(1u8),
+                    reg: Register(2u8),
                 },
                 Instruction::JumpIfZero {
-                    cond: Register(1u8),
+                    cond: Register(2u8),
                     address: Address(4u32),
                 },
                 Instruction::Jump {
@@ -524,13 +524,13 @@ const PROGRAM: Program = Program {
                 Instruction::BumpToken {
                     tok: TokenDescription::Comma,
                 },
-                Instruction::LoadConst(Register(2u8), Value(0i8)),
+                Instruction::LoadConst(Register(5u8), Value(0i8)),
                 Instruction::Peek {
                     tok: TokenDescription::RBrace,
-                    reg: Register(2u8),
+                    reg: Register(5u8),
                 },
                 Instruction::JumpIfZero {
-                    cond: Register(2u8),
+                    cond: Register(5u8),
                     address: Address(9u32),
                 },
                 Instruction::Jump {
@@ -538,15 +538,15 @@ const PROGRAM: Program = Program {
                 },
                 Instruction::Call {
                     function: FunctionId(9u32),
-                    result: Register(3u8),
+                    result: Register(6u8),
                 },
                 Instruction::Call {
                     function: FunctionId(7u32),
-                    result: Register(4u8),
+                    result: Register(7u8),
                 },
                 Instruction::Return(Register(0u8)),
             ],
-            reg_num: 5usize,
+            reg_num: 8usize,
         },
         Function {
             name: "tuple_struct_field",
@@ -570,23 +570,23 @@ const PROGRAM: Program = Program {
                     function: FunctionId(1u32),
                     result: Register(1u8),
                 },
-                Instruction::LoadConst(Register(2u8), Value(0i8)),
-                Instruction::LoadConst(Register(2u8), Value(0i8)),
+                Instruction::LoadConst(Register(3u8), Value(0i8)),
+                Instruction::LoadConst(Register(3u8), Value(0i8)),
                 Instruction::Peek {
                     tok: TokenDescription::Ident,
-                    reg: Register(2u8),
+                    reg: Register(3u8),
                 },
                 Instruction::JumpIfNonZero {
-                    cond: Register(2u8),
+                    cond: Register(3u8),
                     address: Address(7u32),
                 },
-                Instruction::LoadConst(Register(2u8), Value(0i8)),
+                Instruction::LoadConst(Register(3u8), Value(0i8)),
                 Instruction::Peek {
                     tok: TokenDescription::FragmentIdent,
-                    reg: Register(2u8),
+                    reg: Register(3u8),
                 },
                 Instruction::JumpIfZero {
-                    cond: Register(2u8),
+                    cond: Register(3u8),
                     address: Address(10u32),
                 },
                 Instruction::Bump,
@@ -599,11 +599,11 @@ const PROGRAM: Program = Program {
                 },
                 Instruction::Call {
                     function: FunctionId(16u32),
-                    result: Register(3u8),
+                    result: Register(7u8),
                 },
                 Instruction::Return(Register(0u8)),
             ],
-            reg_num: 4usize,
+            reg_num: 8usize,
         },
         Function {
             name: "fn_item",
@@ -611,13 +611,13 @@ const PROGRAM: Program = Program {
                 Instruction::BumpToken {
                     tok: TokenDescription::Fn,
                 },
-                Instruction::LoadConst(Register(1u8), Value(0i8)),
+                Instruction::LoadConst(Register(3u8), Value(0i8)),
                 Instruction::Peek {
                     tok: TokenDescription::Ident,
-                    reg: Register(1u8),
+                    reg: Register(3u8),
                 },
                 Instruction::JumpIfZero {
-                    cond: Register(1u8),
+                    cond: Register(3u8),
                     address: Address(6u32),
                 },
                 Instruction::BumpToken {
@@ -626,13 +626,13 @@ const PROGRAM: Program = Program {
                 Instruction::Jump {
                     address: Address(12u32),
                 },
-                Instruction::LoadConst(Register(2u8), Value(0i8)),
+                Instruction::LoadConst(Register(5u8), Value(0i8)),
                 Instruction::Peek {
                     tok: TokenDescription::FragmentIdent,
-                    reg: Register(2u8),
+                    reg: Register(5u8),
                 },
                 Instruction::JumpIfZero {
-                    cond: Register(2u8),
+                    cond: Register(5u8),
                     address: Address(11u32),
                 },
                 Instruction::BumpToken {
@@ -644,29 +644,29 @@ const PROGRAM: Program = Program {
                 Instruction::Error,
                 Instruction::Call {
                     function: FunctionId(24u32),
-                    result: Register(3u8),
+                    result: Register(8u8),
                 },
-                Instruction::LoadConst(Register(4u8), Value(0i8)),
+                Instruction::LoadConst(Register(10u8), Value(0i8)),
                 Instruction::Peek {
                     tok: TokenDescription::RightArrow,
-                    reg: Register(4u8),
+                    reg: Register(10u8),
                 },
                 Instruction::JumpIfZero {
-                    cond: Register(4u8),
+                    cond: Register(10u8),
                     address: Address(18u32),
                 },
                 Instruction::Bump,
                 Instruction::Call {
                     function: FunctionId(16u32),
-                    result: Register(5u8),
+                    result: Register(12u8),
                 },
                 Instruction::Call {
                     function: FunctionId(12u32),
-                    result: Register(6u8),
+                    result: Register(13u8),
                 },
                 Instruction::Return(Register(0u8)),
             ],
-            reg_num: 7usize,
+            reg_num: 14usize,
         },
         Function {
             name: "stmt",
@@ -687,43 +687,43 @@ const PROGRAM: Program = Program {
                 },
                 Instruction::Call {
                     function: FunctionId(13u32),
-                    result: Register(1u8),
+                    result: Register(2u8),
                 },
                 Instruction::BumpToken {
                     tok: TokenDescription::RBrace,
                 },
                 Instruction::Return(Register(0u8)),
             ],
-            reg_num: 2usize,
+            reg_num: 4usize,
         },
         Function {
             name: "stmt_tail",
             code: &[
-                Instruction::LoadConst(Register(1u8), Value(0i8)),
-                Instruction::PeekAny { reg: Register(1u8) },
-                Instruction::JumpIfZero {
-                    cond: Register(1u8),
-                    address: Address(72u32),
-                },
                 Instruction::LoadConst(Register(2u8), Value(0i8)),
-                Instruction::Peek {
-                    tok: TokenDescription::RBrace,
-                    reg: Register(2u8),
-                },
+                Instruction::PeekAny { reg: Register(2u8) },
                 Instruction::JumpIfZero {
                     cond: Register(2u8),
+                    address: Address(72u32),
+                },
+                Instruction::LoadConst(Register(4u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::RBrace,
+                    reg: Register(4u8),
+                },
+                Instruction::JumpIfZero {
+                    cond: Register(4u8),
                     address: Address(7u32),
                 },
                 Instruction::Jump {
                     address: Address(72u32),
                 },
-                Instruction::LoadConst(Register(3u8), Value(0i8)),
+                Instruction::LoadConst(Register(5u8), Value(0i8)),
                 Instruction::Peek {
                     tok: TokenDescription::FragmentStmt,
-                    reg: Register(3u8),
+                    reg: Register(5u8),
                 },
                 Instruction::JumpIfZero {
-                    cond: Register(3u8),
+                    cond: Register(5u8),
                     address: Address(12u32),
                 },
                 Instruction::BumpToken {
@@ -732,13 +732,13 @@ const PROGRAM: Program = Program {
                 Instruction::Jump {
                     address: Address(72u32),
                 },
-                Instruction::LoadConst(Register(4u8), Value(0i8)),
+                Instruction::LoadConst(Register(7u8), Value(0i8)),
                 Instruction::Peek {
                     tok: TokenDescription::Semicolon,
-                    reg: Register(4u8),
+                    reg: Register(7u8),
                 },
                 Instruction::JumpIfZero {
-                    cond: Register(4u8),
+                    cond: Register(7u8),
                     address: Address(18u32),
                 },
                 Instruction::BumpToken {
@@ -746,18 +746,18 @@ const PROGRAM: Program = Program {
                 },
                 Instruction::Call {
                     function: FunctionId(13u32),
-                    result: Register(5u8),
+                    result: Register(9u8),
                 },
                 Instruction::Jump {
                     address: Address(72u32),
                 },
-                Instruction::LoadConst(Register(6u8), Value(0i8)),
+                Instruction::LoadConst(Register(10u8), Value(0i8)),
                 Instruction::Peek {
                     tok: TokenDescription::Let,
-                    reg: Register(6u8),
+                    reg: Register(10u8),
                 },
                 Instruction::JumpIfZero {
-                    cond: Register(6u8),
+                    cond: Register(10u8),
                     address: Address(33u32),
                 },
                 Instruction::BumpToken {
@@ -765,15 +765,15 @@ const PROGRAM: Program = Program {
                 },
                 Instruction::Call {
                     function: FunctionId(26u32),
-                    result: Register(7u8),
+                    result: Register(12u8),
                 },
-                Instruction::LoadConst(Register(8u8), Value(0i8)),
+                Instruction::LoadConst(Register(14u8), Value(0i8)),
                 Instruction::Peek {
                     tok: TokenDescription::Colon,
-                    reg: Register(8u8),
+                    reg: Register(14u8),
                 },
                 Instruction::JumpIfZero {
-                    cond: Register(8u8),
+                    cond: Register(14u8),
                     address: Address(28u32),
                 },
                 Instruction::BumpToken {
@@ -781,149 +781,149 @@ const PROGRAM: Program = Program {
                 },
                 Instruction::Call {
                     function: FunctionId(16u32),
-                    result: Register(9u8),
+                    result: Register(16u8),
                 },
                 Instruction::BumpToken {
                     tok: TokenDescription::Equals,
                 },
                 Instruction::Call {
                     function: FunctionId(43u32),
-                    result: Register(10u8),
+                    result: Register(18u8),
                 },
                 Instruction::BumpToken {
                     tok: TokenDescription::Semicolon,
                 },
                 Instruction::Call {
                     function: FunctionId(13u32),
-                    result: Register(11u8),
-                },
-                Instruction::Jump {
-                    address: Address(72u32),
-                },
-                Instruction::Call {
-                    function: FunctionId(43u32),
-                    result: Register(12u8),
-                },
-                Instruction::LoadConst(Register(13u8), Value(0i8)),
-                Instruction::LoadConst(Register(13u8), Value(0i8)),
-                Instruction::LoadConst(Register(13u8), Value(0i8)),
-                Instruction::LoadConst(Register(13u8), Value(0i8)),
-                Instruction::LoadConst(Register(13u8), Value(0i8)),
-                Instruction::LoadConst(Register(13u8), Value(0i8)),
-                Instruction::LoadConst(Register(14u8), Value(0i8)),
-                Instruction::Sub {
-                    lhs: Register(12u8),
-                    rhs: Register(14u8),
-                    out: Register(13u8),
-                },
-                Instruction::Invert {
-                    src: Register(13u8),
-                    dst: Register(13u8),
-                },
-                Instruction::JumpIfNonZero {
-                    cond: Register(13u8),
-                    address: Address(48u32),
-                },
-                Instruction::LoadConst(Register(13u8), Value(0i8)),
-                Instruction::LoadConst(Register(15u8), Value(1i8)),
-                Instruction::Sub {
-                    lhs: Register(12u8),
-                    rhs: Register(15u8),
-                    out: Register(13u8),
-                },
-                Instruction::Invert {
-                    src: Register(13u8),
-                    dst: Register(13u8),
-                },
-                Instruction::JumpIfNonZero {
-                    cond: Register(13u8),
-                    address: Address(53u32),
-                },
-                Instruction::LoadConst(Register(13u8), Value(0i8)),
-                Instruction::LoadConst(Register(16u8), Value(2i8)),
-                Instruction::Sub {
-                    lhs: Register(12u8),
-                    rhs: Register(16u8),
-                    out: Register(13u8),
-                },
-                Instruction::Invert {
-                    src: Register(13u8),
-                    dst: Register(13u8),
-                },
-                Instruction::JumpIfNonZero {
-                    cond: Register(13u8),
-                    address: Address(58u32),
-                },
-                Instruction::LoadConst(Register(13u8), Value(0i8)),
-                Instruction::LoadConst(Register(17u8), Value(3i8)),
-                Instruction::Sub {
-                    lhs: Register(12u8),
-                    rhs: Register(17u8),
-                    out: Register(13u8),
-                },
-                Instruction::Invert {
-                    src: Register(13u8),
-                    dst: Register(13u8),
-                },
-                Instruction::JumpIfNonZero {
-                    cond: Register(13u8),
-                    address: Address(63u32),
-                },
-                Instruction::LoadConst(Register(13u8), Value(0i8)),
-                Instruction::LoadConst(Register(18u8), Value(4i8)),
-                Instruction::Sub {
-                    lhs: Register(12u8),
-                    rhs: Register(18u8),
-                    out: Register(13u8),
-                },
-                Instruction::Invert {
-                    src: Register(13u8),
-                    dst: Register(13u8),
-                },
-                Instruction::JumpIfNonZero {
-                    cond: Register(13u8),
-                    address: Address(68u32),
-                },
-                Instruction::LoadConst(Register(13u8), Value(0i8)),
-                Instruction::LoadConst(Register(19u8), Value(5i8)),
-                Instruction::Sub {
-                    lhs: Register(12u8),
-                    rhs: Register(19u8),
-                    out: Register(13u8),
-                },
-                Instruction::Invert {
-                    src: Register(13u8),
-                    dst: Register(13u8),
-                },
-                Instruction::JumpIfZero {
-                    cond: Register(13u8),
-                    address: Address(71u32),
-                },
-                Instruction::Call {
-                    function: FunctionId(15u32),
                     result: Register(20u8),
                 },
                 Instruction::Jump {
                     address: Address(72u32),
                 },
                 Instruction::Call {
-                    function: FunctionId(14u32),
+                    function: FunctionId(43u32),
                     result: Register(21u8),
+                },
+                Instruction::LoadConst(Register(23u8), Value(0i8)),
+                Instruction::LoadConst(Register(23u8), Value(0i8)),
+                Instruction::LoadConst(Register(23u8), Value(0i8)),
+                Instruction::LoadConst(Register(23u8), Value(0i8)),
+                Instruction::LoadConst(Register(23u8), Value(0i8)),
+                Instruction::LoadConst(Register(23u8), Value(0i8)),
+                Instruction::LoadConst(Register(24u8), Value(0i8)),
+                Instruction::Sub {
+                    lhs: Register(21u8),
+                    rhs: Register(24u8),
+                    out: Register(23u8),
+                },
+                Instruction::Invert {
+                    src: Register(23u8),
+                    dst: Register(23u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(23u8),
+                    address: Address(48u32),
+                },
+                Instruction::LoadConst(Register(23u8), Value(0i8)),
+                Instruction::LoadConst(Register(25u8), Value(1i8)),
+                Instruction::Sub {
+                    lhs: Register(21u8),
+                    rhs: Register(25u8),
+                    out: Register(23u8),
+                },
+                Instruction::Invert {
+                    src: Register(23u8),
+                    dst: Register(23u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(23u8),
+                    address: Address(53u32),
+                },
+                Instruction::LoadConst(Register(23u8), Value(0i8)),
+                Instruction::LoadConst(Register(26u8), Value(2i8)),
+                Instruction::Sub {
+                    lhs: Register(21u8),
+                    rhs: Register(26u8),
+                    out: Register(23u8),
+                },
+                Instruction::Invert {
+                    src: Register(23u8),
+                    dst: Register(23u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(23u8),
+                    address: Address(58u32),
+                },
+                Instruction::LoadConst(Register(23u8), Value(0i8)),
+                Instruction::LoadConst(Register(27u8), Value(3i8)),
+                Instruction::Sub {
+                    lhs: Register(21u8),
+                    rhs: Register(27u8),
+                    out: Register(23u8),
+                },
+                Instruction::Invert {
+                    src: Register(23u8),
+                    dst: Register(23u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(23u8),
+                    address: Address(63u32),
+                },
+                Instruction::LoadConst(Register(23u8), Value(0i8)),
+                Instruction::LoadConst(Register(28u8), Value(4i8)),
+                Instruction::Sub {
+                    lhs: Register(21u8),
+                    rhs: Register(28u8),
+                    out: Register(23u8),
+                },
+                Instruction::Invert {
+                    src: Register(23u8),
+                    dst: Register(23u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(23u8),
+                    address: Address(68u32),
+                },
+                Instruction::LoadConst(Register(23u8), Value(0i8)),
+                Instruction::LoadConst(Register(29u8), Value(5i8)),
+                Instruction::Sub {
+                    lhs: Register(21u8),
+                    rhs: Register(29u8),
+                    out: Register(23u8),
+                },
+                Instruction::Invert {
+                    src: Register(23u8),
+                    dst: Register(23u8),
+                },
+                Instruction::JumpIfZero {
+                    cond: Register(23u8),
+                    address: Address(71u32),
+                },
+                Instruction::Call {
+                    function: FunctionId(15u32),
+                    result: Register(30u8),
+                },
+                Instruction::Jump {
+                    address: Address(72u32),
+                },
+                Instruction::Call {
+                    function: FunctionId(14u32),
+                    result: Register(31u8),
                 },
                 Instruction::Return(Register(0u8)),
             ],
-            reg_num: 22usize,
+            reg_num: 32usize,
         },
         Function {
             name: "stmt_end_semi",
             code: &[
-                Instruction::LoadConst(Register(1u8), Value(0i8)),
+                Instruction::LoadConst(Register(2u8), Value(0i8)),
                 Instruction::Peek {
                     tok: TokenDescription::Semicolon,
-                    reg: Register(1u8),
+                    reg: Register(2u8),
                 },
                 Instruction::JumpIfZero {
-                    cond: Register(1u8),
+                    cond: Register(2u8),
                     address: Address(6u32),
                 },
                 Instruction::BumpToken {
@@ -931,44 +931,44 @@ const PROGRAM: Program = Program {
                 },
                 Instruction::Call {
                     function: FunctionId(13u32),
-                    result: Register(2u8),
+                    result: Register(4u8),
                 },
                 Instruction::Jump {
                     address: Address(14u32),
                 },
-                Instruction::LoadConst(Register(3u8), Value(0i8)),
+                Instruction::LoadConst(Register(5u8), Value(0i8)),
                 Instruction::Peek {
                     tok: TokenDescription::RBrace,
-                    reg: Register(3u8),
+                    reg: Register(5u8),
                 },
                 Instruction::JumpIfZero {
-                    cond: Register(3u8),
+                    cond: Register(5u8),
                     address: Address(10u32),
                 },
                 Instruction::Jump {
                     address: Address(14u32),
                 },
-                Instruction::LoadConst(Register(4u8), Value(0i8)),
-                Instruction::PeekAny { reg: Register(4u8) },
+                Instruction::LoadConst(Register(6u8), Value(0i8)),
+                Instruction::PeekAny { reg: Register(6u8) },
                 Instruction::JumpIfZero {
-                    cond: Register(4u8),
+                    cond: Register(6u8),
                     address: Address(14u32),
                 },
                 Instruction::Error,
                 Instruction::Return(Register(0u8)),
             ],
-            reg_num: 5usize,
+            reg_num: 8usize,
         },
         Function {
             name: "stmt_end_nosemi",
             code: &[
-                Instruction::LoadConst(Register(1u8), Value(0i8)),
+                Instruction::LoadConst(Register(2u8), Value(0i8)),
                 Instruction::Peek {
                     tok: TokenDescription::RBrace,
-                    reg: Register(1u8),
+                    reg: Register(2u8),
                 },
                 Instruction::JumpIfZero {
-                    cond: Register(1u8),
+                    cond: Register(2u8),
                     address: Address(4u32),
                 },
                 Instruction::Jump {
@@ -976,22 +976,22 @@ const PROGRAM: Program = Program {
                 },
                 Instruction::Call {
                     function: FunctionId(13u32),
-                    result: Register(2u8),
+                    result: Register(3u8),
                 },
                 Instruction::Return(Register(0u8)),
             ],
-            reg_num: 3usize,
+            reg_num: 4usize,
         },
         Function {
             name: "ty",
             code: &[
-                Instruction::LoadConst(Register(1u8), Value(0i8)),
+                Instruction::LoadConst(Register(2u8), Value(0i8)),
                 Instruction::Peek {
                     tok: TokenDescription::FragmentTy,
-                    reg: Register(1u8),
+                    reg: Register(2u8),
                 },
                 Instruction::JumpIfZero {
-                    cond: Register(1u8),
+                    cond: Register(2u8),
                     address: Address(5u32),
                 },
                 Instruction::BumpToken {
@@ -1000,13 +1000,13 @@ const PROGRAM: Program = Program {
                 Instruction::Jump {
                     address: Address(43u32),
                 },
-                Instruction::LoadConst(Register(2u8), Value(0i8)),
+                Instruction::LoadConst(Register(4u8), Value(0i8)),
                 Instruction::Peek {
                     tok: TokenDescription::Underscore,
-                    reg: Register(2u8),
+                    reg: Register(4u8),
                 },
                 Instruction::JumpIfZero {
-                    cond: Register(2u8),
+                    cond: Register(4u8),
                     address: Address(10u32),
                 },
                 Instruction::BumpToken {
@@ -1015,79 +1015,79 @@ const PROGRAM: Program = Program {
                 Instruction::Jump {
                     address: Address(43u32),
                 },
-                Instruction::LoadConst(Register(3u8), Value(0i8)),
-                Instruction::LoadConst(Register(3u8), Value(0i8)),
-                Instruction::LoadConst(Register(3u8), Value(0i8)),
-                Instruction::LoadConst(Register(3u8), Value(0i8)),
-                Instruction::LoadConst(Register(3u8), Value(0i8)),
-                Instruction::LoadConst(Register(3u8), Value(0i8)),
+                Instruction::LoadConst(Register(6u8), Value(0i8)),
+                Instruction::LoadConst(Register(6u8), Value(0i8)),
+                Instruction::LoadConst(Register(6u8), Value(0i8)),
+                Instruction::LoadConst(Register(6u8), Value(0i8)),
+                Instruction::LoadConst(Register(6u8), Value(0i8)),
+                Instruction::LoadConst(Register(6u8), Value(0i8)),
                 Instruction::Peek {
                     tok: TokenDescription::Ident,
-                    reg: Register(3u8),
+                    reg: Register(6u8),
                 },
                 Instruction::JumpIfNonZero {
-                    cond: Register(3u8),
+                    cond: Register(6u8),
                     address: Address(20u32),
                 },
-                Instruction::LoadConst(Register(3u8), Value(0i8)),
+                Instruction::LoadConst(Register(6u8), Value(0i8)),
                 Instruction::Peek {
                     tok: TokenDescription::FragmentIdent,
-                    reg: Register(3u8),
+                    reg: Register(6u8),
                 },
                 Instruction::JumpIfNonZero {
-                    cond: Register(3u8),
+                    cond: Register(6u8),
                     address: Address(23u32),
                 },
-                Instruction::LoadConst(Register(3u8), Value(0i8)),
+                Instruction::LoadConst(Register(6u8), Value(0i8)),
                 Instruction::Peek {
                     tok: TokenDescription::Self_,
-                    reg: Register(3u8),
+                    reg: Register(6u8),
                 },
                 Instruction::JumpIfNonZero {
-                    cond: Register(3u8),
+                    cond: Register(6u8),
                     address: Address(26u32),
                 },
-                Instruction::LoadConst(Register(3u8), Value(0i8)),
+                Instruction::LoadConst(Register(6u8), Value(0i8)),
                 Instruction::Peek {
                     tok: TokenDescription::SelfUpper,
-                    reg: Register(3u8),
+                    reg: Register(6u8),
                 },
                 Instruction::JumpIfNonZero {
-                    cond: Register(3u8),
+                    cond: Register(6u8),
                     address: Address(29u32),
                 },
-                Instruction::LoadConst(Register(3u8), Value(0i8)),
+                Instruction::LoadConst(Register(6u8), Value(0i8)),
                 Instruction::Peek {
                     tok: TokenDescription::Super,
-                    reg: Register(3u8),
+                    reg: Register(6u8),
                 },
                 Instruction::JumpIfNonZero {
-                    cond: Register(3u8),
+                    cond: Register(6u8),
                     address: Address(32u32),
                 },
-                Instruction::LoadConst(Register(3u8), Value(0i8)),
+                Instruction::LoadConst(Register(6u8), Value(0i8)),
                 Instruction::Peek {
                     tok: TokenDescription::FragmentIdent,
-                    reg: Register(3u8),
+                    reg: Register(6u8),
                 },
                 Instruction::JumpIfZero {
-                    cond: Register(3u8),
+                    cond: Register(6u8),
                     address: Address(35u32),
                 },
                 Instruction::Call {
                     function: FunctionId(18u32),
-                    result: Register(4u8),
+                    result: Register(7u8),
                 },
                 Instruction::Jump {
                     address: Address(43u32),
                 },
-                Instruction::LoadConst(Register(5u8), Value(0i8)),
+                Instruction::LoadConst(Register(8u8), Value(0i8)),
                 Instruction::Peek {
                     tok: TokenDescription::LParen,
-                    reg: Register(5u8),
+                    reg: Register(8u8),
                 },
                 Instruction::JumpIfZero {
-                    cond: Register(5u8),
+                    cond: Register(8u8),
                     address: Address(42u32),
                 },
                 Instruction::BumpToken {
@@ -1095,7 +1095,7 @@ const PROGRAM: Program = Program {
                 },
                 Instruction::Call {
                     function: FunctionId(16u32),
-                    result: Register(6u8),
+                    result: Register(10u8),
                 },
                 Instruction::BumpToken {
                     tok: TokenDescription::RParen,
@@ -1106,7 +1106,7 @@ const PROGRAM: Program = Program {
                 Instruction::Error,
                 Instruction::Return(Register(0u8)),
             ],
-            reg_num: 7usize,
+            reg_num: 13usize,
         },
         Function {
             name: "ty_no_bounds",
@@ -1122,13 +1122,13 @@ const PROGRAM: Program = Program {
         Function {
             name: "ty_path",
             code: &[
-                Instruction::LoadConst(Register(1u8), Value(0i8)),
+                Instruction::LoadConst(Register(2u8), Value(0i8)),
                 Instruction::Peek {
                     tok: TokenDescription::ColonColon,
-                    reg: Register(1u8),
+                    reg: Register(2u8),
                 },
                 Instruction::JumpIfZero {
-                    cond: Register(1u8),
+                    cond: Register(2u8),
                     address: Address(4u32),
                 },
                 Instruction::BumpToken {
@@ -1136,48 +1136,48 @@ const PROGRAM: Program = Program {
                 },
                 Instruction::Call {
                     function: FunctionId(20u32),
-                    result: Register(2u8),
+                    result: Register(4u8),
                 },
-                Instruction::LoadConst(Register(3u8), Value(0i8)),
+                Instruction::LoadConst(Register(6u8), Value(0i8)),
                 Instruction::Peek {
                     tok: TokenDescription::ColonColon,
-                    reg: Register(3u8),
+                    reg: Register(6u8),
                 },
                 Instruction::JumpIfZero {
-                    cond: Register(3u8),
+                    cond: Register(6u8),
                     address: Address(9u32),
                 },
                 Instruction::Call {
                     function: FunctionId(19u32),
-                    result: Register(4u8),
+                    result: Register(7u8),
                 },
-                Instruction::LoadConst(Register(5u8), Value(0i8)),
+                Instruction::LoadConst(Register(9u8), Value(0i8)),
                 Instruction::Peek {
                     tok: TokenDescription::Not,
-                    reg: Register(5u8),
+                    reg: Register(9u8),
                 },
                 Instruction::JumpIfZero {
-                    cond: Register(5u8),
+                    cond: Register(9u8),
                     address: Address(13u32),
                 },
                 Instruction::Call {
                     function: FunctionId(74u32),
-                    result: Register(6u8),
+                    result: Register(10u8),
                 },
                 Instruction::Return(Register(0u8)),
             ],
-            reg_num: 7usize,
+            reg_num: 11usize,
         },
         Function {
             name: "ty_path_",
             code: &[
-                Instruction::LoadConst(Register(1u8), Value(0i8)),
+                Instruction::LoadConst(Register(2u8), Value(0i8)),
                 Instruction::Peek {
                     tok: TokenDescription::ColonColon,
-                    reg: Register(1u8),
+                    reg: Register(2u8),
                 },
                 Instruction::JumpIfZero {
-                    cond: Register(1u8),
+                    cond: Register(2u8),
                     address: Address(6u32),
                 },
                 Instruction::BumpToken {
@@ -1185,15 +1185,15 @@ const PROGRAM: Program = Program {
                 },
                 Instruction::Call {
                     function: FunctionId(20u32),
-                    result: Register(2u8),
+                    result: Register(4u8),
                 },
                 Instruction::Call {
                     function: FunctionId(19u32),
-                    result: Register(3u8),
+                    result: Register(5u8),
                 },
                 Instruction::Return(Register(0u8)),
             ],
-            reg_num: 4usize,
+            reg_num: 6usize,
         },
         Function {
             name: "ty_path_segment",
@@ -1202,22 +1202,22 @@ const PROGRAM: Program = Program {
                     function: FunctionId(52u32),
                     result: Register(1u8),
                 },
-                Instruction::LoadConst(Register(2u8), Value(0i8)),
+                Instruction::LoadConst(Register(3u8), Value(0i8)),
                 Instruction::Peek {
                     tok: TokenDescription::ColonColon,
-                    reg: Register(2u8),
-                },
-                Instruction::JumpIfZero {
-                    cond: Register(2u8),
-                    address: Address(16u32),
-                },
-                Instruction::LoadConst(Register(3u8), Value(0i8)),
-                Instruction::Peek2 {
-                    tok: TokenDescription::LessThan,
                     reg: Register(3u8),
                 },
                 Instruction::JumpIfZero {
                     cond: Register(3u8),
+                    address: Address(16u32),
+                },
+                Instruction::LoadConst(Register(5u8), Value(0i8)),
+                Instruction::Peek2 {
+                    tok: TokenDescription::LessThan,
+                    reg: Register(5u8),
+                },
+                Instruction::JumpIfZero {
+                    cond: Register(5u8),
                     address: Address(10u32),
                 },
                 Instruction::BumpToken {
@@ -1225,18 +1225,18 @@ const PROGRAM: Program = Program {
                 },
                 Instruction::Call {
                     function: FunctionId(61u32),
-                    result: Register(4u8),
+                    result: Register(7u8),
                 },
                 Instruction::Jump {
                     address: Address(15u32),
                 },
-                Instruction::LoadConst(Register(5u8), Value(0i8)),
+                Instruction::LoadConst(Register(8u8), Value(0i8)),
                 Instruction::Peek {
                     tok: TokenDescription::LParen,
-                    reg: Register(5u8),
+                    reg: Register(8u8),
                 },
                 Instruction::JumpIfZero {
-                    cond: Register(5u8),
+                    cond: Register(8u8),
                     address: Address(15u32),
                 },
                 Instruction::BumpToken {
@@ -1244,43 +1244,43 @@ const PROGRAM: Program = Program {
                 },
                 Instruction::Call {
                     function: FunctionId(21u32),
-                    result: Register(6u8),
+                    result: Register(10u8),
                 },
                 Instruction::Jump {
                     address: Address(25u32),
                 },
-                Instruction::LoadConst(Register(7u8), Value(0i8)),
+                Instruction::LoadConst(Register(11u8), Value(0i8)),
                 Instruction::Peek {
                     tok: TokenDescription::LessThan,
-                    reg: Register(7u8),
+                    reg: Register(11u8),
                 },
                 Instruction::JumpIfZero {
-                    cond: Register(7u8),
+                    cond: Register(11u8),
                     address: Address(21u32),
                 },
                 Instruction::Call {
                     function: FunctionId(61u32),
-                    result: Register(8u8),
+                    result: Register(12u8),
                 },
                 Instruction::Jump {
                     address: Address(25u32),
                 },
-                Instruction::LoadConst(Register(9u8), Value(0i8)),
+                Instruction::LoadConst(Register(13u8), Value(0i8)),
                 Instruction::Peek {
                     tok: TokenDescription::LParen,
-                    reg: Register(9u8),
+                    reg: Register(13u8),
                 },
                 Instruction::JumpIfZero {
-                    cond: Register(9u8),
+                    cond: Register(13u8),
                     address: Address(25u32),
                 },
                 Instruction::Call {
                     function: FunctionId(21u32),
-                    result: Register(10u8),
+                    result: Register(14u8),
                 },
                 Instruction::Return(Register(0u8)),
             ],
-            reg_num: 11usize,
+            reg_num: 15usize,
         },
         Function {
             name: "ty_path_fn",
@@ -1288,13 +1288,13 @@ const PROGRAM: Program = Program {
                 Instruction::BumpToken {
                     tok: TokenDescription::LParen,
                 },
-                Instruction::LoadConst(Register(1u8), Value(0i8)),
+                Instruction::LoadConst(Register(3u8), Value(0i8)),
                 Instruction::Peek {
                     tok: TokenDescription::RParen,
-                    reg: Register(1u8),
+                    reg: Register(3u8),
                 },
                 Instruction::JumpIfZero {
-                    cond: Register(1u8),
+                    cond: Register(3u8),
                     address: Address(6u32),
                 },
                 Instruction::BumpToken {
@@ -1305,18 +1305,18 @@ const PROGRAM: Program = Program {
                 },
                 Instruction::Call {
                     function: FunctionId(22u32),
-                    result: Register(2u8),
+                    result: Register(5u8),
                 },
                 Instruction::BumpToken {
                     tok: TokenDescription::RParen,
                 },
-                Instruction::LoadConst(Register(3u8), Value(0i8)),
+                Instruction::LoadConst(Register(8u8), Value(0i8)),
                 Instruction::Peek {
                     tok: TokenDescription::RightArrow,
-                    reg: Register(3u8),
+                    reg: Register(8u8),
                 },
                 Instruction::JumpIfZero {
-                    cond: Register(3u8),
+                    cond: Register(8u8),
                     address: Address(13u32),
                 },
                 Instruction::BumpToken {
@@ -1324,11 +1324,11 @@ const PROGRAM: Program = Program {
                 },
                 Instruction::Call {
                     function: FunctionId(17u32),
-                    result: Register(4u8),
+                    result: Register(10u8),
                 },
                 Instruction::Return(Register(0u8)),
             ],
-            reg_num: 5usize,
+            reg_num: 11usize,
         },
         Function {
             name: "ty_path_fn_inputs",
@@ -1337,25 +1337,25 @@ const PROGRAM: Program = Program {
                     function: FunctionId(16u32),
                     result: Register(1u8),
                 },
-                Instruction::LoadConst(Register(2u8), Value(0i8)),
+                Instruction::LoadConst(Register(3u8), Value(0i8)),
                 Instruction::Peek {
                     tok: TokenDescription::Comma,
-                    reg: Register(2u8),
+                    reg: Register(3u8),
                 },
                 Instruction::JumpIfZero {
-                    cond: Register(2u8),
+                    cond: Register(3u8),
                     address: Address(11u32),
                 },
                 Instruction::BumpToken {
                     tok: TokenDescription::Comma,
                 },
-                Instruction::LoadConst(Register(3u8), Value(0i8)),
+                Instruction::LoadConst(Register(6u8), Value(0i8)),
                 Instruction::Peek {
                     tok: TokenDescription::RParen,
-                    reg: Register(3u8),
+                    reg: Register(6u8),
                 },
                 Instruction::JumpIfZero {
-                    cond: Register(3u8),
+                    cond: Register(6u8),
                     address: Address(10u32),
                 },
                 Instruction::BumpToken {
@@ -1366,11 +1366,11 @@ const PROGRAM: Program = Program {
                 },
                 Instruction::Call {
                     function: FunctionId(23u32),
-                    result: Register(4u8),
+                    result: Register(8u8),
                 },
                 Instruction::Return(Register(0u8)),
             ],
-            reg_num: 5usize,
+            reg_num: 9usize,
         },
         Function {
             name: "ty_path_fn_inputs_",
@@ -1379,25 +1379,25 @@ const PROGRAM: Program = Program {
                     function: FunctionId(16u32),
                     result: Register(1u8),
                 },
-                Instruction::LoadConst(Register(2u8), Value(0i8)),
+                Instruction::LoadConst(Register(3u8), Value(0i8)),
                 Instruction::Peek {
                     tok: TokenDescription::Comma,
-                    reg: Register(2u8),
+                    reg: Register(3u8),
                 },
                 Instruction::JumpIfZero {
-                    cond: Register(2u8),
+                    cond: Register(3u8),
                     address: Address(12u32),
                 },
                 Instruction::BumpToken {
                     tok: TokenDescription::Comma,
                 },
-                Instruction::LoadConst(Register(3u8), Value(0i8)),
+                Instruction::LoadConst(Register(6u8), Value(0i8)),
                 Instruction::Peek {
                     tok: TokenDescription::RParen,
-                    reg: Register(3u8),
+                    reg: Register(6u8),
                 },
                 Instruction::JumpIfZero {
-                    cond: Register(3u8),
+                    cond: Register(6u8),
                     address: Address(10u32),
                 },
                 Instruction::BumpToken {
@@ -1408,7 +1408,7 @@ const PROGRAM: Program = Program {
                 },
                 Instruction::Call {
                     function: FunctionId(23u32),
-                    result: Register(4u8),
+                    result: Register(8u8),
                 },
                 Instruction::Jump {
                     address: Address(13u32),
@@ -1418,7 +1418,7 @@ const PROGRAM: Program = Program {
                 },
                 Instruction::Return(Register(0u8)),
             ],
-            reg_num: 5usize,
+            reg_num: 10usize,
         },
         Function {
             name: "fn_args",
@@ -1426,13 +1426,13 @@ const PROGRAM: Program = Program {
                 Instruction::BumpToken {
                     tok: TokenDescription::LParen,
                 },
-                Instruction::LoadConst(Register(1u8), Value(0i8)),
+                Instruction::LoadConst(Register(3u8), Value(0i8)),
                 Instruction::Peek {
                     tok: TokenDescription::RParen,
-                    reg: Register(1u8),
+                    reg: Register(3u8),
                 },
                 Instruction::JumpIfZero {
-                    cond: Register(1u8),
+                    cond: Register(3u8),
                     address: Address(5u32),
                 },
                 Instruction::Jump {
@@ -1440,27 +1440,27 @@ const PROGRAM: Program = Program {
                 },
                 Instruction::Call {
                     function: FunctionId(42u32),
-                    result: Register(2u8),
+                    result: Register(4u8),
                 },
-                Instruction::LoadConst(Register(3u8), Value(0i8)),
+                Instruction::LoadConst(Register(6u8), Value(0i8)),
                 Instruction::Peek {
                     tok: TokenDescription::Comma,
-                    reg: Register(3u8),
+                    reg: Register(6u8),
                 },
                 Instruction::JumpIfZero {
-                    cond: Register(3u8),
+                    cond: Register(6u8),
                     address: Address(10u32),
                 },
                 Instruction::BumpToken {
                     tok: TokenDescription::Comma,
                 },
-                Instruction::LoadConst(Register(4u8), Value(0i8)),
+                Instruction::LoadConst(Register(9u8), Value(0i8)),
                 Instruction::Peek {
                     tok: TokenDescription::RParen,
-                    reg: Register(4u8),
+                    reg: Register(9u8),
                 },
                 Instruction::JumpIfZero {
-                    cond: Register(4u8),
+                    cond: Register(9u8),
                     address: Address(15u32),
                 },
                 Instruction::BumpToken {
@@ -1471,11 +1471,11 @@ const PROGRAM: Program = Program {
                 },
                 Instruction::Call {
                     function: FunctionId(25u32),
-                    result: Register(5u8),
+                    result: Register(11u8),
                 },
                 Instruction::Return(Register(0u8)),
             ],
-            reg_num: 6usize,
+            reg_num: 12usize,
         },
         Function {
             name: "fn_args_",
@@ -1484,25 +1484,25 @@ const PROGRAM: Program = Program {
                     function: FunctionId(42u32),
                     result: Register(1u8),
                 },
-                Instruction::LoadConst(Register(2u8), Value(0i8)),
+                Instruction::LoadConst(Register(3u8), Value(0i8)),
                 Instruction::Peek {
                     tok: TokenDescription::Comma,
-                    reg: Register(2u8),
+                    reg: Register(3u8),
                 },
                 Instruction::JumpIfZero {
-                    cond: Register(2u8),
+                    cond: Register(3u8),
                     address: Address(5u32),
                 },
                 Instruction::BumpToken {
                     tok: TokenDescription::Comma,
                 },
-                Instruction::LoadConst(Register(3u8), Value(0i8)),
+                Instruction::LoadConst(Register(6u8), Value(0i8)),
                 Instruction::Peek {
                     tok: TokenDescription::RParen,
-                    reg: Register(3u8),
+                    reg: Register(6u8),
                 },
                 Instruction::JumpIfZero {
-                    cond: Register(3u8),
+                    cond: Register(6u8),
                     address: Address(9u32),
                 },
                 Instruction::BumpToken {
@@ -1510,18 +1510,18 @@ const PROGRAM: Program = Program {
                 },
                 Instruction::Return(Register(0u8)),
             ],
-            reg_num: 4usize,
+            reg_num: 8usize,
         },
         Function {
             name: "pat",
             code: &[
-                Instruction::LoadConst(Register(1u8), Value(0i8)),
+                Instruction::LoadConst(Register(2u8), Value(0i8)),
                 Instruction::Peek {
                     tok: TokenDescription::Or,
-                    reg: Register(1u8),
+                    reg: Register(2u8),
                 },
                 Instruction::JumpIfZero {
-                    cond: Register(1u8),
+                    cond: Register(2u8),
                     address: Address(4u32),
                 },
                 Instruction::BumpToken {
@@ -1529,26 +1529,26 @@ const PROGRAM: Program = Program {
                 },
                 Instruction::Call {
                     function: FunctionId(28u32),
-                    result: Register(2u8),
+                    result: Register(4u8),
                 },
                 Instruction::Call {
                     function: FunctionId(27u32),
-                    result: Register(3u8),
+                    result: Register(5u8),
                 },
                 Instruction::Return(Register(0u8)),
             ],
-            reg_num: 4usize,
+            reg_num: 6usize,
         },
         Function {
             name: "pat_",
             code: &[
-                Instruction::LoadConst(Register(1u8), Value(0i8)),
+                Instruction::LoadConst(Register(2u8), Value(0i8)),
                 Instruction::Peek {
                     tok: TokenDescription::Or,
-                    reg: Register(1u8),
+                    reg: Register(2u8),
                 },
                 Instruction::JumpIfZero {
-                    cond: Register(1u8),
+                    cond: Register(2u8),
                     address: Address(6u32),
                 },
                 Instruction::BumpToken {
@@ -1556,155 +1556,155 @@ const PROGRAM: Program = Program {
                 },
                 Instruction::Call {
                     function: FunctionId(28u32),
-                    result: Register(2u8),
+                    result: Register(4u8),
                 },
                 Instruction::Call {
                     function: FunctionId(27u32),
-                    result: Register(3u8),
+                    result: Register(5u8),
                 },
                 Instruction::Return(Register(0u8)),
             ],
-            reg_num: 4usize,
+            reg_num: 6usize,
         },
         Function {
             name: "pat_no_top_alt",
             code: &[
-                Instruction::LoadConst(Register(1u8), Value(0i8)),
-                Instruction::LoadConst(Register(1u8), Value(0i8)),
-                Instruction::LoadConst(Register(1u8), Value(0i8)),
-                Instruction::LoadConst(Register(1u8), Value(0i8)),
+                Instruction::LoadConst(Register(2u8), Value(0i8)),
+                Instruction::LoadConst(Register(2u8), Value(0i8)),
+                Instruction::LoadConst(Register(2u8), Value(0i8)),
+                Instruction::LoadConst(Register(2u8), Value(0i8)),
                 Instruction::Peek {
                     tok: TokenDescription::FragmentPat,
-                    reg: Register(1u8),
+                    reg: Register(2u8),
                 },
                 Instruction::JumpIfNonZero {
-                    cond: Register(1u8),
+                    cond: Register(2u8),
                     address: Address(8u32),
                 },
-                Instruction::LoadConst(Register(1u8), Value(0i8)),
+                Instruction::LoadConst(Register(2u8), Value(0i8)),
                 Instruction::Peek {
                     tok: TokenDescription::FragmentPatParam,
-                    reg: Register(1u8),
+                    reg: Register(2u8),
                 },
                 Instruction::JumpIfNonZero {
-                    cond: Register(1u8),
+                    cond: Register(2u8),
                     address: Address(11u32),
                 },
-                Instruction::LoadConst(Register(1u8), Value(0i8)),
+                Instruction::LoadConst(Register(2u8), Value(0i8)),
                 Instruction::Peek {
                     tok: TokenDescription::Underscore,
-                    reg: Register(1u8),
+                    reg: Register(2u8),
                 },
                 Instruction::JumpIfNonZero {
-                    cond: Register(1u8),
+                    cond: Register(2u8),
                     address: Address(14u32),
                 },
-                Instruction::LoadConst(Register(1u8), Value(0i8)),
+                Instruction::LoadConst(Register(2u8), Value(0i8)),
                 Instruction::Peek {
                     tok: TokenDescription::DotDot,
-                    reg: Register(1u8),
+                    reg: Register(2u8),
                 },
                 Instruction::JumpIfZero {
-                    cond: Register(1u8),
+                    cond: Register(2u8),
                     address: Address(17u32),
                 },
                 Instruction::Bump,
                 Instruction::Jump {
                     address: Address(98u32),
                 },
-                Instruction::LoadConst(Register(2u8), Value(0i8)),
-                Instruction::LoadConst(Register(2u8), Value(0i8)),
+                Instruction::LoadConst(Register(4u8), Value(0i8)),
+                Instruction::LoadConst(Register(4u8), Value(0i8)),
                 Instruction::Peek {
                     tok: TokenDescription::Ref,
-                    reg: Register(2u8),
+                    reg: Register(4u8),
                 },
                 Instruction::JumpIfNonZero {
-                    cond: Register(2u8),
+                    cond: Register(4u8),
                     address: Address(23u32),
                 },
-                Instruction::LoadConst(Register(2u8), Value(0i8)),
+                Instruction::LoadConst(Register(4u8), Value(0i8)),
                 Instruction::Peek {
                     tok: TokenDescription::Mut,
-                    reg: Register(2u8),
+                    reg: Register(4u8),
                 },
                 Instruction::JumpIfZero {
-                    cond: Register(2u8),
+                    cond: Register(4u8),
                     address: Address(26u32),
                 },
                 Instruction::Call {
                     function: FunctionId(41u32),
-                    result: Register(3u8),
+                    result: Register(5u8),
                 },
                 Instruction::Jump {
                     address: Address(98u32),
                 },
-                Instruction::LoadConst(Register(4u8), Value(0i8)),
-                Instruction::LoadConst(Register(4u8), Value(0i8)),
-                Instruction::LoadConst(Register(4u8), Value(0i8)),
-                Instruction::LoadConst(Register(4u8), Value(0i8)),
-                Instruction::LoadConst(Register(4u8), Value(0i8)),
+                Instruction::LoadConst(Register(6u8), Value(0i8)),
+                Instruction::LoadConst(Register(6u8), Value(0i8)),
+                Instruction::LoadConst(Register(6u8), Value(0i8)),
+                Instruction::LoadConst(Register(6u8), Value(0i8)),
+                Instruction::LoadConst(Register(6u8), Value(0i8)),
                 Instruction::Peek {
                     tok: TokenDescription::Literal,
-                    reg: Register(4u8),
+                    reg: Register(6u8),
                 },
                 Instruction::JumpIfNonZero {
-                    cond: Register(4u8),
+                    cond: Register(6u8),
                     address: Address(35u32),
                 },
-                Instruction::LoadConst(Register(4u8), Value(0i8)),
+                Instruction::LoadConst(Register(6u8), Value(0i8)),
                 Instruction::Peek {
                     tok: TokenDescription::FragmentLiteral,
-                    reg: Register(4u8),
+                    reg: Register(6u8),
                 },
                 Instruction::JumpIfNonZero {
-                    cond: Register(4u8),
+                    cond: Register(6u8),
                     address: Address(38u32),
                 },
-                Instruction::LoadConst(Register(4u8), Value(0i8)),
+                Instruction::LoadConst(Register(6u8), Value(0i8)),
                 Instruction::Peek {
                     tok: TokenDescription::True,
-                    reg: Register(4u8),
+                    reg: Register(6u8),
                 },
                 Instruction::JumpIfNonZero {
-                    cond: Register(4u8),
+                    cond: Register(6u8),
                     address: Address(41u32),
                 },
-                Instruction::LoadConst(Register(4u8), Value(0i8)),
+                Instruction::LoadConst(Register(6u8), Value(0i8)),
                 Instruction::Peek {
                     tok: TokenDescription::False,
-                    reg: Register(4u8),
+                    reg: Register(6u8),
                 },
                 Instruction::JumpIfNonZero {
-                    cond: Register(4u8),
+                    cond: Register(6u8),
                     address: Address(44u32),
                 },
-                Instruction::LoadConst(Register(4u8), Value(0i8)),
+                Instruction::LoadConst(Register(6u8), Value(0i8)),
                 Instruction::Peek {
                     tok: TokenDescription::Minus,
-                    reg: Register(4u8),
+                    reg: Register(6u8),
                 },
                 Instruction::JumpIfZero {
-                    cond: Register(4u8),
+                    cond: Register(6u8),
                     address: Address(48u32),
                 },
                 Instruction::Call {
                     function: FunctionId(40u32),
-                    result: Register(5u8),
+                    result: Register(7u8),
                 },
                 Instruction::Call {
                     function: FunctionId(30u32),
-                    result: Register(6u8),
+                    result: Register(8u8),
                 },
                 Instruction::Jump {
                     address: Address(98u32),
                 },
-                Instruction::LoadConst(Register(7u8), Value(0i8)),
+                Instruction::LoadConst(Register(9u8), Value(0i8)),
                 Instruction::Peek {
                     tok: TokenDescription::DotDotEquals,
-                    reg: Register(7u8),
+                    reg: Register(9u8),
                 },
                 Instruction::JumpIfZero {
-                    cond: Register(7u8),
+                    cond: Register(9u8),
                     address: Address(54u32),
                 },
                 Instruction::BumpToken {
@@ -1712,98 +1712,98 @@ const PROGRAM: Program = Program {
                 },
                 Instruction::Call {
                     function: FunctionId(40u32),
-                    result: Register(8u8),
+                    result: Register(11u8),
                 },
                 Instruction::Jump {
                     address: Address(98u32),
-                },
-                Instruction::LoadConst(Register(9u8), Value(0i8)),
-                Instruction::LoadConst(Register(9u8), Value(0i8)),
-                Instruction::Peek {
-                    tok: TokenDescription::ColonColon,
-                    reg: Register(9u8),
-                },
-                Instruction::JumpIfNonZero {
-                    cond: Register(9u8),
-                    address: Address(60u32),
-                },
-                Instruction::LoadConst(Register(9u8), Value(0i8)),
-                Instruction::Peek {
-                    tok: TokenDescription::FragmentPath,
-                    reg: Register(9u8),
-                },
-                Instruction::JumpIfZero {
-                    cond: Register(9u8),
-                    address: Address(63u32),
-                },
-                Instruction::Call {
-                    function: FunctionId(29u32),
-                    result: Register(10u8),
-                },
-                Instruction::Jump {
-                    address: Address(98u32),
-                },
-                Instruction::LoadConst(Register(11u8), Value(0i8)),
-                Instruction::LoadConst(Register(11u8), Value(0i8)),
-                Instruction::Peek {
-                    tok: TokenDescription::Ident,
-                    reg: Register(11u8),
-                },
-                Instruction::JumpIfNonZero {
-                    cond: Register(11u8),
-                    address: Address(69u32),
-                },
-                Instruction::LoadConst(Register(11u8), Value(0i8)),
-                Instruction::Peek {
-                    tok: TokenDescription::FragmentIdent,
-                    reg: Register(11u8),
-                },
-                Instruction::JumpIfZero {
-                    cond: Register(11u8),
-                    address: Address(77u32),
                 },
                 Instruction::LoadConst(Register(12u8), Value(0i8)),
-                Instruction::Peek2 {
-                    tok: TokenDescription::At,
+                Instruction::LoadConst(Register(12u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::ColonColon,
+                    reg: Register(12u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(12u8),
+                    address: Address(60u32),
+                },
+                Instruction::LoadConst(Register(12u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::FragmentPath,
                     reg: Register(12u8),
                 },
                 Instruction::JumpIfZero {
                     cond: Register(12u8),
+                    address: Address(63u32),
+                },
+                Instruction::Call {
+                    function: FunctionId(29u32),
+                    result: Register(13u8),
+                },
+                Instruction::Jump {
+                    address: Address(98u32),
+                },
+                Instruction::LoadConst(Register(14u8), Value(0i8)),
+                Instruction::LoadConst(Register(14u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::Ident,
+                    reg: Register(14u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(14u8),
+                    address: Address(69u32),
+                },
+                Instruction::LoadConst(Register(14u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::FragmentIdent,
+                    reg: Register(14u8),
+                },
+                Instruction::JumpIfZero {
+                    cond: Register(14u8),
+                    address: Address(77u32),
+                },
+                Instruction::LoadConst(Register(16u8), Value(0i8)),
+                Instruction::Peek2 {
+                    tok: TokenDescription::At,
+                    reg: Register(16u8),
+                },
+                Instruction::JumpIfZero {
+                    cond: Register(16u8),
                     address: Address(75u32),
                 },
                 Instruction::Call {
                     function: FunctionId(41u32),
-                    result: Register(13u8),
+                    result: Register(17u8),
                 },
                 Instruction::Jump {
                     address: Address(76u32),
                 },
                 Instruction::Call {
                     function: FunctionId(29u32),
-                    result: Register(14u8),
+                    result: Register(18u8),
                 },
                 Instruction::Jump {
                     address: Address(98u32),
                 },
-                Instruction::LoadConst(Register(15u8), Value(0i8)),
+                Instruction::LoadConst(Register(19u8), Value(0i8)),
                 Instruction::Peek {
                     tok: TokenDescription::And,
-                    reg: Register(15u8),
+                    reg: Register(19u8),
                 },
                 Instruction::JumpIfZero {
-                    cond: Register(15u8),
+                    cond: Register(19u8),
                     address: Address(87u32),
                 },
                 Instruction::BumpToken {
                     tok: TokenDescription::And,
                 },
-                Instruction::LoadConst(Register(16u8), Value(0i8)),
+                Instruction::LoadConst(Register(22u8), Value(0i8)),
                 Instruction::Peek {
                     tok: TokenDescription::And,
-                    reg: Register(16u8),
+                    reg: Register(22u8),
                 },
                 Instruction::JumpIfZero {
-                    cond: Register(16u8),
+                    cond: Register(22u8),
                     address: Address(85u32),
                 },
                 Instruction::BumpToken {
@@ -1811,39 +1811,39 @@ const PROGRAM: Program = Program {
                 },
                 Instruction::Call {
                     function: FunctionId(28u32),
-                    result: Register(17u8),
+                    result: Register(24u8),
                 },
                 Instruction::Jump {
                     address: Address(98u32),
                 },
-                Instruction::LoadConst(Register(18u8), Value(0i8)),
+                Instruction::LoadConst(Register(25u8), Value(0i8)),
                 Instruction::Peek {
                     tok: TokenDescription::LParen,
-                    reg: Register(18u8),
+                    reg: Register(25u8),
                 },
                 Instruction::JumpIfZero {
-                    cond: Register(18u8),
+                    cond: Register(25u8),
                     address: Address(92u32),
                 },
                 Instruction::Call {
                     function: FunctionId(33u32),
-                    result: Register(19u8),
+                    result: Register(26u8),
                 },
                 Instruction::Jump {
                     address: Address(98u32),
                 },
-                Instruction::LoadConst(Register(20u8), Value(0i8)),
+                Instruction::LoadConst(Register(27u8), Value(0i8)),
                 Instruction::Peek {
                     tok: TokenDescription::LBracket,
-                    reg: Register(20u8),
+                    reg: Register(27u8),
                 },
                 Instruction::JumpIfZero {
-                    cond: Register(20u8),
+                    cond: Register(27u8),
                     address: Address(97u32),
                 },
                 Instruction::Call {
                     function: FunctionId(37u32),
-                    result: Register(21u8),
+                    result: Register(28u8),
                 },
                 Instruction::Jump {
                     address: Address(98u32),
@@ -1851,7 +1851,7 @@ const PROGRAM: Program = Program {
                 Instruction::Error,
                 Instruction::Return(Register(0u8)),
             ],
-            reg_num: 22usize,
+            reg_num: 30usize,
         },
         Function {
             name: "pat_starting_with_path",
@@ -1860,157 +1860,157 @@ const PROGRAM: Program = Program {
                     function: FunctionId(47u32),
                     result: Register(1u8),
                 },
-                Instruction::LoadConst(Register(2u8), Value(0i8)),
+                Instruction::LoadConst(Register(3u8), Value(0i8)),
                 Instruction::Peek {
                     tok: TokenDescription::LBrace,
-                    reg: Register(2u8),
+                    reg: Register(3u8),
                 },
                 Instruction::JumpIfZero {
-                    cond: Register(2u8),
+                    cond: Register(3u8),
                     address: Address(6u32),
                 },
                 Instruction::Call {
                     function: FunctionId(31u32),
-                    result: Register(3u8),
+                    result: Register(4u8),
                 },
                 Instruction::Jump {
                     address: Address(18u32),
                 },
-                Instruction::LoadConst(Register(4u8), Value(0i8)),
+                Instruction::LoadConst(Register(5u8), Value(0i8)),
                 Instruction::Peek {
                     tok: TokenDescription::LParen,
-                    reg: Register(4u8),
+                    reg: Register(5u8),
                 },
                 Instruction::JumpIfZero {
-                    cond: Register(4u8),
+                    cond: Register(5u8),
                     address: Address(11u32),
                 },
                 Instruction::Call {
                     function: FunctionId(33u32),
-                    result: Register(5u8),
+                    result: Register(6u8),
                 },
                 Instruction::Jump {
                     address: Address(18u32),
                 },
-                Instruction::LoadConst(Register(6u8), Value(0i8)),
+                Instruction::LoadConst(Register(7u8), Value(0i8)),
                 Instruction::Peek {
                     tok: TokenDescription::Not,
-                    reg: Register(6u8),
+                    reg: Register(7u8),
                 },
                 Instruction::JumpIfZero {
-                    cond: Register(6u8),
+                    cond: Register(7u8),
                     address: Address(17u32),
                 },
                 Instruction::Call {
                     function: FunctionId(74u32),
-                    result: Register(7u8),
-                },
-                Instruction::Call {
-                    function: FunctionId(30u32),
                     result: Register(8u8),
-                },
-                Instruction::Jump {
-                    address: Address(18u32),
                 },
                 Instruction::Call {
                     function: FunctionId(30u32),
                     result: Register(9u8),
                 },
+                Instruction::Jump {
+                    address: Address(18u32),
+                },
+                Instruction::Call {
+                    function: FunctionId(30u32),
+                    result: Register(10u8),
+                },
                 Instruction::Return(Register(0u8)),
             ],
-            reg_num: 10usize,
+            reg_num: 11usize,
         },
         Function {
             name: "pat_maybe_range_tail",
             code: &[
-                Instruction::LoadConst(Register(1u8), Value(0i8)),
+                Instruction::LoadConst(Register(2u8), Value(0i8)),
                 Instruction::Peek {
                     tok: TokenDescription::DotDotEquals,
-                    reg: Register(1u8),
+                    reg: Register(2u8),
                 },
                 Instruction::JumpIfZero {
-                    cond: Register(1u8),
+                    cond: Register(2u8),
                     address: Address(27u32),
                 },
                 Instruction::BumpToken {
                     tok: TokenDescription::DotDotEquals,
                 },
-                Instruction::LoadConst(Register(2u8), Value(0i8)),
-                Instruction::LoadConst(Register(2u8), Value(0i8)),
-                Instruction::LoadConst(Register(2u8), Value(0i8)),
-                Instruction::LoadConst(Register(2u8), Value(0i8)),
-                Instruction::LoadConst(Register(2u8), Value(0i8)),
+                Instruction::LoadConst(Register(5u8), Value(0i8)),
+                Instruction::LoadConst(Register(5u8), Value(0i8)),
+                Instruction::LoadConst(Register(5u8), Value(0i8)),
+                Instruction::LoadConst(Register(5u8), Value(0i8)),
+                Instruction::LoadConst(Register(5u8), Value(0i8)),
                 Instruction::Peek {
                     tok: TokenDescription::Ident,
-                    reg: Register(2u8),
+                    reg: Register(5u8),
                 },
                 Instruction::JumpIfNonZero {
-                    cond: Register(2u8),
+                    cond: Register(5u8),
                     address: Address(13u32),
                 },
-                Instruction::LoadConst(Register(2u8), Value(0i8)),
+                Instruction::LoadConst(Register(5u8), Value(0i8)),
                 Instruction::Peek {
                     tok: TokenDescription::FragmentIdent,
-                    reg: Register(2u8),
+                    reg: Register(5u8),
                 },
                 Instruction::JumpIfNonZero {
-                    cond: Register(2u8),
+                    cond: Register(5u8),
                     address: Address(16u32),
                 },
-                Instruction::LoadConst(Register(2u8), Value(0i8)),
+                Instruction::LoadConst(Register(5u8), Value(0i8)),
                 Instruction::Peek {
                     tok: TokenDescription::ColonColon,
-                    reg: Register(2u8),
+                    reg: Register(5u8),
                 },
                 Instruction::JumpIfNonZero {
-                    cond: Register(2u8),
+                    cond: Register(5u8),
                     address: Address(19u32),
                 },
-                Instruction::LoadConst(Register(2u8), Value(0i8)),
+                Instruction::LoadConst(Register(5u8), Value(0i8)),
                 Instruction::Peek {
                     tok: TokenDescription::FragmentPath,
-                    reg: Register(2u8),
+                    reg: Register(5u8),
                 },
                 Instruction::JumpIfNonZero {
-                    cond: Register(2u8),
+                    cond: Register(5u8),
                     address: Address(22u32),
                 },
-                Instruction::LoadConst(Register(2u8), Value(0i8)),
+                Instruction::LoadConst(Register(5u8), Value(0i8)),
                 Instruction::Peek {
                     tok: TokenDescription::LessThan,
-                    reg: Register(2u8),
+                    reg: Register(5u8),
                 },
                 Instruction::JumpIfZero {
-                    cond: Register(2u8),
+                    cond: Register(5u8),
                     address: Address(25u32),
                 },
                 Instruction::Call {
                     function: FunctionId(47u32),
-                    result: Register(3u8),
+                    result: Register(6u8),
                 },
                 Instruction::Jump {
                     address: Address(26u32),
                 },
                 Instruction::Call {
                     function: FunctionId(40u32),
-                    result: Register(4u8),
+                    result: Register(7u8),
                 },
                 Instruction::Jump {
                     address: Address(31u32),
                 },
-                Instruction::LoadConst(Register(5u8), Value(0i8)),
+                Instruction::LoadConst(Register(8u8), Value(0i8)),
                 Instruction::Peek {
                     tok: TokenDescription::DotDot,
-                    reg: Register(5u8),
+                    reg: Register(8u8),
                 },
                 Instruction::JumpIfZero {
-                    cond: Register(5u8),
+                    cond: Register(8u8),
                     address: Address(31u32),
                 },
                 Instruction::Bump,
                 Instruction::Return(Register(0u8)),
             ],
-            reg_num: 6usize,
+            reg_num: 10usize,
         },
         Function {
             name: "pat_struct_tail",
@@ -2018,13 +2018,13 @@ const PROGRAM: Program = Program {
                 Instruction::BumpToken {
                     tok: TokenDescription::LBrace,
                 },
-                Instruction::LoadConst(Register(1u8), Value(0i8)),
+                Instruction::LoadConst(Register(3u8), Value(0i8)),
                 Instruction::Peek {
                     tok: TokenDescription::DotDot,
-                    reg: Register(1u8),
+                    reg: Register(3u8),
                 },
                 Instruction::JumpIfZero {
-                    cond: Register(1u8),
+                    cond: Register(3u8),
                     address: Address(7u32),
                 },
                 Instruction::BumpToken {
@@ -2036,13 +2036,13 @@ const PROGRAM: Program = Program {
                 Instruction::Jump {
                     address: Address(19u32),
                 },
-                Instruction::LoadConst(Register(2u8), Value(0i8)),
+                Instruction::LoadConst(Register(6u8), Value(0i8)),
                 Instruction::Peek {
                     tok: TokenDescription::RBrace,
-                    reg: Register(2u8),
+                    reg: Register(6u8),
                 },
                 Instruction::JumpIfZero {
-                    cond: Register(2u8),
+                    cond: Register(6u8),
                     address: Address(12u32),
                 },
                 Instruction::BumpToken {
@@ -2053,15 +2053,15 @@ const PROGRAM: Program = Program {
                 },
                 Instruction::Call {
                     function: FunctionId(35u32),
-                    result: Register(3u8),
+                    result: Register(8u8),
                 },
-                Instruction::LoadConst(Register(4u8), Value(0i8)),
+                Instruction::LoadConst(Register(10u8), Value(0i8)),
                 Instruction::Peek {
                     tok: TokenDescription::RBrace,
-                    reg: Register(4u8),
+                    reg: Register(10u8),
                 },
                 Instruction::JumpIfZero {
-                    cond: Register(4u8),
+                    cond: Register(10u8),
                     address: Address(18u32),
                 },
                 Instruction::BumpToken {
@@ -2072,22 +2072,22 @@ const PROGRAM: Program = Program {
                 },
                 Instruction::Call {
                     function: FunctionId(32u32),
-                    result: Register(5u8),
+                    result: Register(12u8),
                 },
                 Instruction::Return(Register(0u8)),
             ],
-            reg_num: 6usize,
+            reg_num: 13usize,
         },
         Function {
             name: "pat_struct_tail_",
             code: &[
-                Instruction::LoadConst(Register(1u8), Value(0i8)),
+                Instruction::LoadConst(Register(2u8), Value(0i8)),
                 Instruction::Peek {
                     tok: TokenDescription::DotDot,
-                    reg: Register(1u8),
+                    reg: Register(2u8),
                 },
                 Instruction::JumpIfZero {
-                    cond: Register(1u8),
+                    cond: Register(2u8),
                     address: Address(6u32),
                 },
                 Instruction::BumpToken {
@@ -2099,25 +2099,25 @@ const PROGRAM: Program = Program {
                 Instruction::Jump {
                     address: Address(19u32),
                 },
-                Instruction::LoadConst(Register(2u8), Value(0i8)),
+                Instruction::LoadConst(Register(5u8), Value(0i8)),
                 Instruction::Peek {
                     tok: TokenDescription::Comma,
-                    reg: Register(2u8),
+                    reg: Register(5u8),
                 },
                 Instruction::JumpIfZero {
-                    cond: Register(2u8),
+                    cond: Register(5u8),
                     address: Address(18u32),
                 },
                 Instruction::BumpToken {
                     tok: TokenDescription::Comma,
                 },
-                Instruction::LoadConst(Register(3u8), Value(0i8)),
+                Instruction::LoadConst(Register(8u8), Value(0i8)),
                 Instruction::Peek {
                     tok: TokenDescription::RBrace,
-                    reg: Register(3u8),
+                    reg: Register(8u8),
                 },
                 Instruction::JumpIfZero {
-                    cond: Register(3u8),
+                    cond: Register(8u8),
                     address: Address(15u32),
                 },
                 Instruction::BumpToken {
@@ -2128,11 +2128,11 @@ const PROGRAM: Program = Program {
                 },
                 Instruction::Call {
                     function: FunctionId(35u32),
-                    result: Register(4u8),
+                    result: Register(10u8),
                 },
                 Instruction::Call {
                     function: FunctionId(32u32),
-                    result: Register(5u8),
+                    result: Register(11u8),
                 },
                 Instruction::Jump {
                     address: Address(19u32),
@@ -2142,7 +2142,7 @@ const PROGRAM: Program = Program {
                 },
                 Instruction::Return(Register(0u8)),
             ],
-            reg_num: 6usize,
+            reg_num: 13usize,
         },
         Function {
             name: "pat_tuple",
@@ -2150,13 +2150,13 @@ const PROGRAM: Program = Program {
                 Instruction::BumpToken {
                     tok: TokenDescription::LParen,
                 },
-                Instruction::LoadConst(Register(1u8), Value(0i8)),
+                Instruction::LoadConst(Register(3u8), Value(0i8)),
                 Instruction::Peek {
                     tok: TokenDescription::RParen,
-                    reg: Register(1u8),
+                    reg: Register(3u8),
                 },
                 Instruction::JumpIfZero {
-                    cond: Register(1u8),
+                    cond: Register(3u8),
                     address: Address(6u32),
                 },
                 Instruction::BumpToken {
@@ -2167,15 +2167,15 @@ const PROGRAM: Program = Program {
                 },
                 Instruction::Call {
                     function: FunctionId(36u32),
-                    result: Register(2u8),
+                    result: Register(5u8),
                 },
-                Instruction::LoadConst(Register(3u8), Value(0i8)),
+                Instruction::LoadConst(Register(7u8), Value(0i8)),
                 Instruction::Peek {
                     tok: TokenDescription::RParen,
-                    reg: Register(3u8),
+                    reg: Register(7u8),
                 },
                 Instruction::JumpIfZero {
-                    cond: Register(3u8),
+                    cond: Register(7u8),
                     address: Address(12u32),
                 },
                 Instruction::BumpToken {
@@ -2186,34 +2186,34 @@ const PROGRAM: Program = Program {
                 },
                 Instruction::Call {
                     function: FunctionId(34u32),
-                    result: Register(4u8),
+                    result: Register(9u8),
                 },
                 Instruction::Return(Register(0u8)),
             ],
-            reg_num: 5usize,
+            reg_num: 10usize,
         },
         Function {
             name: "pat_tuple_",
             code: &[
-                Instruction::LoadConst(Register(1u8), Value(0i8)),
+                Instruction::LoadConst(Register(2u8), Value(0i8)),
                 Instruction::Peek {
                     tok: TokenDescription::Comma,
-                    reg: Register(1u8),
+                    reg: Register(2u8),
                 },
                 Instruction::JumpIfZero {
-                    cond: Register(1u8),
+                    cond: Register(2u8),
                     address: Address(12u32),
                 },
                 Instruction::BumpToken {
                     tok: TokenDescription::Comma,
                 },
-                Instruction::LoadConst(Register(2u8), Value(0i8)),
+                Instruction::LoadConst(Register(5u8), Value(0i8)),
                 Instruction::Peek {
                     tok: TokenDescription::RParen,
-                    reg: Register(2u8),
+                    reg: Register(5u8),
                 },
                 Instruction::JumpIfZero {
-                    cond: Register(2u8),
+                    cond: Register(5u8),
                     address: Address(9u32),
                 },
                 Instruction::BumpToken {
@@ -2224,11 +2224,11 @@ const PROGRAM: Program = Program {
                 },
                 Instruction::Call {
                     function: FunctionId(36u32),
-                    result: Register(3u8),
+                    result: Register(7u8),
                 },
                 Instruction::Call {
                     function: FunctionId(34u32),
-                    result: Register(4u8),
+                    result: Register(8u8),
                 },
                 Instruction::Jump {
                     address: Address(13u32),
@@ -2238,18 +2238,18 @@ const PROGRAM: Program = Program {
                 },
                 Instruction::Return(Register(0u8)),
             ],
-            reg_num: 5usize,
+            reg_num: 10usize,
         },
         Function {
             name: "pat_struct_field",
             code: &[
-                Instruction::LoadConst(Register(1u8), Value(0i8)),
+                Instruction::LoadConst(Register(2u8), Value(0i8)),
                 Instruction::Peek {
                     tok: TokenDescription::Literal,
-                    reg: Register(1u8),
+                    reg: Register(2u8),
                 },
                 Instruction::JumpIfZero {
-                    cond: Register(1u8),
+                    cond: Register(2u8),
                     address: Address(7u32),
                 },
                 Instruction::BumpToken {
@@ -2260,27 +2260,27 @@ const PROGRAM: Program = Program {
                 },
                 Instruction::Call {
                     function: FunctionId(26u32),
-                    result: Register(2u8),
+                    result: Register(5u8),
                 },
                 Instruction::Jump {
                     address: Address(27u32),
                 },
-                Instruction::LoadConst(Register(3u8), Value(0i8)),
+                Instruction::LoadConst(Register(6u8), Value(0i8)),
                 Instruction::Peek {
                     tok: TokenDescription::Ident,
-                    reg: Register(3u8),
+                    reg: Register(6u8),
                 },
                 Instruction::JumpIfZero {
-                    cond: Register(3u8),
+                    cond: Register(6u8),
                     address: Address(19u32),
                 },
-                Instruction::LoadConst(Register(4u8), Value(0i8)),
+                Instruction::LoadConst(Register(8u8), Value(0i8)),
                 Instruction::Peek2 {
                     tok: TokenDescription::Colon,
-                    reg: Register(4u8),
+                    reg: Register(8u8),
                 },
                 Instruction::JumpIfZero {
-                    cond: Register(4u8),
+                    cond: Register(8u8),
                     address: Address(17u32),
                 },
                 Instruction::BumpToken {
@@ -2291,7 +2291,7 @@ const PROGRAM: Program = Program {
                 },
                 Instruction::Call {
                     function: FunctionId(26u32),
-                    result: Register(5u8),
+                    result: Register(11u8),
                 },
                 Instruction::Jump {
                     address: Address(18u32),
@@ -2302,32 +2302,32 @@ const PROGRAM: Program = Program {
                 Instruction::Jump {
                     address: Address(27u32),
                 },
-                Instruction::LoadConst(Register(6u8), Value(0i8)),
-                Instruction::LoadConst(Register(6u8), Value(0i8)),
+                Instruction::LoadConst(Register(13u8), Value(0i8)),
+                Instruction::LoadConst(Register(13u8), Value(0i8)),
                 Instruction::Peek {
                     tok: TokenDescription::Ref,
-                    reg: Register(6u8),
+                    reg: Register(13u8),
                 },
                 Instruction::JumpIfNonZero {
-                    cond: Register(6u8),
+                    cond: Register(13u8),
                     address: Address(25u32),
                 },
-                Instruction::LoadConst(Register(6u8), Value(0i8)),
+                Instruction::LoadConst(Register(13u8), Value(0i8)),
                 Instruction::Peek {
                     tok: TokenDescription::Mut,
-                    reg: Register(6u8),
+                    reg: Register(13u8),
                 },
                 Instruction::JumpIfZero {
-                    cond: Register(6u8),
+                    cond: Register(13u8),
                     address: Address(27u32),
                 },
                 Instruction::Call {
                     function: FunctionId(41u32),
-                    result: Register(7u8),
+                    result: Register(14u8),
                 },
                 Instruction::Return(Register(0u8)),
             ],
-            reg_num: 8usize,
+            reg_num: 15usize,
         },
         Function {
             name: "pat_tuple_field",
@@ -2346,13 +2346,13 @@ const PROGRAM: Program = Program {
                 Instruction::BumpToken {
                     tok: TokenDescription::LBracket,
                 },
-                Instruction::LoadConst(Register(1u8), Value(0i8)),
+                Instruction::LoadConst(Register(3u8), Value(0i8)),
                 Instruction::Peek {
                     tok: TokenDescription::RBracket,
-                    reg: Register(1u8),
+                    reg: Register(3u8),
                 },
                 Instruction::JumpIfZero {
-                    cond: Register(1u8),
+                    cond: Register(3u8),
                     address: Address(6u32),
                 },
                 Instruction::BumpToken {
@@ -2363,38 +2363,38 @@ const PROGRAM: Program = Program {
                 },
                 Instruction::Call {
                     function: FunctionId(26u32),
-                    result: Register(2u8),
+                    result: Register(5u8),
                 },
                 Instruction::Call {
                     function: FunctionId(38u32),
-                    result: Register(3u8),
+                    result: Register(6u8),
                 },
                 Instruction::Return(Register(0u8)),
             ],
-            reg_num: 4usize,
+            reg_num: 7usize,
         },
         Function {
             name: "pat_slice_",
             code: &[
-                Instruction::LoadConst(Register(1u8), Value(0i8)),
+                Instruction::LoadConst(Register(2u8), Value(0i8)),
                 Instruction::Peek {
                     tok: TokenDescription::Comma,
-                    reg: Register(1u8),
+                    reg: Register(2u8),
                 },
                 Instruction::JumpIfZero {
-                    cond: Register(1u8),
+                    cond: Register(2u8),
                     address: Address(12u32),
                 },
                 Instruction::BumpToken {
                     tok: TokenDescription::Comma,
                 },
-                Instruction::LoadConst(Register(2u8), Value(0i8)),
+                Instruction::LoadConst(Register(5u8), Value(0i8)),
                 Instruction::Peek {
                     tok: TokenDescription::RBracket,
-                    reg: Register(2u8),
+                    reg: Register(5u8),
                 },
                 Instruction::JumpIfZero {
-                    cond: Register(2u8),
+                    cond: Register(5u8),
                     address: Address(9u32),
                 },
                 Instruction::BumpToken {
@@ -2405,11 +2405,11 @@ const PROGRAM: Program = Program {
                 },
                 Instruction::Call {
                     function: FunctionId(26u32),
-                    result: Register(3u8),
+                    result: Register(7u8),
                 },
                 Instruction::Call {
                     function: FunctionId(38u32),
-                    result: Register(4u8),
+                    result: Register(8u8),
                 },
                 Instruction::Jump {
                     address: Address(13u32),
@@ -2419,152 +2419,152 @@ const PROGRAM: Program = Program {
                 },
                 Instruction::Return(Register(0u8)),
             ],
-            reg_num: 5usize,
+            reg_num: 10usize,
         },
         Function {
             name: "pat_range_bound",
             code: &[
-                Instruction::LoadConst(Register(1u8), Value(0i8)),
+                Instruction::LoadConst(Register(2u8), Value(0i8)),
                 Instruction::Peek {
                     tok: TokenDescription::Minus,
-                    reg: Register(1u8),
+                    reg: Register(2u8),
                 },
                 Instruction::JumpIfZero {
-                    cond: Register(1u8),
+                    cond: Register(2u8),
                     address: Address(5u32),
                 },
                 Instruction::Call {
                     function: FunctionId(40u32),
-                    result: Register(2u8),
+                    result: Register(3u8),
                 },
                 Instruction::Jump {
                     address: Address(30u32),
                 },
-                Instruction::LoadConst(Register(3u8), Value(0i8)),
-                Instruction::LoadConst(Register(3u8), Value(0i8)),
+                Instruction::LoadConst(Register(4u8), Value(0i8)),
+                Instruction::LoadConst(Register(4u8), Value(0i8)),
                 Instruction::Peek {
                     tok: TokenDescription::Literal,
-                    reg: Register(3u8),
+                    reg: Register(4u8),
                 },
                 Instruction::JumpIfNonZero {
-                    cond: Register(3u8),
+                    cond: Register(4u8),
                     address: Address(11u32),
                 },
-                Instruction::LoadConst(Register(3u8), Value(0i8)),
+                Instruction::LoadConst(Register(4u8), Value(0i8)),
                 Instruction::Peek {
                     tok: TokenDescription::FragmentLiteral,
-                    reg: Register(3u8),
+                    reg: Register(4u8),
                 },
                 Instruction::JumpIfZero {
-                    cond: Register(3u8),
+                    cond: Register(4u8),
                     address: Address(14u32),
                 },
                 Instruction::Call {
                     function: FunctionId(40u32),
-                    result: Register(4u8),
+                    result: Register(5u8),
                 },
                 Instruction::Jump {
                     address: Address(30u32),
                 },
-                Instruction::LoadConst(Register(5u8), Value(0i8)),
-                Instruction::LoadConst(Register(5u8), Value(0i8)),
-                Instruction::LoadConst(Register(5u8), Value(0i8)),
-                Instruction::LoadConst(Register(5u8), Value(0i8)),
+                Instruction::LoadConst(Register(6u8), Value(0i8)),
+                Instruction::LoadConst(Register(6u8), Value(0i8)),
+                Instruction::LoadConst(Register(6u8), Value(0i8)),
+                Instruction::LoadConst(Register(6u8), Value(0i8)),
                 Instruction::Peek {
                     tok: TokenDescription::Ident,
-                    reg: Register(5u8),
+                    reg: Register(6u8),
                 },
                 Instruction::JumpIfNonZero {
-                    cond: Register(5u8),
+                    cond: Register(6u8),
                     address: Address(22u32),
                 },
-                Instruction::LoadConst(Register(5u8), Value(0i8)),
+                Instruction::LoadConst(Register(6u8), Value(0i8)),
                 Instruction::Peek {
                     tok: TokenDescription::FragmentIdent,
-                    reg: Register(5u8),
+                    reg: Register(6u8),
                 },
                 Instruction::JumpIfNonZero {
-                    cond: Register(5u8),
+                    cond: Register(6u8),
                     address: Address(25u32),
                 },
-                Instruction::LoadConst(Register(5u8), Value(0i8)),
+                Instruction::LoadConst(Register(6u8), Value(0i8)),
                 Instruction::Peek {
                     tok: TokenDescription::FragmentPath,
-                    reg: Register(5u8),
+                    reg: Register(6u8),
                 },
                 Instruction::JumpIfNonZero {
-                    cond: Register(5u8),
+                    cond: Register(6u8),
                     address: Address(28u32),
                 },
-                Instruction::LoadConst(Register(5u8), Value(0i8)),
+                Instruction::LoadConst(Register(6u8), Value(0i8)),
                 Instruction::Peek {
                     tok: TokenDescription::LessThan,
-                    reg: Register(5u8),
+                    reg: Register(6u8),
                 },
                 Instruction::JumpIfZero {
-                    cond: Register(5u8),
+                    cond: Register(6u8),
                     address: Address(30u32),
                 },
                 Instruction::Call {
                     function: FunctionId(47u32),
-                    result: Register(6u8),
+                    result: Register(7u8),
                 },
                 Instruction::Return(Register(0u8)),
             ],
-            reg_num: 7usize,
+            reg_num: 8usize,
         },
         Function {
             name: "pat_literal",
             code: &[
-                Instruction::LoadConst(Register(1u8), Value(0i8)),
+                Instruction::LoadConst(Register(2u8), Value(0i8)),
                 Instruction::Peek {
                     tok: TokenDescription::Minus,
-                    reg: Register(1u8),
+                    reg: Register(2u8),
                 },
                 Instruction::JumpIfZero {
-                    cond: Register(1u8),
+                    cond: Register(2u8),
                     address: Address(4u32),
                 },
                 Instruction::BumpToken {
                     tok: TokenDescription::Minus,
                 },
-                Instruction::LoadConst(Register(2u8), Value(0i8)),
-                Instruction::LoadConst(Register(2u8), Value(0i8)),
-                Instruction::LoadConst(Register(2u8), Value(0i8)),
-                Instruction::LoadConst(Register(2u8), Value(0i8)),
+                Instruction::LoadConst(Register(5u8), Value(0i8)),
+                Instruction::LoadConst(Register(5u8), Value(0i8)),
+                Instruction::LoadConst(Register(5u8), Value(0i8)),
+                Instruction::LoadConst(Register(5u8), Value(0i8)),
                 Instruction::Peek {
                     tok: TokenDescription::Literal,
-                    reg: Register(2u8),
+                    reg: Register(5u8),
                 },
                 Instruction::JumpIfNonZero {
-                    cond: Register(2u8),
+                    cond: Register(5u8),
                     address: Address(12u32),
                 },
-                Instruction::LoadConst(Register(2u8), Value(0i8)),
+                Instruction::LoadConst(Register(5u8), Value(0i8)),
                 Instruction::Peek {
                     tok: TokenDescription::FragmentLiteral,
-                    reg: Register(2u8),
+                    reg: Register(5u8),
                 },
                 Instruction::JumpIfNonZero {
-                    cond: Register(2u8),
+                    cond: Register(5u8),
                     address: Address(15u32),
                 },
-                Instruction::LoadConst(Register(2u8), Value(0i8)),
+                Instruction::LoadConst(Register(5u8), Value(0i8)),
                 Instruction::Peek {
                     tok: TokenDescription::True,
-                    reg: Register(2u8),
+                    reg: Register(5u8),
                 },
                 Instruction::JumpIfNonZero {
-                    cond: Register(2u8),
+                    cond: Register(5u8),
                     address: Address(18u32),
                 },
-                Instruction::LoadConst(Register(2u8), Value(0i8)),
+                Instruction::LoadConst(Register(5u8), Value(0i8)),
                 Instruction::Peek {
                     tok: TokenDescription::False,
-                    reg: Register(2u8),
+                    reg: Register(5u8),
                 },
                 Instruction::JumpIfZero {
-                    cond: Register(2u8),
+                    cond: Register(5u8),
                     address: Address(21u32),
                 },
                 Instruction::Bump,
@@ -2574,42 +2574,42 @@ const PROGRAM: Program = Program {
                 Instruction::Error,
                 Instruction::Return(Register(0u8)),
             ],
-            reg_num: 3usize,
+            reg_num: 8usize,
         },
         Function {
             name: "pat_ident",
             code: &[
-                Instruction::LoadConst(Register(1u8), Value(0i8)),
+                Instruction::LoadConst(Register(2u8), Value(0i8)),
                 Instruction::Peek {
                     tok: TokenDescription::Ref,
-                    reg: Register(1u8),
+                    reg: Register(2u8),
                 },
                 Instruction::JumpIfZero {
-                    cond: Register(1u8),
+                    cond: Register(2u8),
                     address: Address(4u32),
                 },
                 Instruction::BumpToken {
                     tok: TokenDescription::Ref,
                 },
-                Instruction::LoadConst(Register(2u8), Value(0i8)),
+                Instruction::LoadConst(Register(5u8), Value(0i8)),
                 Instruction::Peek {
                     tok: TokenDescription::Mut,
-                    reg: Register(2u8),
+                    reg: Register(5u8),
                 },
                 Instruction::JumpIfZero {
-                    cond: Register(2u8),
+                    cond: Register(5u8),
                     address: Address(8u32),
                 },
                 Instruction::BumpToken {
                     tok: TokenDescription::Mut,
                 },
-                Instruction::LoadConst(Register(3u8), Value(0i8)),
+                Instruction::LoadConst(Register(8u8), Value(0i8)),
                 Instruction::Peek {
                     tok: TokenDescription::Ident,
-                    reg: Register(3u8),
+                    reg: Register(8u8),
                 },
                 Instruction::JumpIfZero {
-                    cond: Register(3u8),
+                    cond: Register(8u8),
                     address: Address(13u32),
                 },
                 Instruction::BumpToken {
@@ -2618,13 +2618,13 @@ const PROGRAM: Program = Program {
                 Instruction::Jump {
                     address: Address(19u32),
                 },
-                Instruction::LoadConst(Register(4u8), Value(0i8)),
+                Instruction::LoadConst(Register(10u8), Value(0i8)),
                 Instruction::Peek {
                     tok: TokenDescription::FragmentIdent,
-                    reg: Register(4u8),
+                    reg: Register(10u8),
                 },
                 Instruction::JumpIfZero {
-                    cond: Register(4u8),
+                    cond: Register(10u8),
                     address: Address(18u32),
                 },
                 Instruction::BumpToken {
@@ -2634,13 +2634,13 @@ const PROGRAM: Program = Program {
                     address: Address(19u32),
                 },
                 Instruction::Error,
-                Instruction::LoadConst(Register(5u8), Value(0i8)),
+                Instruction::LoadConst(Register(14u8), Value(0i8)),
                 Instruction::Peek {
                     tok: TokenDescription::At,
-                    reg: Register(5u8),
+                    reg: Register(14u8),
                 },
                 Instruction::JumpIfZero {
-                    cond: Register(5u8),
+                    cond: Register(14u8),
                     address: Address(24u32),
                 },
                 Instruction::BumpToken {
@@ -2648,11 +2648,11 @@ const PROGRAM: Program = Program {
                 },
                 Instruction::Call {
                     function: FunctionId(28u32),
-                    result: Register(6u8),
+                    result: Register(16u8),
                 },
                 Instruction::Return(Register(0u8)),
             ],
-            reg_num: 7usize,
+            reg_num: 17usize,
         },
         Function {
             name: "fn_arg",
@@ -2666,11 +2666,11 @@ const PROGRAM: Program = Program {
                 },
                 Instruction::Call {
                     function: FunctionId(16u32),
-                    result: Register(2u8),
+                    result: Register(3u8),
                 },
                 Instruction::Return(Register(0u8)),
             ],
-            reg_num: 3usize,
+            reg_num: 4usize,
         },
         Function {
             name: "expr",
@@ -2694,256 +2694,256 @@ const PROGRAM: Program = Program {
         Function {
             name: "expr_after_atom",
             code: &[
-                Instruction::LoadConst(Register(1u8), Value(0i8)),
-                Instruction::LoadConst(Register(1u8), Value(0i8)),
-                Instruction::LoadConst(Register(1u8), Value(0i8)),
-                Instruction::LoadConst(Register(1u8), Value(0i8)),
-                Instruction::LoadConst(Register(1u8), Value(0i8)),
-                Instruction::LoadConst(Register(1u8), Value(0i8)),
-                Instruction::LoadConst(Register(1u8), Value(0i8)),
-                Instruction::LoadConst(Register(1u8), Value(0i8)),
-                Instruction::LoadConst(Register(1u8), Value(0i8)),
-                Instruction::LoadConst(Register(1u8), Value(0i8)),
+                Instruction::LoadConst(Register(2u8), Value(0i8)),
+                Instruction::LoadConst(Register(2u8), Value(0i8)),
+                Instruction::LoadConst(Register(2u8), Value(0i8)),
+                Instruction::LoadConst(Register(2u8), Value(0i8)),
+                Instruction::LoadConst(Register(2u8), Value(0i8)),
+                Instruction::LoadConst(Register(2u8), Value(0i8)),
+                Instruction::LoadConst(Register(2u8), Value(0i8)),
+                Instruction::LoadConst(Register(2u8), Value(0i8)),
+                Instruction::LoadConst(Register(2u8), Value(0i8)),
+                Instruction::LoadConst(Register(2u8), Value(0i8)),
                 Instruction::Peek {
                     tok: TokenDescription::Plus,
-                    reg: Register(1u8),
+                    reg: Register(2u8),
                 },
                 Instruction::JumpIfNonZero {
-                    cond: Register(1u8),
+                    cond: Register(2u8),
                     address: Address(14u32),
                 },
-                Instruction::LoadConst(Register(1u8), Value(0i8)),
+                Instruction::LoadConst(Register(2u8), Value(0i8)),
                 Instruction::Peek {
                     tok: TokenDescription::Minus,
-                    reg: Register(1u8),
+                    reg: Register(2u8),
                 },
                 Instruction::JumpIfNonZero {
-                    cond: Register(1u8),
+                    cond: Register(2u8),
                     address: Address(17u32),
                 },
-                Instruction::LoadConst(Register(1u8), Value(0i8)),
+                Instruction::LoadConst(Register(2u8), Value(0i8)),
                 Instruction::Peek {
                     tok: TokenDescription::Star,
-                    reg: Register(1u8),
+                    reg: Register(2u8),
                 },
                 Instruction::JumpIfNonZero {
-                    cond: Register(1u8),
+                    cond: Register(2u8),
                     address: Address(20u32),
                 },
-                Instruction::LoadConst(Register(1u8), Value(0i8)),
+                Instruction::LoadConst(Register(2u8), Value(0i8)),
                 Instruction::Peek {
                     tok: TokenDescription::Slash,
-                    reg: Register(1u8),
+                    reg: Register(2u8),
                 },
                 Instruction::JumpIfNonZero {
-                    cond: Register(1u8),
+                    cond: Register(2u8),
                     address: Address(23u32),
                 },
-                Instruction::LoadConst(Register(1u8), Value(0i8)),
+                Instruction::LoadConst(Register(2u8), Value(0i8)),
                 Instruction::Peek {
                     tok: TokenDescription::Percent,
-                    reg: Register(1u8),
+                    reg: Register(2u8),
                 },
                 Instruction::JumpIfNonZero {
-                    cond: Register(1u8),
+                    cond: Register(2u8),
                     address: Address(26u32),
                 },
-                Instruction::LoadConst(Register(1u8), Value(0i8)),
+                Instruction::LoadConst(Register(2u8), Value(0i8)),
                 Instruction::Peek {
                     tok: TokenDescription::And,
-                    reg: Register(1u8),
+                    reg: Register(2u8),
                 },
                 Instruction::JumpIfNonZero {
-                    cond: Register(1u8),
+                    cond: Register(2u8),
                     address: Address(29u32),
                 },
-                Instruction::LoadConst(Register(1u8), Value(0i8)),
+                Instruction::LoadConst(Register(2u8), Value(0i8)),
                 Instruction::Peek {
                     tok: TokenDescription::Or,
-                    reg: Register(1u8),
+                    reg: Register(2u8),
                 },
                 Instruction::JumpIfNonZero {
-                    cond: Register(1u8),
+                    cond: Register(2u8),
                     address: Address(32u32),
                 },
-                Instruction::LoadConst(Register(1u8), Value(0i8)),
+                Instruction::LoadConst(Register(2u8), Value(0i8)),
                 Instruction::Peek {
                     tok: TokenDescription::Caret,
-                    reg: Register(1u8),
+                    reg: Register(2u8),
                 },
                 Instruction::JumpIfNonZero {
-                    cond: Register(1u8),
+                    cond: Register(2u8),
                     address: Address(35u32),
                 },
-                Instruction::LoadConst(Register(1u8), Value(0i8)),
+                Instruction::LoadConst(Register(2u8), Value(0i8)),
                 Instruction::Peek {
                     tok: TokenDescription::Shl,
-                    reg: Register(1u8),
+                    reg: Register(2u8),
                 },
                 Instruction::JumpIfNonZero {
-                    cond: Register(1u8),
+                    cond: Register(2u8),
                     address: Address(38u32),
                 },
-                Instruction::LoadConst(Register(1u8), Value(0i8)),
+                Instruction::LoadConst(Register(2u8), Value(0i8)),
                 Instruction::Peek {
                     tok: TokenDescription::Shr,
-                    reg: Register(1u8),
+                    reg: Register(2u8),
                 },
                 Instruction::JumpIfZero {
-                    cond: Register(1u8),
+                    cond: Register(2u8),
                     address: Address(43u32),
-                },
-                Instruction::Bump,
-                Instruction::Call {
-                    function: FunctionId(43u32),
-                    result: Register(2u8),
-                },
-                Instruction::LoadConst(Register(0u8), Value(6i8)),
-                Instruction::Return(Register(0u8)),
-                Instruction::LoadConst(Register(3u8), Value(0i8)),
-                Instruction::LoadConst(Register(3u8), Value(0i8)),
-                Instruction::LoadConst(Register(3u8), Value(0i8)),
-                Instruction::LoadConst(Register(3u8), Value(0i8)),
-                Instruction::LoadConst(Register(3u8), Value(0i8)),
-                Instruction::LoadConst(Register(3u8), Value(0i8)),
-                Instruction::Peek {
-                    tok: TokenDescription::EqualsEquals,
-                    reg: Register(3u8),
-                },
-                Instruction::JumpIfNonZero {
-                    cond: Register(3u8),
-                    address: Address(53u32),
-                },
-                Instruction::LoadConst(Register(3u8), Value(0i8)),
-                Instruction::Peek {
-                    tok: TokenDescription::NotEquals,
-                    reg: Register(3u8),
-                },
-                Instruction::JumpIfNonZero {
-                    cond: Register(3u8),
-                    address: Address(56u32),
-                },
-                Instruction::LoadConst(Register(3u8), Value(0i8)),
-                Instruction::Peek {
-                    tok: TokenDescription::GreaterThan,
-                    reg: Register(3u8),
-                },
-                Instruction::JumpIfNonZero {
-                    cond: Register(3u8),
-                    address: Address(59u32),
-                },
-                Instruction::LoadConst(Register(3u8), Value(0i8)),
-                Instruction::Peek {
-                    tok: TokenDescription::LessThan,
-                    reg: Register(3u8),
-                },
-                Instruction::JumpIfNonZero {
-                    cond: Register(3u8),
-                    address: Address(62u32),
-                },
-                Instruction::LoadConst(Register(3u8), Value(0i8)),
-                Instruction::Peek {
-                    tok: TokenDescription::GreaterThanEquals,
-                    reg: Register(3u8),
-                },
-                Instruction::JumpIfNonZero {
-                    cond: Register(3u8),
-                    address: Address(65u32),
-                },
-                Instruction::LoadConst(Register(3u8), Value(0i8)),
-                Instruction::Peek {
-                    tok: TokenDescription::LessThanEquals,
-                    reg: Register(3u8),
-                },
-                Instruction::JumpIfZero {
-                    cond: Register(3u8),
-                    address: Address(70u32),
                 },
                 Instruction::Bump,
                 Instruction::Call {
                     function: FunctionId(43u32),
                     result: Register(4u8),
                 },
-                Instruction::LoadConst(Register(0u8), Value(6i8)),
-                Instruction::Return(Register(0u8)),
+                Instruction::LoadConst(Register(1u8), Value(6i8)),
+                Instruction::Return(Register(1u8)),
+                Instruction::LoadConst(Register(5u8), Value(0i8)),
+                Instruction::LoadConst(Register(5u8), Value(0i8)),
+                Instruction::LoadConst(Register(5u8), Value(0i8)),
+                Instruction::LoadConst(Register(5u8), Value(0i8)),
                 Instruction::LoadConst(Register(5u8), Value(0i8)),
                 Instruction::LoadConst(Register(5u8), Value(0i8)),
                 Instruction::Peek {
-                    tok: TokenDescription::OrOr,
+                    tok: TokenDescription::EqualsEquals,
                     reg: Register(5u8),
                 },
                 Instruction::JumpIfNonZero {
                     cond: Register(5u8),
-                    address: Address(76u32),
+                    address: Address(53u32),
                 },
                 Instruction::LoadConst(Register(5u8), Value(0i8)),
                 Instruction::Peek {
-                    tok: TokenDescription::AndAnd,
+                    tok: TokenDescription::NotEquals,
+                    reg: Register(5u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(5u8),
+                    address: Address(56u32),
+                },
+                Instruction::LoadConst(Register(5u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::GreaterThan,
+                    reg: Register(5u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(5u8),
+                    address: Address(59u32),
+                },
+                Instruction::LoadConst(Register(5u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::LessThan,
+                    reg: Register(5u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(5u8),
+                    address: Address(62u32),
+                },
+                Instruction::LoadConst(Register(5u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::GreaterThanEquals,
+                    reg: Register(5u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(5u8),
+                    address: Address(65u32),
+                },
+                Instruction::LoadConst(Register(5u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::LessThanEquals,
                     reg: Register(5u8),
                 },
                 Instruction::JumpIfZero {
                     cond: Register(5u8),
+                    address: Address(70u32),
+                },
+                Instruction::Bump,
+                Instruction::Call {
+                    function: FunctionId(43u32),
+                    result: Register(7u8),
+                },
+                Instruction::LoadConst(Register(1u8), Value(6i8)),
+                Instruction::Return(Register(1u8)),
+                Instruction::LoadConst(Register(8u8), Value(0i8)),
+                Instruction::LoadConst(Register(8u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::OrOr,
+                    reg: Register(8u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(8u8),
+                    address: Address(76u32),
+                },
+                Instruction::LoadConst(Register(8u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::AndAnd,
+                    reg: Register(8u8),
+                },
+                Instruction::JumpIfZero {
+                    cond: Register(8u8),
                     address: Address(81u32),
                 },
                 Instruction::Bump,
                 Instruction::Call {
                     function: FunctionId(43u32),
-                    result: Register(6u8),
+                    result: Register(10u8),
                 },
-                Instruction::LoadConst(Register(0u8), Value(6i8)),
-                Instruction::Return(Register(0u8)),
-                Instruction::LoadConst(Register(7u8), Value(0i8)),
-                Instruction::LoadConst(Register(7u8), Value(0i8)),
+                Instruction::LoadConst(Register(1u8), Value(6i8)),
+                Instruction::Return(Register(1u8)),
+                Instruction::LoadConst(Register(11u8), Value(0i8)),
+                Instruction::LoadConst(Register(11u8), Value(0i8)),
                 Instruction::Peek {
                     tok: TokenDescription::DotDot,
-                    reg: Register(7u8),
+                    reg: Register(11u8),
                 },
                 Instruction::JumpIfNonZero {
-                    cond: Register(7u8),
+                    cond: Register(11u8),
                     address: Address(87u32),
                 },
-                Instruction::LoadConst(Register(7u8), Value(0i8)),
+                Instruction::LoadConst(Register(11u8), Value(0i8)),
                 Instruction::Peek {
                     tok: TokenDescription::DotDotEquals,
-                    reg: Register(7u8),
+                    reg: Register(11u8),
                 },
                 Instruction::JumpIfZero {
-                    cond: Register(7u8),
+                    cond: Register(11u8),
                     address: Address(92u32),
                 },
                 Instruction::Bump,
                 Instruction::Call {
                     function: FunctionId(43u32),
-                    result: Register(8u8),
+                    result: Register(13u8),
                 },
-                Instruction::LoadConst(Register(0u8), Value(6i8)),
-                Instruction::Return(Register(0u8)),
-                Instruction::LoadConst(Register(9u8), Value(0i8)),
+                Instruction::LoadConst(Register(1u8), Value(6i8)),
+                Instruction::Return(Register(1u8)),
+                Instruction::LoadConst(Register(14u8), Value(0i8)),
                 Instruction::Peek {
                     tok: TokenDescription::LParen,
-                    reg: Register(9u8),
+                    reg: Register(14u8),
                 },
                 Instruction::JumpIfZero {
-                    cond: Register(9u8),
+                    cond: Register(14u8),
                     address: Address(99u32),
                 },
                 Instruction::Call {
                     function: FunctionId(57u32),
-                    result: Register(10u8),
+                    result: Register(15u8),
                 },
                 Instruction::Call {
                     function: FunctionId(44u32),
-                    result: Register(11u8),
+                    result: Register(16u8),
                 },
-                Instruction::LoadConst(Register(0u8), Value(7i8)),
-                Instruction::Return(Register(0u8)),
-                Instruction::LoadConst(Register(12u8), Value(0i8)),
+                Instruction::LoadConst(Register(1u8), Value(7i8)),
+                Instruction::Return(Register(1u8)),
+                Instruction::LoadConst(Register(17u8), Value(0i8)),
                 Instruction::Peek {
                     tok: TokenDescription::LBracket,
-                    reg: Register(12u8),
+                    reg: Register(17u8),
                 },
                 Instruction::JumpIfZero {
-                    cond: Register(12u8),
+                    cond: Register(17u8),
                     address: Address(107u32),
                 },
                 Instruction::BumpToken {
@@ -2951,189 +2951,702 @@ const PROGRAM: Program = Program {
                 },
                 Instruction::Call {
                     function: FunctionId(43u32),
-                    result: Register(13u8),
+                    result: Register(19u8),
                 },
                 Instruction::BumpToken {
                     tok: TokenDescription::RBracket,
                 },
-                Instruction::LoadConst(Register(0u8), Value(8i8)),
-                Instruction::Return(Register(0u8)),
-                Instruction::LoadConst(Register(14u8), Value(0i8)),
+                Instruction::LoadConst(Register(1u8), Value(8i8)),
+                Instruction::Return(Register(1u8)),
+                Instruction::LoadConst(Register(21u8), Value(0i8)),
                 Instruction::Peek {
                     tok: TokenDescription::Dot,
-                    reg: Register(14u8),
+                    reg: Register(21u8),
                 },
                 Instruction::JumpIfZero {
-                    cond: Register(14u8),
+                    cond: Register(21u8),
                     address: Address(112u32),
                 },
                 Instruction::Call {
                     function: FunctionId(59u32),
-                    result: Register(15u8),
+                    result: Register(22u8),
                 },
                 Instruction::Call {
                     function: FunctionId(44u32),
-                    result: Register(16u8),
+                    result: Register(23u8),
                 },
                 Instruction::Return(Register(0u8)),
             ],
-            reg_num: 17usize,
+            reg_num: 24usize,
         },
         Function {
             name: "expr_atom",
             code: &[
-                Instruction::LoadConst(Register(1u8), Value(0i8)),
-                Instruction::LoadConst(Register(1u8), Value(0i8)),
+                Instruction::LoadConst(Register(2u8), Value(0i8)),
+                Instruction::LoadConst(Register(2u8), Value(0i8)),
                 Instruction::Peek {
                     tok: TokenDescription::Return,
-                    reg: Register(1u8),
+                    reg: Register(2u8),
                 },
                 Instruction::JumpIfNonZero {
-                    cond: Register(1u8),
+                    cond: Register(2u8),
                     address: Address(6u32),
                 },
-                Instruction::LoadConst(Register(1u8), Value(0i8)),
+                Instruction::LoadConst(Register(2u8), Value(0i8)),
                 Instruction::Peek {
                     tok: TokenDescription::Break,
-                    reg: Register(1u8),
+                    reg: Register(2u8),
                 },
                 Instruction::JumpIfZero {
-                    cond: Register(1u8),
+                    cond: Register(2u8),
                     address: Address(9u32),
                 },
                 Instruction::Call {
                     function: FunctionId(46u32),
-                    result: Register(2u8),
+                    result: Register(3u8),
                 },
                 Instruction::Jump {
                     address: Address(124u32),
                 },
-                Instruction::LoadConst(Register(3u8), Value(0i8)),
-                Instruction::LoadConst(Register(3u8), Value(0i8)),
-                Instruction::LoadConst(Register(3u8), Value(0i8)),
-                Instruction::LoadConst(Register(3u8), Value(0i8)),
-                Instruction::LoadConst(Register(3u8), Value(0i8)),
-                Instruction::LoadConst(Register(3u8), Value(0i8)),
-                Instruction::LoadConst(Register(3u8), Value(0i8)),
-                Instruction::LoadConst(Register(3u8), Value(0i8)),
-                Instruction::LoadConst(Register(3u8), Value(0i8)),
+                Instruction::LoadConst(Register(4u8), Value(0i8)),
+                Instruction::LoadConst(Register(4u8), Value(0i8)),
+                Instruction::LoadConst(Register(4u8), Value(0i8)),
+                Instruction::LoadConst(Register(4u8), Value(0i8)),
+                Instruction::LoadConst(Register(4u8), Value(0i8)),
+                Instruction::LoadConst(Register(4u8), Value(0i8)),
+                Instruction::LoadConst(Register(4u8), Value(0i8)),
+                Instruction::LoadConst(Register(4u8), Value(0i8)),
+                Instruction::LoadConst(Register(4u8), Value(0i8)),
                 Instruction::Peek {
                     tok: TokenDescription::Ident,
-                    reg: Register(3u8),
+                    reg: Register(4u8),
                 },
                 Instruction::JumpIfNonZero {
-                    cond: Register(3u8),
+                    cond: Register(4u8),
                     address: Address(22u32),
                 },
-                Instruction::LoadConst(Register(3u8), Value(0i8)),
+                Instruction::LoadConst(Register(4u8), Value(0i8)),
                 Instruction::Peek {
                     tok: TokenDescription::Self_,
-                    reg: Register(3u8),
+                    reg: Register(4u8),
                 },
                 Instruction::JumpIfNonZero {
-                    cond: Register(3u8),
+                    cond: Register(4u8),
                     address: Address(25u32),
                 },
-                Instruction::LoadConst(Register(3u8), Value(0i8)),
+                Instruction::LoadConst(Register(4u8), Value(0i8)),
                 Instruction::Peek {
                     tok: TokenDescription::SelfUpper,
-                    reg: Register(3u8),
+                    reg: Register(4u8),
                 },
                 Instruction::JumpIfNonZero {
-                    cond: Register(3u8),
+                    cond: Register(4u8),
                     address: Address(28u32),
                 },
-                Instruction::LoadConst(Register(3u8), Value(0i8)),
+                Instruction::LoadConst(Register(4u8), Value(0i8)),
                 Instruction::Peek {
                     tok: TokenDescription::Super,
-                    reg: Register(3u8),
+                    reg: Register(4u8),
                 },
                 Instruction::JumpIfNonZero {
-                    cond: Register(3u8),
+                    cond: Register(4u8),
                     address: Address(31u32),
                 },
-                Instruction::LoadConst(Register(3u8), Value(0i8)),
+                Instruction::LoadConst(Register(4u8), Value(0i8)),
                 Instruction::Peek {
                     tok: TokenDescription::Crate,
-                    reg: Register(3u8),
+                    reg: Register(4u8),
                 },
                 Instruction::JumpIfNonZero {
-                    cond: Register(3u8),
+                    cond: Register(4u8),
                     address: Address(34u32),
                 },
-                Instruction::LoadConst(Register(3u8), Value(0i8)),
+                Instruction::LoadConst(Register(4u8), Value(0i8)),
                 Instruction::Peek {
                     tok: TokenDescription::FragmentIdent,
-                    reg: Register(3u8),
+                    reg: Register(4u8),
                 },
                 Instruction::JumpIfNonZero {
-                    cond: Register(3u8),
+                    cond: Register(4u8),
                     address: Address(37u32),
                 },
-                Instruction::LoadConst(Register(3u8), Value(0i8)),
+                Instruction::LoadConst(Register(4u8), Value(0i8)),
                 Instruction::Peek {
                     tok: TokenDescription::ColonColon,
-                    reg: Register(3u8),
+                    reg: Register(4u8),
                 },
                 Instruction::JumpIfNonZero {
-                    cond: Register(3u8),
+                    cond: Register(4u8),
                     address: Address(40u32),
                 },
-                Instruction::LoadConst(Register(3u8), Value(0i8)),
+                Instruction::LoadConst(Register(4u8), Value(0i8)),
                 Instruction::Peek {
                     tok: TokenDescription::LessThan,
-                    reg: Register(3u8),
+                    reg: Register(4u8),
                 },
                 Instruction::JumpIfNonZero {
-                    cond: Register(3u8),
+                    cond: Register(4u8),
                     address: Address(43u32),
                 },
-                Instruction::LoadConst(Register(3u8), Value(0i8)),
+                Instruction::LoadConst(Register(4u8), Value(0i8)),
                 Instruction::Peek {
                     tok: TokenDescription::FragmentPath,
-                    reg: Register(3u8),
+                    reg: Register(4u8),
                 },
                 Instruction::JumpIfZero {
-                    cond: Register(3u8),
+                    cond: Register(4u8),
                     address: Address(53u32),
                 },
                 Instruction::Call {
                     function: FunctionId(47u32),
-                    result: Register(4u8),
-                },
-                Instruction::LoadConst(Register(5u8), Value(0i8)),
-                Instruction::Peek {
-                    tok: TokenDescription::Not,
-                    reg: Register(5u8),
-                },
-                Instruction::JumpIfZero {
-                    cond: Register(5u8),
-                    address: Address(50u32),
-                },
-                Instruction::Call {
-                    function: FunctionId(74u32),
-                    result: Register(6u8),
-                },
-                Instruction::Jump {
-                    address: Address(52u32),
-                },
-                Instruction::LoadConst(Register(0u8), Value(9i8)),
-                Instruction::Return(Register(0u8)),
-                Instruction::Jump {
-                    address: Address(124u32),
+                    result: Register(5u8),
                 },
                 Instruction::LoadConst(Register(7u8), Value(0i8)),
                 Instruction::Peek {
-                    tok: TokenDescription::Literal,
+                    tok: TokenDescription::Not,
                     reg: Register(7u8),
                 },
                 Instruction::JumpIfZero {
                     cond: Register(7u8),
+                    address: Address(50u32),
+                },
+                Instruction::Call {
+                    function: FunctionId(74u32),
+                    result: Register(8u8),
+                },
+                Instruction::Jump {
+                    address: Address(52u32),
+                },
+                Instruction::LoadConst(Register(6u8), Value(9i8)),
+                Instruction::Return(Register(6u8)),
+                Instruction::Jump {
+                    address: Address(124u32),
+                },
+                Instruction::LoadConst(Register(9u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::Literal,
+                    reg: Register(9u8),
+                },
+                Instruction::JumpIfZero {
+                    cond: Register(9u8),
                     address: Address(59u32),
                 },
                 Instruction::Bump,
-                Instruction::LoadConst(Register(0u8), Value(10i8)),
+                Instruction::LoadConst(Register(1u8), Value(10i8)),
+                Instruction::Return(Register(1u8)),
+                Instruction::LoadConst(Register(11u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::FragmentExpr,
+                    reg: Register(11u8),
+                },
+                Instruction::JumpIfZero {
+                    cond: Register(11u8),
+                    address: Address(65u32),
+                },
+                Instruction::Bump,
+                Instruction::LoadConst(Register(1u8), Value(11i8)),
+                Instruction::Return(Register(1u8)),
+                Instruction::LoadConst(Register(13u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::FragmentBlock,
+                    reg: Register(13u8),
+                },
+                Instruction::JumpIfZero {
+                    cond: Register(13u8),
+                    address: Address(71u32),
+                },
+                Instruction::Bump,
+                Instruction::LoadConst(Register(1u8), Value(12i8)),
+                Instruction::Return(Register(1u8)),
+                Instruction::LoadConst(Register(15u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::If,
+                    reg: Register(15u8),
+                },
+                Instruction::JumpIfZero {
+                    cond: Register(15u8),
+                    address: Address(77u32),
+                },
+                Instruction::Call {
+                    function: FunctionId(53u32),
+                    result: Register(16u8),
+                },
+                Instruction::LoadConst(Register(1u8), Value(0i8)),
+                Instruction::Return(Register(1u8)),
+                Instruction::LoadConst(Register(17u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::LParen,
+                    reg: Register(17u8),
+                },
+                Instruction::JumpIfZero {
+                    cond: Register(17u8),
+                    address: Address(83u32),
+                },
+                Instruction::Call {
+                    function: FunctionId(66u32),
+                    result: Register(18u8),
+                },
+                Instruction::LoadConst(Register(1u8), Value(13i8)),
+                Instruction::Return(Register(1u8)),
+                Instruction::LoadConst(Register(19u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::LBracket,
+                    reg: Register(19u8),
+                },
+                Instruction::JumpIfZero {
+                    cond: Register(19u8),
+                    address: Address(89u32),
+                },
+                Instruction::Call {
+                    function: FunctionId(54u32),
+                    result: Register(20u8),
+                },
+                Instruction::LoadConst(Register(1u8), Value(14i8)),
+                Instruction::Return(Register(1u8)),
+                Instruction::LoadConst(Register(21u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::LBrace,
+                    reg: Register(21u8),
+                },
+                Instruction::JumpIfZero {
+                    cond: Register(21u8),
+                    address: Address(95u32),
+                },
+                Instruction::Call {
+                    function: FunctionId(12u32),
+                    result: Register(22u8),
+                },
+                Instruction::LoadConst(Register(1u8), Value(1i8)),
+                Instruction::Return(Register(1u8)),
+                Instruction::LoadConst(Register(23u8), Value(0i8)),
+                Instruction::LoadConst(Register(23u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::Loop,
+                    reg: Register(23u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(23u8),
+                    address: Address(101u32),
+                },
+                Instruction::LoadConst(Register(23u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::FragmentLifetime,
+                    reg: Register(23u8),
+                },
+                Instruction::JumpIfZero {
+                    cond: Register(23u8),
+                    address: Address(105u32),
+                },
+                Instruction::Call {
+                    function: FunctionId(68u32),
+                    result: Register(24u8),
+                },
+                Instruction::LoadConst(Register(1u8), Value(2i8)),
+                Instruction::Return(Register(1u8)),
+                Instruction::LoadConst(Register(25u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::While,
+                    reg: Register(25u8),
+                },
+                Instruction::JumpIfZero {
+                    cond: Register(25u8),
+                    address: Address(111u32),
+                },
+                Instruction::Call {
+                    function: FunctionId(69u32),
+                    result: Register(26u8),
+                },
+                Instruction::LoadConst(Register(1u8), Value(15i8)),
+                Instruction::Return(Register(1u8)),
+                Instruction::LoadConst(Register(27u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::For,
+                    reg: Register(27u8),
+                },
+                Instruction::JumpIfZero {
+                    cond: Register(27u8),
+                    address: Address(117u32),
+                },
+                Instruction::Call {
+                    function: FunctionId(70u32),
+                    result: Register(28u8),
+                },
+                Instruction::LoadConst(Register(1u8), Value(3i8)),
+                Instruction::Return(Register(1u8)),
+                Instruction::LoadConst(Register(29u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::Match,
+                    reg: Register(29u8),
+                },
+                Instruction::JumpIfZero {
+                    cond: Register(29u8),
+                    address: Address(123u32),
+                },
+                Instruction::Call {
+                    function: FunctionId(71u32),
+                    result: Register(30u8),
+                },
+                Instruction::LoadConst(Register(1u8), Value(4i8)),
+                Instruction::Return(Register(1u8)),
+                Instruction::Error,
                 Instruction::Return(Register(0u8)),
+            ],
+            reg_num: 32usize,
+        },
+        Function {
+            name: "expr_return_or_break",
+            code: &[
+                Instruction::LoadConst(Register(2u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::Return,
+                    reg: Register(2u8),
+                },
+                Instruction::JumpIfZero {
+                    cond: Register(2u8),
+                    address: Address(5u32),
+                },
+                Instruction::BumpToken {
+                    tok: TokenDescription::Return,
+                },
+                Instruction::Jump {
+                    address: Address(11u32),
+                },
+                Instruction::LoadConst(Register(4u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::Break,
+                    reg: Register(4u8),
+                },
+                Instruction::JumpIfZero {
+                    cond: Register(4u8),
+                    address: Address(10u32),
+                },
+                Instruction::BumpToken {
+                    tok: TokenDescription::Break,
+                },
+                Instruction::Jump {
+                    address: Address(11u32),
+                },
+                Instruction::Error,
+                Instruction::LoadConst(Register(8u8), Value(0i8)),
+                Instruction::LoadConst(Register(8u8), Value(0i8)),
+                Instruction::LoadConst(Register(8u8), Value(0i8)),
+                Instruction::LoadConst(Register(8u8), Value(0i8)),
+                Instruction::LoadConst(Register(8u8), Value(0i8)),
+                Instruction::LoadConst(Register(8u8), Value(0i8)),
+                Instruction::LoadConst(Register(8u8), Value(0i8)),
+                Instruction::LoadConst(Register(8u8), Value(0i8)),
+                Instruction::LoadConst(Register(8u8), Value(0i8)),
+                Instruction::LoadConst(Register(8u8), Value(0i8)),
+                Instruction::LoadConst(Register(8u8), Value(0i8)),
+                Instruction::LoadConst(Register(8u8), Value(0i8)),
+                Instruction::LoadConst(Register(8u8), Value(0i8)),
+                Instruction::LoadConst(Register(8u8), Value(0i8)),
+                Instruction::LoadConst(Register(8u8), Value(0i8)),
+                Instruction::LoadConst(Register(8u8), Value(0i8)),
+                Instruction::LoadConst(Register(8u8), Value(0i8)),
+                Instruction::LoadConst(Register(8u8), Value(0i8)),
+                Instruction::LoadConst(Register(8u8), Value(0i8)),
+                Instruction::LoadConst(Register(8u8), Value(0i8)),
+                Instruction::LoadConst(Register(8u8), Value(0i8)),
+                Instruction::LoadConst(Register(8u8), Value(0i8)),
+                Instruction::LoadConst(Register(8u8), Value(0i8)),
+                Instruction::LoadConst(Register(8u8), Value(0i8)),
+                Instruction::LoadConst(Register(8u8), Value(0i8)),
+                Instruction::LoadConst(Register(8u8), Value(0i8)),
+                Instruction::LoadConst(Register(8u8), Value(0i8)),
+                Instruction::LoadConst(Register(8u8), Value(0i8)),
+                Instruction::LoadConst(Register(8u8), Value(0i8)),
+                Instruction::LoadConst(Register(8u8), Value(0i8)),
+                Instruction::LoadConst(Register(8u8), Value(0i8)),
+                Instruction::LoadConst(Register(8u8), Value(0i8)),
+                Instruction::LoadConst(Register(8u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::Async,
+                    reg: Register(8u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(8u8),
+                    address: Address(48u32),
+                },
+                Instruction::LoadConst(Register(8u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::Break,
+                    reg: Register(8u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(8u8),
+                    address: Address(51u32),
+                },
+                Instruction::LoadConst(Register(8u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::Continue,
+                    reg: Register(8u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(8u8),
+                    address: Address(54u32),
+                },
+                Instruction::LoadConst(Register(8u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::Crate,
+                    reg: Register(8u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(8u8),
+                    address: Address(57u32),
+                },
+                Instruction::LoadConst(Register(8u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::False,
+                    reg: Register(8u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(8u8),
+                    address: Address(60u32),
+                },
+                Instruction::LoadConst(Register(8u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::For,
+                    reg: Register(8u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(8u8),
+                    address: Address(63u32),
+                },
+                Instruction::LoadConst(Register(8u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::Let,
+                    reg: Register(8u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(8u8),
+                    address: Address(66u32),
+                },
+                Instruction::LoadConst(Register(8u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::Loop,
+                    reg: Register(8u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(8u8),
+                    address: Address(69u32),
+                },
+                Instruction::LoadConst(Register(8u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::Match,
+                    reg: Register(8u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(8u8),
+                    address: Address(72u32),
+                },
+                Instruction::LoadConst(Register(8u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::Move,
+                    reg: Register(8u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(8u8),
+                    address: Address(75u32),
+                },
+                Instruction::LoadConst(Register(8u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::Return,
+                    reg: Register(8u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(8u8),
+                    address: Address(78u32),
+                },
+                Instruction::LoadConst(Register(8u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::Self_,
+                    reg: Register(8u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(8u8),
+                    address: Address(81u32),
+                },
+                Instruction::LoadConst(Register(8u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::SelfUpper,
+                    reg: Register(8u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(8u8),
+                    address: Address(84u32),
+                },
+                Instruction::LoadConst(Register(8u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::True,
+                    reg: Register(8u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(8u8),
+                    address: Address(87u32),
+                },
+                Instruction::LoadConst(Register(8u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::Union,
+                    reg: Register(8u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(8u8),
+                    address: Address(90u32),
+                },
+                Instruction::LoadConst(Register(8u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::While,
+                    reg: Register(8u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(8u8),
+                    address: Address(93u32),
+                },
+                Instruction::LoadConst(Register(8u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::Yield,
+                    reg: Register(8u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(8u8),
+                    address: Address(96u32),
+                },
+                Instruction::LoadConst(Register(8u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::Ident,
+                    reg: Register(8u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(8u8),
+                    address: Address(99u32),
+                },
+                Instruction::LoadConst(Register(8u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::FragmentIdent,
+                    reg: Register(8u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(8u8),
+                    address: Address(102u32),
+                },
+                Instruction::LoadConst(Register(8u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::LParen,
+                    reg: Register(8u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(8u8),
+                    address: Address(105u32),
+                },
+                Instruction::LoadConst(Register(8u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::LBracket,
+                    reg: Register(8u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(8u8),
+                    address: Address(108u32),
+                },
+                Instruction::LoadConst(Register(8u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::LBrace,
+                    reg: Register(8u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(8u8),
+                    address: Address(111u32),
+                },
+                Instruction::LoadConst(Register(8u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::Literal,
+                    reg: Register(8u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(8u8),
+                    address: Address(114u32),
+                },
+                Instruction::LoadConst(Register(8u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::FragmentLiteral,
+                    reg: Register(8u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(8u8),
+                    address: Address(117u32),
+                },
+                Instruction::LoadConst(Register(8u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::Not,
+                    reg: Register(8u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(8u8),
+                    address: Address(120u32),
+                },
+                Instruction::LoadConst(Register(8u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::Star,
+                    reg: Register(8u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(8u8),
+                    address: Address(123u32),
+                },
+                Instruction::LoadConst(Register(8u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::Or,
+                    reg: Register(8u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(8u8),
+                    address: Address(126u32),
+                },
+                Instruction::LoadConst(Register(8u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::And,
+                    reg: Register(8u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(8u8),
+                    address: Address(129u32),
+                },
+                Instruction::LoadConst(Register(8u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::DotDot,
+                    reg: Register(8u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(8u8),
+                    address: Address(132u32),
+                },
+                Instruction::LoadConst(Register(8u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::LessThan,
+                    reg: Register(8u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(8u8),
+                    address: Address(135u32),
+                },
+                Instruction::LoadConst(Register(8u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::ColonColon,
+                    reg: Register(8u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(8u8),
+                    address: Address(138u32),
+                },
+                Instruction::LoadConst(Register(8u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::Pound,
+                    reg: Register(8u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(8u8),
+                    address: Address(141u32),
+                },
                 Instruction::LoadConst(Register(8u8), Value(0i8)),
                 Instruction::Peek {
                     tok: TokenDescription::FragmentExpr,
@@ -3141,539 +3654,26 @@ const PROGRAM: Program = Program {
                 },
                 Instruction::JumpIfZero {
                     cond: Register(8u8),
-                    address: Address(65u32),
-                },
-                Instruction::Bump,
-                Instruction::LoadConst(Register(0u8), Value(11i8)),
-                Instruction::Return(Register(0u8)),
-                Instruction::LoadConst(Register(9u8), Value(0i8)),
-                Instruction::Peek {
-                    tok: TokenDescription::FragmentBlock,
-                    reg: Register(9u8),
-                },
-                Instruction::JumpIfZero {
-                    cond: Register(9u8),
-                    address: Address(71u32),
-                },
-                Instruction::Bump,
-                Instruction::LoadConst(Register(0u8), Value(12i8)),
-                Instruction::Return(Register(0u8)),
-                Instruction::LoadConst(Register(10u8), Value(0i8)),
-                Instruction::Peek {
-                    tok: TokenDescription::If,
-                    reg: Register(10u8),
-                },
-                Instruction::JumpIfZero {
-                    cond: Register(10u8),
-                    address: Address(77u32),
-                },
-                Instruction::Call {
-                    function: FunctionId(53u32),
-                    result: Register(11u8),
-                },
-                Instruction::LoadConst(Register(0u8), Value(0i8)),
-                Instruction::Return(Register(0u8)),
-                Instruction::LoadConst(Register(12u8), Value(0i8)),
-                Instruction::Peek {
-                    tok: TokenDescription::LParen,
-                    reg: Register(12u8),
-                },
-                Instruction::JumpIfZero {
-                    cond: Register(12u8),
-                    address: Address(83u32),
-                },
-                Instruction::Call {
-                    function: FunctionId(66u32),
-                    result: Register(13u8),
-                },
-                Instruction::LoadConst(Register(0u8), Value(13i8)),
-                Instruction::Return(Register(0u8)),
-                Instruction::LoadConst(Register(14u8), Value(0i8)),
-                Instruction::Peek {
-                    tok: TokenDescription::LBracket,
-                    reg: Register(14u8),
-                },
-                Instruction::JumpIfZero {
-                    cond: Register(14u8),
-                    address: Address(89u32),
-                },
-                Instruction::Call {
-                    function: FunctionId(54u32),
-                    result: Register(15u8),
-                },
-                Instruction::LoadConst(Register(0u8), Value(14i8)),
-                Instruction::Return(Register(0u8)),
-                Instruction::LoadConst(Register(16u8), Value(0i8)),
-                Instruction::Peek {
-                    tok: TokenDescription::LBrace,
-                    reg: Register(16u8),
-                },
-                Instruction::JumpIfZero {
-                    cond: Register(16u8),
-                    address: Address(95u32),
-                },
-                Instruction::Call {
-                    function: FunctionId(12u32),
-                    result: Register(17u8),
-                },
-                Instruction::LoadConst(Register(0u8), Value(1i8)),
-                Instruction::Return(Register(0u8)),
-                Instruction::LoadConst(Register(18u8), Value(0i8)),
-                Instruction::LoadConst(Register(18u8), Value(0i8)),
-                Instruction::Peek {
-                    tok: TokenDescription::Loop,
-                    reg: Register(18u8),
-                },
-                Instruction::JumpIfNonZero {
-                    cond: Register(18u8),
-                    address: Address(101u32),
-                },
-                Instruction::LoadConst(Register(18u8), Value(0i8)),
-                Instruction::Peek {
-                    tok: TokenDescription::FragmentLifetime,
-                    reg: Register(18u8),
-                },
-                Instruction::JumpIfZero {
-                    cond: Register(18u8),
-                    address: Address(105u32),
-                },
-                Instruction::Call {
-                    function: FunctionId(68u32),
-                    result: Register(19u8),
-                },
-                Instruction::LoadConst(Register(0u8), Value(2i8)),
-                Instruction::Return(Register(0u8)),
-                Instruction::LoadConst(Register(20u8), Value(0i8)),
-                Instruction::Peek {
-                    tok: TokenDescription::While,
-                    reg: Register(20u8),
-                },
-                Instruction::JumpIfZero {
-                    cond: Register(20u8),
-                    address: Address(111u32),
-                },
-                Instruction::Call {
-                    function: FunctionId(69u32),
-                    result: Register(21u8),
-                },
-                Instruction::LoadConst(Register(0u8), Value(15i8)),
-                Instruction::Return(Register(0u8)),
-                Instruction::LoadConst(Register(22u8), Value(0i8)),
-                Instruction::Peek {
-                    tok: TokenDescription::For,
-                    reg: Register(22u8),
-                },
-                Instruction::JumpIfZero {
-                    cond: Register(22u8),
-                    address: Address(117u32),
-                },
-                Instruction::Call {
-                    function: FunctionId(70u32),
-                    result: Register(23u8),
-                },
-                Instruction::LoadConst(Register(0u8), Value(3i8)),
-                Instruction::Return(Register(0u8)),
-                Instruction::LoadConst(Register(24u8), Value(0i8)),
-                Instruction::Peek {
-                    tok: TokenDescription::Match,
-                    reg: Register(24u8),
-                },
-                Instruction::JumpIfZero {
-                    cond: Register(24u8),
-                    address: Address(123u32),
-                },
-                Instruction::Call {
-                    function: FunctionId(71u32),
-                    result: Register(25u8),
-                },
-                Instruction::LoadConst(Register(0u8), Value(4i8)),
-                Instruction::Return(Register(0u8)),
-                Instruction::Error,
-                Instruction::Return(Register(0u8)),
-            ],
-            reg_num: 26usize,
-        },
-        Function {
-            name: "expr_return_or_break",
-            code: &[
-                Instruction::LoadConst(Register(1u8), Value(0i8)),
-                Instruction::Peek {
-                    tok: TokenDescription::Return,
-                    reg: Register(1u8),
-                },
-                Instruction::JumpIfZero {
-                    cond: Register(1u8),
-                    address: Address(5u32),
-                },
-                Instruction::BumpToken {
-                    tok: TokenDescription::Return,
-                },
-                Instruction::Jump {
-                    address: Address(11u32),
-                },
-                Instruction::LoadConst(Register(2u8), Value(0i8)),
-                Instruction::Peek {
-                    tok: TokenDescription::Break,
-                    reg: Register(2u8),
-                },
-                Instruction::JumpIfZero {
-                    cond: Register(2u8),
-                    address: Address(10u32),
-                },
-                Instruction::BumpToken {
-                    tok: TokenDescription::Break,
-                },
-                Instruction::Jump {
-                    address: Address(11u32),
-                },
-                Instruction::Error,
-                Instruction::LoadConst(Register(3u8), Value(0i8)),
-                Instruction::LoadConst(Register(3u8), Value(0i8)),
-                Instruction::LoadConst(Register(3u8), Value(0i8)),
-                Instruction::LoadConst(Register(3u8), Value(0i8)),
-                Instruction::LoadConst(Register(3u8), Value(0i8)),
-                Instruction::LoadConst(Register(3u8), Value(0i8)),
-                Instruction::LoadConst(Register(3u8), Value(0i8)),
-                Instruction::LoadConst(Register(3u8), Value(0i8)),
-                Instruction::LoadConst(Register(3u8), Value(0i8)),
-                Instruction::LoadConst(Register(3u8), Value(0i8)),
-                Instruction::LoadConst(Register(3u8), Value(0i8)),
-                Instruction::LoadConst(Register(3u8), Value(0i8)),
-                Instruction::LoadConst(Register(3u8), Value(0i8)),
-                Instruction::LoadConst(Register(3u8), Value(0i8)),
-                Instruction::LoadConst(Register(3u8), Value(0i8)),
-                Instruction::LoadConst(Register(3u8), Value(0i8)),
-                Instruction::LoadConst(Register(3u8), Value(0i8)),
-                Instruction::LoadConst(Register(3u8), Value(0i8)),
-                Instruction::LoadConst(Register(3u8), Value(0i8)),
-                Instruction::LoadConst(Register(3u8), Value(0i8)),
-                Instruction::LoadConst(Register(3u8), Value(0i8)),
-                Instruction::LoadConst(Register(3u8), Value(0i8)),
-                Instruction::LoadConst(Register(3u8), Value(0i8)),
-                Instruction::LoadConst(Register(3u8), Value(0i8)),
-                Instruction::LoadConst(Register(3u8), Value(0i8)),
-                Instruction::LoadConst(Register(3u8), Value(0i8)),
-                Instruction::LoadConst(Register(3u8), Value(0i8)),
-                Instruction::LoadConst(Register(3u8), Value(0i8)),
-                Instruction::LoadConst(Register(3u8), Value(0i8)),
-                Instruction::LoadConst(Register(3u8), Value(0i8)),
-                Instruction::LoadConst(Register(3u8), Value(0i8)),
-                Instruction::LoadConst(Register(3u8), Value(0i8)),
-                Instruction::LoadConst(Register(3u8), Value(0i8)),
-                Instruction::Peek {
-                    tok: TokenDescription::Async,
-                    reg: Register(3u8),
-                },
-                Instruction::JumpIfNonZero {
-                    cond: Register(3u8),
-                    address: Address(48u32),
-                },
-                Instruction::LoadConst(Register(3u8), Value(0i8)),
-                Instruction::Peek {
-                    tok: TokenDescription::Break,
-                    reg: Register(3u8),
-                },
-                Instruction::JumpIfNonZero {
-                    cond: Register(3u8),
-                    address: Address(51u32),
-                },
-                Instruction::LoadConst(Register(3u8), Value(0i8)),
-                Instruction::Peek {
-                    tok: TokenDescription::Continue,
-                    reg: Register(3u8),
-                },
-                Instruction::JumpIfNonZero {
-                    cond: Register(3u8),
-                    address: Address(54u32),
-                },
-                Instruction::LoadConst(Register(3u8), Value(0i8)),
-                Instruction::Peek {
-                    tok: TokenDescription::Crate,
-                    reg: Register(3u8),
-                },
-                Instruction::JumpIfNonZero {
-                    cond: Register(3u8),
-                    address: Address(57u32),
-                },
-                Instruction::LoadConst(Register(3u8), Value(0i8)),
-                Instruction::Peek {
-                    tok: TokenDescription::False,
-                    reg: Register(3u8),
-                },
-                Instruction::JumpIfNonZero {
-                    cond: Register(3u8),
-                    address: Address(60u32),
-                },
-                Instruction::LoadConst(Register(3u8), Value(0i8)),
-                Instruction::Peek {
-                    tok: TokenDescription::For,
-                    reg: Register(3u8),
-                },
-                Instruction::JumpIfNonZero {
-                    cond: Register(3u8),
-                    address: Address(63u32),
-                },
-                Instruction::LoadConst(Register(3u8), Value(0i8)),
-                Instruction::Peek {
-                    tok: TokenDescription::Let,
-                    reg: Register(3u8),
-                },
-                Instruction::JumpIfNonZero {
-                    cond: Register(3u8),
-                    address: Address(66u32),
-                },
-                Instruction::LoadConst(Register(3u8), Value(0i8)),
-                Instruction::Peek {
-                    tok: TokenDescription::Loop,
-                    reg: Register(3u8),
-                },
-                Instruction::JumpIfNonZero {
-                    cond: Register(3u8),
-                    address: Address(69u32),
-                },
-                Instruction::LoadConst(Register(3u8), Value(0i8)),
-                Instruction::Peek {
-                    tok: TokenDescription::Match,
-                    reg: Register(3u8),
-                },
-                Instruction::JumpIfNonZero {
-                    cond: Register(3u8),
-                    address: Address(72u32),
-                },
-                Instruction::LoadConst(Register(3u8), Value(0i8)),
-                Instruction::Peek {
-                    tok: TokenDescription::Move,
-                    reg: Register(3u8),
-                },
-                Instruction::JumpIfNonZero {
-                    cond: Register(3u8),
-                    address: Address(75u32),
-                },
-                Instruction::LoadConst(Register(3u8), Value(0i8)),
-                Instruction::Peek {
-                    tok: TokenDescription::Return,
-                    reg: Register(3u8),
-                },
-                Instruction::JumpIfNonZero {
-                    cond: Register(3u8),
-                    address: Address(78u32),
-                },
-                Instruction::LoadConst(Register(3u8), Value(0i8)),
-                Instruction::Peek {
-                    tok: TokenDescription::Self_,
-                    reg: Register(3u8),
-                },
-                Instruction::JumpIfNonZero {
-                    cond: Register(3u8),
-                    address: Address(81u32),
-                },
-                Instruction::LoadConst(Register(3u8), Value(0i8)),
-                Instruction::Peek {
-                    tok: TokenDescription::SelfUpper,
-                    reg: Register(3u8),
-                },
-                Instruction::JumpIfNonZero {
-                    cond: Register(3u8),
-                    address: Address(84u32),
-                },
-                Instruction::LoadConst(Register(3u8), Value(0i8)),
-                Instruction::Peek {
-                    tok: TokenDescription::True,
-                    reg: Register(3u8),
-                },
-                Instruction::JumpIfNonZero {
-                    cond: Register(3u8),
-                    address: Address(87u32),
-                },
-                Instruction::LoadConst(Register(3u8), Value(0i8)),
-                Instruction::Peek {
-                    tok: TokenDescription::Union,
-                    reg: Register(3u8),
-                },
-                Instruction::JumpIfNonZero {
-                    cond: Register(3u8),
-                    address: Address(90u32),
-                },
-                Instruction::LoadConst(Register(3u8), Value(0i8)),
-                Instruction::Peek {
-                    tok: TokenDescription::While,
-                    reg: Register(3u8),
-                },
-                Instruction::JumpIfNonZero {
-                    cond: Register(3u8),
-                    address: Address(93u32),
-                },
-                Instruction::LoadConst(Register(3u8), Value(0i8)),
-                Instruction::Peek {
-                    tok: TokenDescription::Yield,
-                    reg: Register(3u8),
-                },
-                Instruction::JumpIfNonZero {
-                    cond: Register(3u8),
-                    address: Address(96u32),
-                },
-                Instruction::LoadConst(Register(3u8), Value(0i8)),
-                Instruction::Peek {
-                    tok: TokenDescription::Ident,
-                    reg: Register(3u8),
-                },
-                Instruction::JumpIfNonZero {
-                    cond: Register(3u8),
-                    address: Address(99u32),
-                },
-                Instruction::LoadConst(Register(3u8), Value(0i8)),
-                Instruction::Peek {
-                    tok: TokenDescription::FragmentIdent,
-                    reg: Register(3u8),
-                },
-                Instruction::JumpIfNonZero {
-                    cond: Register(3u8),
-                    address: Address(102u32),
-                },
-                Instruction::LoadConst(Register(3u8), Value(0i8)),
-                Instruction::Peek {
-                    tok: TokenDescription::LParen,
-                    reg: Register(3u8),
-                },
-                Instruction::JumpIfNonZero {
-                    cond: Register(3u8),
-                    address: Address(105u32),
-                },
-                Instruction::LoadConst(Register(3u8), Value(0i8)),
-                Instruction::Peek {
-                    tok: TokenDescription::LBracket,
-                    reg: Register(3u8),
-                },
-                Instruction::JumpIfNonZero {
-                    cond: Register(3u8),
-                    address: Address(108u32),
-                },
-                Instruction::LoadConst(Register(3u8), Value(0i8)),
-                Instruction::Peek {
-                    tok: TokenDescription::LBrace,
-                    reg: Register(3u8),
-                },
-                Instruction::JumpIfNonZero {
-                    cond: Register(3u8),
-                    address: Address(111u32),
-                },
-                Instruction::LoadConst(Register(3u8), Value(0i8)),
-                Instruction::Peek {
-                    tok: TokenDescription::Literal,
-                    reg: Register(3u8),
-                },
-                Instruction::JumpIfNonZero {
-                    cond: Register(3u8),
-                    address: Address(114u32),
-                },
-                Instruction::LoadConst(Register(3u8), Value(0i8)),
-                Instruction::Peek {
-                    tok: TokenDescription::FragmentLiteral,
-                    reg: Register(3u8),
-                },
-                Instruction::JumpIfNonZero {
-                    cond: Register(3u8),
-                    address: Address(117u32),
-                },
-                Instruction::LoadConst(Register(3u8), Value(0i8)),
-                Instruction::Peek {
-                    tok: TokenDescription::Not,
-                    reg: Register(3u8),
-                },
-                Instruction::JumpIfNonZero {
-                    cond: Register(3u8),
-                    address: Address(120u32),
-                },
-                Instruction::LoadConst(Register(3u8), Value(0i8)),
-                Instruction::Peek {
-                    tok: TokenDescription::Star,
-                    reg: Register(3u8),
-                },
-                Instruction::JumpIfNonZero {
-                    cond: Register(3u8),
-                    address: Address(123u32),
-                },
-                Instruction::LoadConst(Register(3u8), Value(0i8)),
-                Instruction::Peek {
-                    tok: TokenDescription::Or,
-                    reg: Register(3u8),
-                },
-                Instruction::JumpIfNonZero {
-                    cond: Register(3u8),
-                    address: Address(126u32),
-                },
-                Instruction::LoadConst(Register(3u8), Value(0i8)),
-                Instruction::Peek {
-                    tok: TokenDescription::And,
-                    reg: Register(3u8),
-                },
-                Instruction::JumpIfNonZero {
-                    cond: Register(3u8),
-                    address: Address(129u32),
-                },
-                Instruction::LoadConst(Register(3u8), Value(0i8)),
-                Instruction::Peek {
-                    tok: TokenDescription::DotDot,
-                    reg: Register(3u8),
-                },
-                Instruction::JumpIfNonZero {
-                    cond: Register(3u8),
-                    address: Address(132u32),
-                },
-                Instruction::LoadConst(Register(3u8), Value(0i8)),
-                Instruction::Peek {
-                    tok: TokenDescription::LessThan,
-                    reg: Register(3u8),
-                },
-                Instruction::JumpIfNonZero {
-                    cond: Register(3u8),
-                    address: Address(135u32),
-                },
-                Instruction::LoadConst(Register(3u8), Value(0i8)),
-                Instruction::Peek {
-                    tok: TokenDescription::ColonColon,
-                    reg: Register(3u8),
-                },
-                Instruction::JumpIfNonZero {
-                    cond: Register(3u8),
-                    address: Address(138u32),
-                },
-                Instruction::LoadConst(Register(3u8), Value(0i8)),
-                Instruction::Peek {
-                    tok: TokenDescription::Pound,
-                    reg: Register(3u8),
-                },
-                Instruction::JumpIfNonZero {
-                    cond: Register(3u8),
-                    address: Address(141u32),
-                },
-                Instruction::LoadConst(Register(3u8), Value(0i8)),
-                Instruction::Peek {
-                    tok: TokenDescription::FragmentExpr,
-                    reg: Register(3u8),
-                },
-                Instruction::JumpIfZero {
-                    cond: Register(3u8),
                     address: Address(143u32),
                 },
                 Instruction::Call {
                     function: FunctionId(45u32),
-                    result: Register(4u8),
+                    result: Register(9u8),
                 },
                 Instruction::Return(Register(0u8)),
             ],
-            reg_num: 5usize,
+            reg_num: 10usize,
         },
         Function {
             name: "expr_path",
             code: &[
-                Instruction::LoadConst(Register(1u8), Value(0i8)),
+                Instruction::LoadConst(Register(2u8), Value(0i8)),
                 Instruction::Peek {
                     tok: TokenDescription::FragmentPath,
-                    reg: Register(1u8),
+                    reg: Register(2u8),
                 },
                 Instruction::JumpIfZero {
-                    cond: Register(1u8),
+                    cond: Register(2u8),
                     address: Address(5u32),
                 },
                 Instruction::BumpToken {
@@ -3682,102 +3682,102 @@ const PROGRAM: Program = Program {
                 Instruction::Jump {
                     address: Address(40u32),
                 },
-                Instruction::LoadConst(Register(2u8), Value(0i8)),
+                Instruction::LoadConst(Register(4u8), Value(0i8)),
                 Instruction::Peek {
                     tok: TokenDescription::LessThan,
-                    reg: Register(2u8),
+                    reg: Register(4u8),
                 },
                 Instruction::JumpIfZero {
-                    cond: Register(2u8),
+                    cond: Register(4u8),
                     address: Address(10u32),
                 },
                 Instruction::Call {
                     function: FunctionId(48u32),
-                    result: Register(3u8),
-                },
-                Instruction::Jump {
-                    address: Address(40u32),
-                },
-                Instruction::LoadConst(Register(4u8), Value(0i8)),
-                Instruction::LoadConst(Register(4u8), Value(0i8)),
-                Instruction::LoadConst(Register(4u8), Value(0i8)),
-                Instruction::LoadConst(Register(4u8), Value(0i8)),
-                Instruction::LoadConst(Register(4u8), Value(0i8)),
-                Instruction::LoadConst(Register(4u8), Value(0i8)),
-                Instruction::LoadConst(Register(4u8), Value(0i8)),
-                Instruction::Peek {
-                    tok: TokenDescription::Ident,
-                    reg: Register(4u8),
-                },
-                Instruction::JumpIfNonZero {
-                    cond: Register(4u8),
-                    address: Address(21u32),
-                },
-                Instruction::LoadConst(Register(4u8), Value(0i8)),
-                Instruction::Peek {
-                    tok: TokenDescription::FragmentIdent,
-                    reg: Register(4u8),
-                },
-                Instruction::JumpIfNonZero {
-                    cond: Register(4u8),
-                    address: Address(24u32),
-                },
-                Instruction::LoadConst(Register(4u8), Value(0i8)),
-                Instruction::Peek {
-                    tok: TokenDescription::Super,
-                    reg: Register(4u8),
-                },
-                Instruction::JumpIfNonZero {
-                    cond: Register(4u8),
-                    address: Address(27u32),
-                },
-                Instruction::LoadConst(Register(4u8), Value(0i8)),
-                Instruction::Peek {
-                    tok: TokenDescription::Self_,
-                    reg: Register(4u8),
-                },
-                Instruction::JumpIfNonZero {
-                    cond: Register(4u8),
-                    address: Address(30u32),
-                },
-                Instruction::LoadConst(Register(4u8), Value(0i8)),
-                Instruction::Peek {
-                    tok: TokenDescription::SelfUpper,
-                    reg: Register(4u8),
-                },
-                Instruction::JumpIfNonZero {
-                    cond: Register(4u8),
-                    address: Address(33u32),
-                },
-                Instruction::LoadConst(Register(4u8), Value(0i8)),
-                Instruction::Peek {
-                    tok: TokenDescription::Crate,
-                    reg: Register(4u8),
-                },
-                Instruction::JumpIfNonZero {
-                    cond: Register(4u8),
-                    address: Address(36u32),
-                },
-                Instruction::LoadConst(Register(4u8), Value(0i8)),
-                Instruction::Peek {
-                    tok: TokenDescription::ColonColon,
-                    reg: Register(4u8),
-                },
-                Instruction::JumpIfZero {
-                    cond: Register(4u8),
-                    address: Address(39u32),
-                },
-                Instruction::Call {
-                    function: FunctionId(49u32),
                     result: Register(5u8),
                 },
                 Instruction::Jump {
                     address: Address(40u32),
                 },
+                Instruction::LoadConst(Register(6u8), Value(0i8)),
+                Instruction::LoadConst(Register(6u8), Value(0i8)),
+                Instruction::LoadConst(Register(6u8), Value(0i8)),
+                Instruction::LoadConst(Register(6u8), Value(0i8)),
+                Instruction::LoadConst(Register(6u8), Value(0i8)),
+                Instruction::LoadConst(Register(6u8), Value(0i8)),
+                Instruction::LoadConst(Register(6u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::Ident,
+                    reg: Register(6u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(6u8),
+                    address: Address(21u32),
+                },
+                Instruction::LoadConst(Register(6u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::FragmentIdent,
+                    reg: Register(6u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(6u8),
+                    address: Address(24u32),
+                },
+                Instruction::LoadConst(Register(6u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::Super,
+                    reg: Register(6u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(6u8),
+                    address: Address(27u32),
+                },
+                Instruction::LoadConst(Register(6u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::Self_,
+                    reg: Register(6u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(6u8),
+                    address: Address(30u32),
+                },
+                Instruction::LoadConst(Register(6u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::SelfUpper,
+                    reg: Register(6u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(6u8),
+                    address: Address(33u32),
+                },
+                Instruction::LoadConst(Register(6u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::Crate,
+                    reg: Register(6u8),
+                },
+                Instruction::JumpIfNonZero {
+                    cond: Register(6u8),
+                    address: Address(36u32),
+                },
+                Instruction::LoadConst(Register(6u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::ColonColon,
+                    reg: Register(6u8),
+                },
+                Instruction::JumpIfZero {
+                    cond: Register(6u8),
+                    address: Address(39u32),
+                },
+                Instruction::Call {
+                    function: FunctionId(49u32),
+                    result: Register(7u8),
+                },
+                Instruction::Jump {
+                    address: Address(40u32),
+                },
                 Instruction::Error,
                 Instruction::Return(Register(0u8)),
             ],
-            reg_num: 6usize,
+            reg_num: 9usize,
         },
         Function {
             name: "expr_qualified_path",
@@ -3787,15 +3787,15 @@ const PROGRAM: Program = Program {
                 },
                 Instruction::Call {
                     function: FunctionId(16u32),
-                    result: Register(1u8),
+                    result: Register(2u8),
                 },
-                Instruction::LoadConst(Register(2u8), Value(0i8)),
+                Instruction::LoadConst(Register(4u8), Value(0i8)),
                 Instruction::Peek {
                     tok: TokenDescription::As,
-                    reg: Register(2u8),
+                    reg: Register(4u8),
                 },
                 Instruction::JumpIfZero {
-                    cond: Register(2u8),
+                    cond: Register(4u8),
                     address: Address(7u32),
                 },
                 Instruction::BumpToken {
@@ -3803,7 +3803,7 @@ const PROGRAM: Program = Program {
                 },
                 Instruction::Call {
                     function: FunctionId(18u32),
-                    result: Register(3u8),
+                    result: Register(6u8),
                 },
                 Instruction::BumpToken {
                     tok: TokenDescription::GreaterThan,
@@ -3813,22 +3813,22 @@ const PROGRAM: Program = Program {
                 },
                 Instruction::Call {
                     function: FunctionId(51u32),
-                    result: Register(4u8),
+                    result: Register(9u8),
                 },
                 Instruction::Return(Register(0u8)),
             ],
-            reg_num: 5usize,
+            reg_num: 10usize,
         },
         Function {
             name: "expr_path_in",
             code: &[
-                Instruction::LoadConst(Register(1u8), Value(0i8)),
+                Instruction::LoadConst(Register(2u8), Value(0i8)),
                 Instruction::Peek {
                     tok: TokenDescription::ColonColon,
-                    reg: Register(1u8),
+                    reg: Register(2u8),
                 },
                 Instruction::JumpIfZero {
-                    cond: Register(1u8),
+                    cond: Register(2u8),
                     address: Address(4u32),
                 },
                 Instruction::BumpToken {
@@ -3836,24 +3836,24 @@ const PROGRAM: Program = Program {
                 },
                 Instruction::Call {
                     function: FunctionId(51u32),
-                    result: Register(2u8),
+                    result: Register(4u8),
                 },
-                Instruction::LoadConst(Register(3u8), Value(0i8)),
+                Instruction::LoadConst(Register(6u8), Value(0i8)),
                 Instruction::Peek {
                     tok: TokenDescription::ColonColon,
-                    reg: Register(3u8),
+                    reg: Register(6u8),
                 },
                 Instruction::JumpIfZero {
-                    cond: Register(3u8),
+                    cond: Register(6u8),
                     address: Address(9u32),
                 },
                 Instruction::Call {
                     function: FunctionId(50u32),
-                    result: Register(4u8),
+                    result: Register(7u8),
                 },
                 Instruction::Return(Register(0u8)),
             ],
-            reg_num: 5usize,
+            reg_num: 8usize,
         },
         Function {
             name: "expr_path_in_",
@@ -3863,24 +3863,24 @@ const PROGRAM: Program = Program {
                 },
                 Instruction::Call {
                     function: FunctionId(51u32),
-                    result: Register(1u8),
+                    result: Register(2u8),
                 },
-                Instruction::LoadConst(Register(2u8), Value(0i8)),
+                Instruction::LoadConst(Register(4u8), Value(0i8)),
                 Instruction::Peek {
                     tok: TokenDescription::ColonColon,
-                    reg: Register(2u8),
+                    reg: Register(4u8),
                 },
                 Instruction::JumpIfZero {
-                    cond: Register(2u8),
+                    cond: Register(4u8),
                     address: Address(6u32),
                 },
                 Instruction::Call {
                     function: FunctionId(50u32),
-                    result: Register(3u8),
+                    result: Register(5u8),
                 },
                 Instruction::Return(Register(0u8)),
             ],
-            reg_num: 4usize,
+            reg_num: 6usize,
         },
         Function {
             name: "expr_path_segment",
@@ -3889,22 +3889,22 @@ const PROGRAM: Program = Program {
                     function: FunctionId(52u32),
                     result: Register(1u8),
                 },
-                Instruction::LoadConst(Register(2u8), Value(0i8)),
+                Instruction::LoadConst(Register(3u8), Value(0i8)),
                 Instruction::Peek {
                     tok: TokenDescription::ColonColon,
-                    reg: Register(2u8),
-                },
-                Instruction::JumpIfZero {
-                    cond: Register(2u8),
-                    address: Address(9u32),
-                },
-                Instruction::LoadConst(Register(3u8), Value(0i8)),
-                Instruction::Peek2 {
-                    tok: TokenDescription::LessThan,
                     reg: Register(3u8),
                 },
                 Instruction::JumpIfZero {
                     cond: Register(3u8),
+                    address: Address(9u32),
+                },
+                Instruction::LoadConst(Register(5u8), Value(0i8)),
+                Instruction::Peek2 {
+                    tok: TokenDescription::LessThan,
+                    reg: Register(5u8),
+                },
+                Instruction::JumpIfZero {
+                    cond: Register(5u8),
                     address: Address(9u32),
                 },
                 Instruction::BumpToken {
@@ -3912,72 +3912,72 @@ const PROGRAM: Program = Program {
                 },
                 Instruction::Call {
                     function: FunctionId(61u32),
-                    result: Register(4u8),
+                    result: Register(7u8),
                 },
                 Instruction::Return(Register(0u8)),
             ],
-            reg_num: 5usize,
+            reg_num: 8usize,
         },
         Function {
             name: "path_ident_segment",
             code: &[
-                Instruction::LoadConst(Register(1u8), Value(0i8)),
-                Instruction::LoadConst(Register(1u8), Value(0i8)),
-                Instruction::LoadConst(Register(1u8), Value(0i8)),
-                Instruction::LoadConst(Register(1u8), Value(0i8)),
-                Instruction::LoadConst(Register(1u8), Value(0i8)),
-                Instruction::LoadConst(Register(1u8), Value(0i8)),
+                Instruction::LoadConst(Register(2u8), Value(0i8)),
+                Instruction::LoadConst(Register(2u8), Value(0i8)),
+                Instruction::LoadConst(Register(2u8), Value(0i8)),
+                Instruction::LoadConst(Register(2u8), Value(0i8)),
+                Instruction::LoadConst(Register(2u8), Value(0i8)),
+                Instruction::LoadConst(Register(2u8), Value(0i8)),
                 Instruction::Peek {
                     tok: TokenDescription::Ident,
-                    reg: Register(1u8),
+                    reg: Register(2u8),
                 },
                 Instruction::JumpIfNonZero {
-                    cond: Register(1u8),
+                    cond: Register(2u8),
                     address: Address(10u32),
                 },
-                Instruction::LoadConst(Register(1u8), Value(0i8)),
+                Instruction::LoadConst(Register(2u8), Value(0i8)),
                 Instruction::Peek {
                     tok: TokenDescription::FragmentIdent,
-                    reg: Register(1u8),
+                    reg: Register(2u8),
                 },
                 Instruction::JumpIfNonZero {
-                    cond: Register(1u8),
+                    cond: Register(2u8),
                     address: Address(13u32),
                 },
-                Instruction::LoadConst(Register(1u8), Value(0i8)),
+                Instruction::LoadConst(Register(2u8), Value(0i8)),
                 Instruction::Peek {
                     tok: TokenDescription::SelfUpper,
-                    reg: Register(1u8),
+                    reg: Register(2u8),
                 },
                 Instruction::JumpIfNonZero {
-                    cond: Register(1u8),
+                    cond: Register(2u8),
                     address: Address(16u32),
                 },
-                Instruction::LoadConst(Register(1u8), Value(0i8)),
+                Instruction::LoadConst(Register(2u8), Value(0i8)),
                 Instruction::Peek {
                     tok: TokenDescription::Self_,
-                    reg: Register(1u8),
+                    reg: Register(2u8),
                 },
                 Instruction::JumpIfNonZero {
-                    cond: Register(1u8),
+                    cond: Register(2u8),
                     address: Address(19u32),
                 },
-                Instruction::LoadConst(Register(1u8), Value(0i8)),
+                Instruction::LoadConst(Register(2u8), Value(0i8)),
                 Instruction::Peek {
                     tok: TokenDescription::Super,
-                    reg: Register(1u8),
+                    reg: Register(2u8),
                 },
                 Instruction::JumpIfNonZero {
-                    cond: Register(1u8),
+                    cond: Register(2u8),
                     address: Address(22u32),
                 },
-                Instruction::LoadConst(Register(1u8), Value(0i8)),
+                Instruction::LoadConst(Register(2u8), Value(0i8)),
                 Instruction::Peek {
                     tok: TokenDescription::Crate,
-                    reg: Register(1u8),
+                    reg: Register(2u8),
                 },
                 Instruction::JumpIfZero {
-                    cond: Register(1u8),
+                    cond: Register(2u8),
                     address: Address(25u32),
                 },
                 Instruction::Bump,
@@ -3987,7 +3987,7 @@ const PROGRAM: Program = Program {
                 Instruction::Error,
                 Instruction::Return(Register(0u8)),
             ],
-            reg_num: 2usize,
+            reg_num: 5usize,
         },
         Function {
             name: "expr_if",
@@ -3997,19 +3997,19 @@ const PROGRAM: Program = Program {
                 },
                 Instruction::Call {
                     function: FunctionId(43u32),
-                    result: Register(1u8),
+                    result: Register(2u8),
                 },
                 Instruction::Call {
                     function: FunctionId(56u32),
-                    result: Register(2u8),
+                    result: Register(3u8),
                 },
-                Instruction::LoadConst(Register(3u8), Value(0i8)),
+                Instruction::LoadConst(Register(5u8), Value(0i8)),
                 Instruction::Peek {
                     tok: TokenDescription::Else,
-                    reg: Register(3u8),
+                    reg: Register(5u8),
                 },
                 Instruction::JumpIfZero {
-                    cond: Register(3u8),
+                    cond: Register(5u8),
                     address: Address(8u32),
                 },
                 Instruction::BumpToken {
@@ -4017,11 +4017,11 @@ const PROGRAM: Program = Program {
                 },
                 Instruction::Call {
                     function: FunctionId(56u32),
-                    result: Register(4u8),
+                    result: Register(7u8),
                 },
                 Instruction::Return(Register(0u8)),
             ],
-            reg_num: 5usize,
+            reg_num: 8usize,
         },
         Function {
             name: "expr_array",
@@ -4029,13 +4029,13 @@ const PROGRAM: Program = Program {
                 Instruction::BumpToken {
                     tok: TokenDescription::LBracket,
                 },
-                Instruction::LoadConst(Register(1u8), Value(0i8)),
+                Instruction::LoadConst(Register(3u8), Value(0i8)),
                 Instruction::Peek {
                     tok: TokenDescription::RBracket,
-                    reg: Register(1u8),
+                    reg: Register(3u8),
                 },
                 Instruction::JumpIfZero {
-                    cond: Register(1u8),
+                    cond: Register(3u8),
                     address: Address(6u32),
                 },
                 Instruction::BumpToken {
@@ -4046,15 +4046,15 @@ const PROGRAM: Program = Program {
                 },
                 Instruction::Call {
                     function: FunctionId(43u32),
-                    result: Register(2u8),
+                    result: Register(5u8),
                 },
-                Instruction::LoadConst(Register(3u8), Value(0i8)),
+                Instruction::LoadConst(Register(7u8), Value(0i8)),
                 Instruction::Peek {
                     tok: TokenDescription::Semicolon,
-                    reg: Register(3u8),
+                    reg: Register(7u8),
                 },
                 Instruction::JumpIfZero {
-                    cond: Register(3u8),
+                    cond: Register(7u8),
                     address: Address(14u32),
                 },
                 Instruction::BumpToken {
@@ -4062,7 +4062,7 @@ const PROGRAM: Program = Program {
                 },
                 Instruction::Call {
                     function: FunctionId(43u32),
-                    result: Register(4u8),
+                    result: Register(9u8),
                 },
                 Instruction::BumpToken {
                     tok: TokenDescription::RBracket,
@@ -4072,34 +4072,34 @@ const PROGRAM: Program = Program {
                 },
                 Instruction::Call {
                     function: FunctionId(55u32),
-                    result: Register(5u8),
+                    result: Register(11u8),
                 },
                 Instruction::Return(Register(0u8)),
             ],
-            reg_num: 6usize,
+            reg_num: 12usize,
         },
         Function {
             name: "expr_array_",
             code: &[
-                Instruction::LoadConst(Register(1u8), Value(0i8)),
+                Instruction::LoadConst(Register(2u8), Value(0i8)),
                 Instruction::Peek {
                     tok: TokenDescription::Comma,
-                    reg: Register(1u8),
+                    reg: Register(2u8),
                 },
                 Instruction::JumpIfZero {
-                    cond: Register(1u8),
+                    cond: Register(2u8),
                     address: Address(12u32),
                 },
                 Instruction::BumpToken {
                     tok: TokenDescription::Comma,
                 },
-                Instruction::LoadConst(Register(2u8), Value(0i8)),
+                Instruction::LoadConst(Register(5u8), Value(0i8)),
                 Instruction::Peek {
                     tok: TokenDescription::RBracket,
-                    reg: Register(2u8),
+                    reg: Register(5u8),
                 },
                 Instruction::JumpIfZero {
-                    cond: Register(2u8),
+                    cond: Register(5u8),
                     address: Address(9u32),
                 },
                 Instruction::BumpToken {
@@ -4110,11 +4110,11 @@ const PROGRAM: Program = Program {
                 },
                 Instruction::Call {
                     function: FunctionId(43u32),
-                    result: Register(3u8),
+                    result: Register(7u8),
                 },
                 Instruction::Call {
                     function: FunctionId(55u32),
-                    result: Register(4u8),
+                    result: Register(8u8),
                 },
                 Instruction::Jump {
                     address: Address(13u32),
@@ -4124,7 +4124,7 @@ const PROGRAM: Program = Program {
                 },
                 Instruction::Return(Register(0u8)),
             ],
-            reg_num: 5usize,
+            reg_num: 10usize,
         },
         Function {
             name: "expr_block",
@@ -4143,13 +4143,13 @@ const PROGRAM: Program = Program {
                 Instruction::BumpToken {
                     tok: TokenDescription::LParen,
                 },
-                Instruction::LoadConst(Register(1u8), Value(0i8)),
+                Instruction::LoadConst(Register(3u8), Value(0i8)),
                 Instruction::Peek {
                     tok: TokenDescription::RParen,
-                    reg: Register(1u8),
+                    reg: Register(3u8),
                 },
                 Instruction::JumpIfZero {
-                    cond: Register(1u8),
+                    cond: Register(3u8),
                     address: Address(6u32),
                 },
                 Instruction::BumpToken {
@@ -4160,38 +4160,38 @@ const PROGRAM: Program = Program {
                 },
                 Instruction::Call {
                     function: FunctionId(43u32),
-                    result: Register(2u8),
+                    result: Register(5u8),
                 },
                 Instruction::Call {
                     function: FunctionId(58u32),
-                    result: Register(3u8),
+                    result: Register(6u8),
                 },
                 Instruction::Return(Register(0u8)),
             ],
-            reg_num: 4usize,
+            reg_num: 7usize,
         },
         Function {
             name: "expr_call_",
             code: &[
-                Instruction::LoadConst(Register(1u8), Value(0i8)),
+                Instruction::LoadConst(Register(2u8), Value(0i8)),
                 Instruction::Peek {
                     tok: TokenDescription::Comma,
-                    reg: Register(1u8),
+                    reg: Register(2u8),
                 },
                 Instruction::JumpIfZero {
-                    cond: Register(1u8),
+                    cond: Register(2u8),
                     address: Address(12u32),
                 },
                 Instruction::BumpToken {
                     tok: TokenDescription::Comma,
                 },
-                Instruction::LoadConst(Register(2u8), Value(0i8)),
+                Instruction::LoadConst(Register(5u8), Value(0i8)),
                 Instruction::Peek {
                     tok: TokenDescription::RParen,
-                    reg: Register(2u8),
+                    reg: Register(5u8),
                 },
                 Instruction::JumpIfZero {
-                    cond: Register(2u8),
+                    cond: Register(5u8),
                     address: Address(9u32),
                 },
                 Instruction::BumpToken {
@@ -4202,11 +4202,11 @@ const PROGRAM: Program = Program {
                 },
                 Instruction::Call {
                     function: FunctionId(43u32),
-                    result: Register(3u8),
+                    result: Register(7u8),
                 },
                 Instruction::Call {
                     function: FunctionId(58u32),
-                    result: Register(4u8),
+                    result: Register(8u8),
                 },
                 Instruction::Jump {
                     address: Address(13u32),
@@ -4216,7 +4216,7 @@ const PROGRAM: Program = Program {
                 },
                 Instruction::Return(Register(0u8)),
             ],
-            reg_num: 5usize,
+            reg_num: 10usize,
         },
         Function {
             name: "expr_dot_expr",
@@ -4224,13 +4224,13 @@ const PROGRAM: Program = Program {
                 Instruction::BumpToken {
                     tok: TokenDescription::Dot,
                 },
-                Instruction::LoadConst(Register(1u8), Value(0i8)),
+                Instruction::LoadConst(Register(3u8), Value(0i8)),
                 Instruction::Peek {
                     tok: TokenDescription::Await,
-                    reg: Register(1u8),
+                    reg: Register(3u8),
                 },
                 Instruction::JumpIfZero {
-                    cond: Register(1u8),
+                    cond: Register(3u8),
                     address: Address(6u32),
                 },
                 Instruction::BumpToken {
@@ -4239,55 +4239,17 @@ const PROGRAM: Program = Program {
                 Instruction::Jump {
                     address: Address(31u32),
                 },
-                Instruction::LoadConst(Register(2u8), Value(0i8)),
+                Instruction::LoadConst(Register(5u8), Value(0i8)),
                 Instruction::Peek {
                     tok: TokenDescription::Ident,
-                    reg: Register(2u8),
+                    reg: Register(5u8),
                 },
                 Instruction::JumpIfZero {
-                    cond: Register(2u8),
+                    cond: Register(5u8),
                     address: Address(12u32),
                 },
                 Instruction::BumpToken {
                     tok: TokenDescription::Ident,
-                },
-                Instruction::Call {
-                    function: FunctionId(60u32),
-                    result: Register(3u8),
-                },
-                Instruction::Jump {
-                    address: Address(31u32),
-                },
-                Instruction::LoadConst(Register(4u8), Value(0i8)),
-                Instruction::Peek {
-                    tok: TokenDescription::FragmentIdent,
-                    reg: Register(4u8),
-                },
-                Instruction::JumpIfZero {
-                    cond: Register(4u8),
-                    address: Address(18u32),
-                },
-                Instruction::BumpToken {
-                    tok: TokenDescription::FragmentIdent,
-                },
-                Instruction::Call {
-                    function: FunctionId(60u32),
-                    result: Register(5u8),
-                },
-                Instruction::Jump {
-                    address: Address(31u32),
-                },
-                Instruction::LoadConst(Register(6u8), Value(0i8)),
-                Instruction::Peek {
-                    tok: TokenDescription::Literal,
-                    reg: Register(6u8),
-                },
-                Instruction::JumpIfZero {
-                    cond: Register(6u8),
-                    address: Address(24u32),
-                },
-                Instruction::BumpToken {
-                    tok: TokenDescription::Literal,
                 },
                 Instruction::Call {
                     function: FunctionId(60u32),
@@ -4298,11 +4260,49 @@ const PROGRAM: Program = Program {
                 },
                 Instruction::LoadConst(Register(8u8), Value(0i8)),
                 Instruction::Peek {
-                    tok: TokenDescription::FragmentLiteral,
+                    tok: TokenDescription::FragmentIdent,
                     reg: Register(8u8),
                 },
                 Instruction::JumpIfZero {
                     cond: Register(8u8),
+                    address: Address(18u32),
+                },
+                Instruction::BumpToken {
+                    tok: TokenDescription::FragmentIdent,
+                },
+                Instruction::Call {
+                    function: FunctionId(60u32),
+                    result: Register(10u8),
+                },
+                Instruction::Jump {
+                    address: Address(31u32),
+                },
+                Instruction::LoadConst(Register(11u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::Literal,
+                    reg: Register(11u8),
+                },
+                Instruction::JumpIfZero {
+                    cond: Register(11u8),
+                    address: Address(24u32),
+                },
+                Instruction::BumpToken {
+                    tok: TokenDescription::Literal,
+                },
+                Instruction::Call {
+                    function: FunctionId(60u32),
+                    result: Register(13u8),
+                },
+                Instruction::Jump {
+                    address: Address(31u32),
+                },
+                Instruction::LoadConst(Register(14u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::FragmentLiteral,
+                    reg: Register(14u8),
+                },
+                Instruction::JumpIfZero {
+                    cond: Register(14u8),
                     address: Address(30u32),
                 },
                 Instruction::BumpToken {
@@ -4310,7 +4310,7 @@ const PROGRAM: Program = Program {
                 },
                 Instruction::Call {
                     function: FunctionId(60u32),
-                    result: Register(9u8),
+                    result: Register(16u8),
                 },
                 Instruction::Jump {
                     address: Address(31u32),
@@ -4318,18 +4318,18 @@ const PROGRAM: Program = Program {
                 Instruction::Error,
                 Instruction::Return(Register(0u8)),
             ],
-            reg_num: 10usize,
+            reg_num: 18usize,
         },
         Function {
             name: "expr_field_or_method",
             code: &[
-                Instruction::LoadConst(Register(1u8), Value(0i8)),
+                Instruction::LoadConst(Register(2u8), Value(0i8)),
                 Instruction::Peek {
                     tok: TokenDescription::ColonColon,
-                    reg: Register(1u8),
+                    reg: Register(2u8),
                 },
                 Instruction::JumpIfZero {
-                    cond: Register(1u8),
+                    cond: Register(2u8),
                     address: Address(6u32),
                 },
                 Instruction::BumpToken {
@@ -4337,28 +4337,28 @@ const PROGRAM: Program = Program {
                 },
                 Instruction::Call {
                     function: FunctionId(61u32),
-                    result: Register(2u8),
-                },
-                Instruction::Call {
-                    function: FunctionId(57u32),
-                    result: Register(3u8),
-                },
-                Instruction::LoadConst(Register(4u8), Value(0i8)),
-                Instruction::Peek {
-                    tok: TokenDescription::LParen,
-                    reg: Register(4u8),
-                },
-                Instruction::JumpIfZero {
-                    cond: Register(4u8),
-                    address: Address(10u32),
+                    result: Register(4u8),
                 },
                 Instruction::Call {
                     function: FunctionId(57u32),
                     result: Register(5u8),
                 },
+                Instruction::LoadConst(Register(7u8), Value(0i8)),
+                Instruction::Peek {
+                    tok: TokenDescription::LParen,
+                    reg: Register(7u8),
+                },
+                Instruction::JumpIfZero {
+                    cond: Register(7u8),
+                    address: Address(10u32),
+                },
+                Instruction::Call {
+                    function: FunctionId(57u32),
+                    result: Register(8u8),
+                },
                 Instruction::Return(Register(0u8)),
             ],
-            reg_num: 6usize,
+            reg_num: 9usize,
         },
         Function {
             name: "expr_angle_bracketed_generic_arguments",
@@ -4366,13 +4366,13 @@ const PROGRAM: Program = Program {
                 Instruction::BumpToken {
                     tok: TokenDescription::LessThan,
                 },
-                Instruction::LoadConst(Register(1u8), Value(0i8)),
+                Instruction::LoadConst(Register(3u8), Value(0i8)),
                 Instruction::Peek {
                     tok: TokenDescription::GreaterThan,
-                    reg: Register(1u8),
+                    reg: Register(3u8),
                 },
                 Instruction::JumpIfZero {
-                    cond: Register(1u8),
+                    cond: Register(3u8),
                     address: Address(6u32),
                 },
                 Instruction::BumpToken {
@@ -4383,26 +4383,26 @@ const PROGRAM: Program = Program {
                 },
                 Instruction::Call {
                     function: FunctionId(63u32),
-                    result: Register(2u8),
+                    result: Register(5u8),
                 },
                 Instruction::Call {
                     function: FunctionId(62u32),
-                    result: Register(3u8),
+                    result: Register(6u8),
                 },
                 Instruction::Return(Register(0u8)),
             ],
-            reg_num: 4usize,
+            reg_num: 7usize,
         },
         Function {
             name: "expr_angle_bracketed_generic_arguments_",
             code: &[
-                Instruction::LoadConst(Register(1u8), Value(0i8)),
+                Instruction::LoadConst(Register(2u8), Value(0i8)),
                 Instruction::Peek {
                     tok: TokenDescription::GreaterThan,
-                    reg: Register(1u8),
+                    reg: Register(2u8),
                 },
                 Instruction::JumpIfZero {
-                    cond: Register(1u8),
+                    cond: Register(2u8),
                     address: Address(5u32),
                 },
                 Instruction::BumpToken {
@@ -4411,25 +4411,25 @@ const PROGRAM: Program = Program {
                 Instruction::Jump {
                     address: Address(16u32),
                 },
-                Instruction::LoadConst(Register(2u8), Value(0i8)),
+                Instruction::LoadConst(Register(4u8), Value(0i8)),
                 Instruction::Peek {
                     tok: TokenDescription::Comma,
-                    reg: Register(2u8),
+                    reg: Register(4u8),
                 },
                 Instruction::JumpIfZero {
-                    cond: Register(2u8),
+                    cond: Register(4u8),
                     address: Address(16u32),
                 },
                 Instruction::BumpToken {
                     tok: TokenDescription::Comma,
                 },
-                Instruction::LoadConst(Register(3u8), Value(0i8)),
+                Instruction::LoadConst(Register(7u8), Value(0i8)),
                 Instruction::Peek {
                     tok: TokenDescription::GreaterThan,
-                    reg: Register(3u8),
+                    reg: Register(7u8),
                 },
                 Instruction::JumpIfZero {
-                    cond: Register(3u8),
+                    cond: Register(7u8),
                     address: Address(14u32),
                 },
                 Instruction::BumpToken {
@@ -4440,84 +4440,84 @@ const PROGRAM: Program = Program {
                 },
                 Instruction::Call {
                     function: FunctionId(63u32),
-                    result: Register(4u8),
+                    result: Register(9u8),
                 },
                 Instruction::Call {
                     function: FunctionId(62u32),
-                    result: Register(5u8),
+                    result: Register(10u8),
                 },
                 Instruction::Return(Register(0u8)),
             ],
-            reg_num: 6usize,
+            reg_num: 11usize,
         },
         Function {
             name: "expr_generic_argument",
             code: &[
-                Instruction::LoadConst(Register(1u8), Value(0i8)),
-                Instruction::LoadConst(Register(1u8), Value(0i8)),
+                Instruction::LoadConst(Register(2u8), Value(0i8)),
+                Instruction::LoadConst(Register(2u8), Value(0i8)),
                 Instruction::Peek {
                     tok: TokenDescription::Literal,
-                    reg: Register(1u8),
+                    reg: Register(2u8),
                 },
                 Instruction::JumpIfNonZero {
-                    cond: Register(1u8),
+                    cond: Register(2u8),
                     address: Address(6u32),
                 },
-                Instruction::LoadConst(Register(1u8), Value(0i8)),
+                Instruction::LoadConst(Register(2u8), Value(0i8)),
                 Instruction::Peek {
                     tok: TokenDescription::FragmentLiteral,
-                    reg: Register(1u8),
+                    reg: Register(2u8),
                 },
                 Instruction::JumpIfZero {
-                    cond: Register(1u8),
+                    cond: Register(2u8),
                     address: Address(9u32),
                 },
                 Instruction::Bump,
                 Instruction::Jump {
                     address: Address(34u32),
                 },
-                Instruction::LoadConst(Register(2u8), Value(0i8)),
+                Instruction::LoadConst(Register(4u8), Value(0i8)),
                 Instruction::Peek {
                     tok: TokenDescription::Minus,
-                    reg: Register(2u8),
+                    reg: Register(4u8),
                 },
                 Instruction::JumpIfZero {
-                    cond: Register(2u8),
+                    cond: Register(4u8),
                     address: Address(14u32),
                 },
                 Instruction::Call {
                     function: FunctionId(64u32),
-                    result: Register(3u8),
+                    result: Register(5u8),
                 },
                 Instruction::Jump {
                     address: Address(34u32),
                 },
-                Instruction::LoadConst(Register(4u8), Value(0i8)),
-                Instruction::LoadConst(Register(4u8), Value(0i8)),
+                Instruction::LoadConst(Register(6u8), Value(0i8)),
+                Instruction::LoadConst(Register(6u8), Value(0i8)),
                 Instruction::Peek {
                     tok: TokenDescription::FragmentIdent,
-                    reg: Register(4u8),
+                    reg: Register(6u8),
                 },
                 Instruction::JumpIfNonZero {
-                    cond: Register(4u8),
+                    cond: Register(6u8),
                     address: Address(20u32),
                 },
-                Instruction::LoadConst(Register(4u8), Value(0i8)),
+                Instruction::LoadConst(Register(6u8), Value(0i8)),
                 Instruction::Peek {
                     tok: TokenDescription::Ident,
-                    reg: Register(4u8),
+                    reg: Register(6u8),
                 },
                 Instruction::JumpIfZero {
-                    cond: Register(4u8),
+                    cond: Register(6u8),
                     address: Address(28u32),
                 },
-                Instruction::LoadConst(Register(5u8), Value(0i8)),
+                Instruction::LoadConst(Register(8u8), Value(0i8)),
                 Instruction::Peek2 {
                     tok: TokenDescription::Equals,
-                    reg: Register(5u8),
+                    reg: Register(8u8),
                 },
                 Instruction::JumpIfZero {
-                    cond: Register(5u8),
+                    cond: Register(8u8),
                     address: Address(26u32),
                 },
                 Instruction::Bump,
@@ -4526,45 +4526,45 @@ const PROGRAM: Program = Program {
                 },
                 Instruction::Call {
                     function: FunctionId(16u32),
-                    result: Register(6u8),
+                    result: Register(11u8),
                 },
                 Instruction::Jump {
                     address: Address(34u32),
                 },
-                Instruction::LoadConst(Register(7u8), Value(0i8)),
+                Instruction::LoadConst(Register(12u8), Value(0i8)),
                 Instruction::Peek {
                     tok: TokenDescription::LBrace,
-                    reg: Register(7u8),
+                    reg: Register(12u8),
                 },
                 Instruction::JumpIfZero {
-                    cond: Register(7u8),
+                    cond: Register(12u8),
                     address: Address(33u32),
                 },
                 Instruction::Call {
                     function: FunctionId(12u32),
-                    result: Register(8u8),
+                    result: Register(13u8),
                 },
                 Instruction::Jump {
                     address: Address(34u32),
                 },
                 Instruction::Call {
                     function: FunctionId(16u32),
-                    result: Register(9u8),
+                    result: Register(14u8),
                 },
                 Instruction::Return(Register(0u8)),
             ],
-            reg_num: 10usize,
+            reg_num: 15usize,
         },
         Function {
             name: "minus_prefixed_literal",
             code: &[
-                Instruction::LoadConst(Register(1u8), Value(0i8)),
+                Instruction::LoadConst(Register(2u8), Value(0i8)),
                 Instruction::Peek {
                     tok: TokenDescription::Minus,
-                    reg: Register(1u8),
+                    reg: Register(2u8),
                 },
                 Instruction::JumpIfZero {
-                    cond: Register(1u8),
+                    cond: Register(2u8),
                     address: Address(6u32),
                 },
                 Instruction::BumpToken {
@@ -4572,18 +4572,18 @@ const PROGRAM: Program = Program {
                 },
                 Instruction::Call {
                     function: FunctionId(64u32),
-                    result: Register(2u8),
+                    result: Register(4u8),
                 },
                 Instruction::Jump {
                     address: Address(17u32),
                 },
-                Instruction::LoadConst(Register(3u8), Value(0i8)),
+                Instruction::LoadConst(Register(5u8), Value(0i8)),
                 Instruction::Peek {
                     tok: TokenDescription::Literal,
-                    reg: Register(3u8),
+                    reg: Register(5u8),
                 },
                 Instruction::JumpIfZero {
-                    cond: Register(3u8),
+                    cond: Register(5u8),
                     address: Address(11u32),
                 },
                 Instruction::BumpToken {
@@ -4592,13 +4592,13 @@ const PROGRAM: Program = Program {
                 Instruction::Jump {
                     address: Address(17u32),
                 },
-                Instruction::LoadConst(Register(4u8), Value(0i8)),
+                Instruction::LoadConst(Register(7u8), Value(0i8)),
                 Instruction::Peek {
                     tok: TokenDescription::FragmentLiteral,
-                    reg: Register(4u8),
+                    reg: Register(7u8),
                 },
                 Instruction::JumpIfZero {
-                    cond: Register(4u8),
+                    cond: Register(7u8),
                     address: Address(16u32),
                 },
                 Instruction::BumpToken {
@@ -4610,7 +4610,7 @@ const PROGRAM: Program = Program {
                 Instruction::Error,
                 Instruction::Return(Register(0u8)),
             ],
-            reg_num: 5usize,
+            reg_num: 10usize,
         },
         Function {
             name: "expr_prefixed_unary_op",
@@ -4623,13 +4623,13 @@ const PROGRAM: Program = Program {
                 Instruction::BumpToken {
                     tok: TokenDescription::LParen,
                 },
-                Instruction::LoadConst(Register(1u8), Value(0i8)),
+                Instruction::LoadConst(Register(3u8), Value(0i8)),
                 Instruction::Peek {
                     tok: TokenDescription::RParen,
-                    reg: Register(1u8),
+                    reg: Register(3u8),
                 },
                 Instruction::JumpIfZero {
-                    cond: Register(1u8),
+                    cond: Register(3u8),
                     address: Address(6u32),
                 },
                 Instruction::BumpToken {
@@ -4640,26 +4640,26 @@ const PROGRAM: Program = Program {
                 },
                 Instruction::Call {
                     function: FunctionId(43u32),
-                    result: Register(2u8),
+                    result: Register(5u8),
                 },
                 Instruction::Call {
                     function: FunctionId(67u32),
-                    result: Register(3u8),
+                    result: Register(6u8),
                 },
                 Instruction::Return(Register(0u8)),
             ],
-            reg_num: 4usize,
+            reg_num: 7usize,
         },
         Function {
             name: "expr_tuple_",
             code: &[
-                Instruction::LoadConst(Register(1u8), Value(0i8)),
+                Instruction::LoadConst(Register(2u8), Value(0i8)),
                 Instruction::Peek {
                     tok: TokenDescription::RParen,
-                    reg: Register(1u8),
+                    reg: Register(2u8),
                 },
                 Instruction::JumpIfZero {
-                    cond: Register(1u8),
+                    cond: Register(2u8),
                     address: Address(5u32),
                 },
                 Instruction::BumpToken {
@@ -4671,13 +4671,13 @@ const PROGRAM: Program = Program {
                 Instruction::BumpToken {
                     tok: TokenDescription::Comma,
                 },
-                Instruction::LoadConst(Register(2u8), Value(0i8)),
+                Instruction::LoadConst(Register(6u8), Value(0i8)),
                 Instruction::Peek {
                     tok: TokenDescription::RParen,
-                    reg: Register(2u8),
+                    reg: Register(6u8),
                 },
                 Instruction::JumpIfZero {
-                    cond: Register(2u8),
+                    cond: Register(6u8),
                     address: Address(11u32),
                 },
                 Instruction::BumpToken {
@@ -4688,26 +4688,26 @@ const PROGRAM: Program = Program {
                 },
                 Instruction::Call {
                     function: FunctionId(43u32),
-                    result: Register(3u8),
+                    result: Register(8u8),
                 },
                 Instruction::Call {
                     function: FunctionId(67u32),
-                    result: Register(4u8),
+                    result: Register(9u8),
                 },
                 Instruction::Return(Register(0u8)),
             ],
-            reg_num: 5usize,
+            reg_num: 10usize,
         },
         Function {
             name: "expr_loop",
             code: &[
-                Instruction::LoadConst(Register(1u8), Value(0i8)),
+                Instruction::LoadConst(Register(2u8), Value(0i8)),
                 Instruction::Peek {
                     tok: TokenDescription::FragmentLifetime,
-                    reg: Register(1u8),
+                    reg: Register(2u8),
                 },
                 Instruction::JumpIfZero {
-                    cond: Register(1u8),
+                    cond: Register(2u8),
                     address: Address(4u32),
                 },
                 Instruction::BumpToken {
@@ -4718,11 +4718,11 @@ const PROGRAM: Program = Program {
                 },
                 Instruction::Call {
                     function: FunctionId(12u32),
-                    result: Register(2u8),
+                    result: Register(5u8),
                 },
                 Instruction::Return(Register(0u8)),
             ],
-            reg_num: 3usize,
+            reg_num: 6usize,
         },
         Function {
             name: "expr_while",
@@ -4732,15 +4732,15 @@ const PROGRAM: Program = Program {
                 },
                 Instruction::Call {
                     function: FunctionId(43u32),
-                    result: Register(1u8),
+                    result: Register(2u8),
                 },
                 Instruction::Call {
                     function: FunctionId(12u32),
-                    result: Register(2u8),
+                    result: Register(3u8),
                 },
                 Instruction::Return(Register(0u8)),
             ],
-            reg_num: 3usize,
+            reg_num: 4usize,
         },
         Function {
             name: "expr_for",
@@ -4750,22 +4750,22 @@ const PROGRAM: Program = Program {
                 },
                 Instruction::Call {
                     function: FunctionId(26u32),
-                    result: Register(1u8),
+                    result: Register(2u8),
                 },
                 Instruction::BumpToken {
                     tok: TokenDescription::In,
                 },
                 Instruction::Call {
                     function: FunctionId(43u32),
-                    result: Register(2u8),
+                    result: Register(4u8),
                 },
                 Instruction::Call {
                     function: FunctionId(12u32),
-                    result: Register(3u8),
+                    result: Register(5u8),
                 },
                 Instruction::Return(Register(0u8)),
             ],
-            reg_num: 4usize,
+            reg_num: 6usize,
         },
         Function {
             name: "expr_match",
@@ -4775,32 +4775,32 @@ const PROGRAM: Program = Program {
                 },
                 Instruction::Call {
                     function: FunctionId(43u32),
-                    result: Register(1u8),
+                    result: Register(2u8),
                 },
                 Instruction::BumpToken {
                     tok: TokenDescription::LBrace,
                 },
                 Instruction::Call {
                     function: FunctionId(72u32),
-                    result: Register(2u8),
+                    result: Register(4u8),
                 },
                 Instruction::BumpToken {
                     tok: TokenDescription::RBrace,
                 },
                 Instruction::Return(Register(0u8)),
             ],
-            reg_num: 3usize,
+            reg_num: 6usize,
         },
         Function {
             name: "match_arms",
             code: &[
-                Instruction::LoadConst(Register(1u8), Value(0i8)),
+                Instruction::LoadConst(Register(2u8), Value(0i8)),
                 Instruction::Peek {
                     tok: TokenDescription::RBrace,
-                    reg: Register(1u8),
+                    reg: Register(2u8),
                 },
                 Instruction::JumpIfZero {
-                    cond: Register(1u8),
+                    cond: Register(2u8),
                     address: Address(4u32),
                 },
                 Instruction::Jump {
@@ -4808,15 +4808,15 @@ const PROGRAM: Program = Program {
                 },
                 Instruction::Call {
                     function: FunctionId(73u32),
-                    result: Register(2u8),
+                    result: Register(3u8),
                 },
                 Instruction::Call {
                     function: FunctionId(72u32),
-                    result: Register(3u8),
+                    result: Register(4u8),
                 },
                 Instruction::Return(Register(0u8)),
             ],
-            reg_num: 4usize,
+            reg_num: 5usize,
         },
         Function {
             name: "match_arm",
@@ -4825,13 +4825,13 @@ const PROGRAM: Program = Program {
                     function: FunctionId(26u32),
                     result: Register(1u8),
                 },
-                Instruction::LoadConst(Register(2u8), Value(0i8)),
+                Instruction::LoadConst(Register(3u8), Value(0i8)),
                 Instruction::Peek {
                     tok: TokenDescription::If,
-                    reg: Register(2u8),
+                    reg: Register(3u8),
                 },
                 Instruction::JumpIfZero {
-                    cond: Register(2u8),
+                    cond: Register(3u8),
                     address: Address(6u32),
                 },
                 Instruction::BumpToken {
@@ -4839,21 +4839,21 @@ const PROGRAM: Program = Program {
                 },
                 Instruction::Call {
                     function: FunctionId(43u32),
-                    result: Register(3u8),
+                    result: Register(5u8),
                 },
                 Instruction::BumpToken {
                     tok: TokenDescription::FatArrow,
                 },
                 Instruction::Call {
                     function: FunctionId(43u32),
-                    result: Register(4u8),
+                    result: Register(7u8),
                 },
                 Instruction::BumpToken {
                     tok: TokenDescription::Comma,
                 },
                 Instruction::Return(Register(0u8)),
             ],
-            reg_num: 5usize,
+            reg_num: 9usize,
         },
         Function {
             name: "macro_call_tail",
@@ -4863,29 +4863,12 @@ const PROGRAM: Program = Program {
                 },
                 Instruction::Call {
                     function: FunctionId(75u32),
-                    result: Register(1u8),
+                    result: Register(2u8),
                 },
-                Instruction::LoadConst(Register(2u8), Value(0i8)),
-                Instruction::LoadConst(Register(3u8), Value(16i8)),
-                Instruction::Sub {
-                    lhs: Register(1u8),
-                    rhs: Register(3u8),
-                    out: Register(2u8),
-                },
-                Instruction::Invert {
-                    src: Register(2u8),
-                    dst: Register(2u8),
-                },
-                Instruction::JumpIfZero {
-                    cond: Register(2u8),
-                    address: Address(9u32),
-                },
-                Instruction::LoadConst(Register(0u8), Value(17i8)),
-                Instruction::Return(Register(0u8)),
                 Instruction::LoadConst(Register(4u8), Value(0i8)),
-                Instruction::LoadConst(Register(5u8), Value(18i8)),
+                Instruction::LoadConst(Register(5u8), Value(16i8)),
                 Instruction::Sub {
-                    lhs: Register(1u8),
+                    lhs: Register(2u8),
                     rhs: Register(5u8),
                     out: Register(4u8),
                 },
@@ -4895,14 +4878,14 @@ const PROGRAM: Program = Program {
                 },
                 Instruction::JumpIfZero {
                     cond: Register(4u8),
-                    address: Address(16u32),
+                    address: Address(9u32),
                 },
-                Instruction::LoadConst(Register(0u8), Value(19i8)),
-                Instruction::Return(Register(0u8)),
+                Instruction::LoadConst(Register(3u8), Value(17i8)),
+                Instruction::Return(Register(3u8)),
                 Instruction::LoadConst(Register(6u8), Value(0i8)),
-                Instruction::LoadConst(Register(7u8), Value(20i8)),
+                Instruction::LoadConst(Register(7u8), Value(18i8)),
                 Instruction::Sub {
-                    lhs: Register(1u8),
+                    lhs: Register(2u8),
                     rhs: Register(7u8),
                     out: Register(6u8),
                 },
@@ -4912,133 +4895,150 @@ const PROGRAM: Program = Program {
                 },
                 Instruction::JumpIfZero {
                     cond: Register(6u8),
+                    address: Address(16u32),
+                },
+                Instruction::LoadConst(Register(3u8), Value(19i8)),
+                Instruction::Return(Register(3u8)),
+                Instruction::LoadConst(Register(8u8), Value(0i8)),
+                Instruction::LoadConst(Register(9u8), Value(20i8)),
+                Instruction::Sub {
+                    lhs: Register(2u8),
+                    rhs: Register(9u8),
+                    out: Register(8u8),
+                },
+                Instruction::Invert {
+                    src: Register(8u8),
+                    dst: Register(8u8),
+                },
+                Instruction::JumpIfZero {
+                    cond: Register(8u8),
                     address: Address(23u32),
                 },
-                Instruction::LoadConst(Register(0u8), Value(5i8)),
-                Instruction::Return(Register(0u8)),
+                Instruction::LoadConst(Register(3u8), Value(5i8)),
+                Instruction::Return(Register(3u8)),
                 Instruction::Return(Register(0u8)),
             ],
-            reg_num: 8usize,
+            reg_num: 10usize,
         },
         Function {
             name: "token_stream_group",
             code: &[
-                Instruction::LoadConst(Register(1u8), Value(0i8)),
+                Instruction::LoadConst(Register(2u8), Value(0i8)),
                 Instruction::Peek {
                     tok: TokenDescription::LParen,
-                    reg: Register(1u8),
+                    reg: Register(2u8),
                 },
                 Instruction::JumpIfZero {
-                    cond: Register(1u8),
+                    cond: Register(2u8),
                     address: Address(6u32),
                 },
                 Instruction::Call {
                     function: FunctionId(77u32),
-                    result: Register(2u8),
+                    result: Register(3u8),
                 },
-                Instruction::LoadConst(Register(0u8), Value(16i8)),
-                Instruction::Return(Register(0u8)),
-                Instruction::LoadConst(Register(3u8), Value(0i8)),
+                Instruction::LoadConst(Register(1u8), Value(16i8)),
+                Instruction::Return(Register(1u8)),
+                Instruction::LoadConst(Register(4u8), Value(0i8)),
                 Instruction::Peek {
                     tok: TokenDescription::LBracket,
-                    reg: Register(3u8),
+                    reg: Register(4u8),
                 },
                 Instruction::JumpIfZero {
-                    cond: Register(3u8),
+                    cond: Register(4u8),
                     address: Address(12u32),
                 },
                 Instruction::Call {
                     function: FunctionId(79u32),
-                    result: Register(4u8),
+                    result: Register(5u8),
                 },
-                Instruction::LoadConst(Register(0u8), Value(18i8)),
-                Instruction::Return(Register(0u8)),
-                Instruction::LoadConst(Register(5u8), Value(0i8)),
+                Instruction::LoadConst(Register(1u8), Value(18i8)),
+                Instruction::Return(Register(1u8)),
+                Instruction::LoadConst(Register(6u8), Value(0i8)),
                 Instruction::Peek {
                     tok: TokenDescription::LBrace,
-                    reg: Register(5u8),
+                    reg: Register(6u8),
                 },
                 Instruction::JumpIfZero {
-                    cond: Register(5u8),
+                    cond: Register(6u8),
                     address: Address(18u32),
                 },
                 Instruction::Call {
                     function: FunctionId(81u32),
-                    result: Register(6u8),
+                    result: Register(7u8),
                 },
-                Instruction::LoadConst(Register(0u8), Value(20i8)),
-                Instruction::Return(Register(0u8)),
+                Instruction::LoadConst(Register(1u8), Value(20i8)),
+                Instruction::Return(Register(1u8)),
                 Instruction::Error,
                 Instruction::Return(Register(0u8)),
             ],
-            reg_num: 7usize,
+            reg_num: 9usize,
         },
         Function {
             name: "token_stream_group_or_token",
             code: &[
-                Instruction::LoadConst(Register(1u8), Value(0i8)),
-                Instruction::LoadConst(Register(1u8), Value(0i8)),
-                Instruction::LoadConst(Register(1u8), Value(0i8)),
+                Instruction::LoadConst(Register(2u8), Value(0i8)),
+                Instruction::LoadConst(Register(2u8), Value(0i8)),
+                Instruction::LoadConst(Register(2u8), Value(0i8)),
                 Instruction::Peek {
                     tok: TokenDescription::LParen,
-                    reg: Register(1u8),
+                    reg: Register(2u8),
                 },
                 Instruction::JumpIfNonZero {
-                    cond: Register(1u8),
+                    cond: Register(2u8),
                     address: Address(7u32),
                 },
-                Instruction::LoadConst(Register(1u8), Value(0i8)),
+                Instruction::LoadConst(Register(2u8), Value(0i8)),
                 Instruction::Peek {
                     tok: TokenDescription::LBracket,
-                    reg: Register(1u8),
+                    reg: Register(2u8),
                 },
                 Instruction::JumpIfNonZero {
-                    cond: Register(1u8),
+                    cond: Register(2u8),
                     address: Address(10u32),
                 },
-                Instruction::LoadConst(Register(1u8), Value(0i8)),
+                Instruction::LoadConst(Register(2u8), Value(0i8)),
                 Instruction::Peek {
                     tok: TokenDescription::LBrace,
-                    reg: Register(1u8),
+                    reg: Register(2u8),
                 },
                 Instruction::JumpIfZero {
-                    cond: Register(1u8),
+                    cond: Register(2u8),
                     address: Address(13u32),
                 },
                 Instruction::Call {
                     function: FunctionId(75u32),
-                    result: Register(2u8),
+                    result: Register(3u8),
                 },
                 Instruction::Jump {
                     address: Address(27u32),
                 },
-                Instruction::LoadConst(Register(3u8), Value(0i8)),
-                Instruction::LoadConst(Register(3u8), Value(0i8)),
-                Instruction::LoadConst(Register(3u8), Value(0i8)),
+                Instruction::LoadConst(Register(4u8), Value(0i8)),
+                Instruction::LoadConst(Register(4u8), Value(0i8)),
+                Instruction::LoadConst(Register(4u8), Value(0i8)),
                 Instruction::Peek {
                     tok: TokenDescription::RParen,
-                    reg: Register(3u8),
+                    reg: Register(4u8),
                 },
                 Instruction::JumpIfNonZero {
-                    cond: Register(3u8),
+                    cond: Register(4u8),
                     address: Address(20u32),
                 },
-                Instruction::LoadConst(Register(3u8), Value(0i8)),
+                Instruction::LoadConst(Register(4u8), Value(0i8)),
                 Instruction::Peek {
                     tok: TokenDescription::RBracket,
-                    reg: Register(3u8),
+                    reg: Register(4u8),
                 },
                 Instruction::JumpIfNonZero {
-                    cond: Register(3u8),
+                    cond: Register(4u8),
                     address: Address(23u32),
                 },
-                Instruction::LoadConst(Register(3u8), Value(0i8)),
+                Instruction::LoadConst(Register(4u8), Value(0i8)),
                 Instruction::Peek {
                     tok: TokenDescription::RBrace,
-                    reg: Register(3u8),
+                    reg: Register(4u8),
                 },
                 Instruction::JumpIfZero {
-                    cond: Register(3u8),
+                    cond: Register(4u8),
                     address: Address(26u32),
                 },
                 Instruction::Error,
@@ -5048,7 +5048,7 @@ const PROGRAM: Program = Program {
                 Instruction::Bump,
                 Instruction::Return(Register(0u8)),
             ],
-            reg_num: 4usize,
+            reg_num: 7usize,
         },
         Function {
             name: "token_stream_group_paren",
@@ -5058,22 +5058,22 @@ const PROGRAM: Program = Program {
                 },
                 Instruction::Call {
                     function: FunctionId(78u32),
-                    result: Register(1u8),
+                    result: Register(2u8),
                 },
                 Instruction::Return(Register(0u8)),
             ],
-            reg_num: 2usize,
+            reg_num: 3usize,
         },
         Function {
             name: "token_stream_group_paren_",
             code: &[
-                Instruction::LoadConst(Register(1u8), Value(0i8)),
+                Instruction::LoadConst(Register(2u8), Value(0i8)),
                 Instruction::Peek {
                     tok: TokenDescription::RParen,
-                    reg: Register(1u8),
+                    reg: Register(2u8),
                 },
                 Instruction::JumpIfZero {
-                    cond: Register(1u8),
+                    cond: Register(2u8),
                     address: Address(5u32),
                 },
                 Instruction::BumpToken {
@@ -5084,15 +5084,15 @@ const PROGRAM: Program = Program {
                 },
                 Instruction::Call {
                     function: FunctionId(76u32),
-                    result: Register(2u8),
+                    result: Register(4u8),
                 },
                 Instruction::Call {
                     function: FunctionId(78u32),
-                    result: Register(3u8),
+                    result: Register(5u8),
                 },
                 Instruction::Return(Register(0u8)),
             ],
-            reg_num: 4usize,
+            reg_num: 6usize,
         },
         Function {
             name: "token_stream_group_bracket",
@@ -5102,22 +5102,22 @@ const PROGRAM: Program = Program {
                 },
                 Instruction::Call {
                     function: FunctionId(80u32),
-                    result: Register(1u8),
+                    result: Register(2u8),
                 },
                 Instruction::Return(Register(0u8)),
             ],
-            reg_num: 2usize,
+            reg_num: 3usize,
         },
         Function {
             name: "token_stream_group_bracket_",
             code: &[
-                Instruction::LoadConst(Register(1u8), Value(0i8)),
+                Instruction::LoadConst(Register(2u8), Value(0i8)),
                 Instruction::Peek {
                     tok: TokenDescription::RBracket,
-                    reg: Register(1u8),
+                    reg: Register(2u8),
                 },
                 Instruction::JumpIfZero {
-                    cond: Register(1u8),
+                    cond: Register(2u8),
                     address: Address(5u32),
                 },
                 Instruction::BumpToken {
@@ -5128,15 +5128,15 @@ const PROGRAM: Program = Program {
                 },
                 Instruction::Call {
                     function: FunctionId(76u32),
-                    result: Register(2u8),
+                    result: Register(4u8),
                 },
                 Instruction::Call {
                     function: FunctionId(80u32),
-                    result: Register(3u8),
+                    result: Register(5u8),
                 },
                 Instruction::Return(Register(0u8)),
             ],
-            reg_num: 4usize,
+            reg_num: 6usize,
         },
         Function {
             name: "token_stream_group_brace",
@@ -5146,22 +5146,22 @@ const PROGRAM: Program = Program {
                 },
                 Instruction::Call {
                     function: FunctionId(82u32),
-                    result: Register(1u8),
+                    result: Register(2u8),
                 },
                 Instruction::Return(Register(0u8)),
             ],
-            reg_num: 2usize,
+            reg_num: 3usize,
         },
         Function {
             name: "token_stream_group_brace_",
             code: &[
-                Instruction::LoadConst(Register(1u8), Value(0i8)),
+                Instruction::LoadConst(Register(2u8), Value(0i8)),
                 Instruction::Peek {
                     tok: TokenDescription::RBrace,
-                    reg: Register(1u8),
+                    reg: Register(2u8),
                 },
                 Instruction::JumpIfZero {
-                    cond: Register(1u8),
+                    cond: Register(2u8),
                     address: Address(5u32),
                 },
                 Instruction::BumpToken {
@@ -5172,15 +5172,15 @@ const PROGRAM: Program = Program {
                 },
                 Instruction::Call {
                     function: FunctionId(76u32),
-                    result: Register(2u8),
+                    result: Register(4u8),
                 },
                 Instruction::Call {
                     function: FunctionId(82u32),
-                    result: Register(3u8),
+                    result: Register(5u8),
                 },
                 Instruction::Return(Register(0u8)),
             ],
-            reg_num: 4usize,
+            reg_num: 6usize,
         },
     ],
 };

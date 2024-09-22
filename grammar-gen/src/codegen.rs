@@ -81,10 +81,7 @@ fn codegen_block(
     ret_reg: Register,
     jump_at_end: Option<LabelRef>,
 ) {
-    block
-        .stmts
-        .iter()
-        .for_each(|stmt| codegen_stmt(ctxt, stmt, ret_reg));
+    block.stmts.iter().for_each(|stmt| codegen_stmt(ctxt, stmt));
 
     if let Some(ret) = &block.ret {
         let reg = if ident_is_atom(&ret.symbol) {
@@ -102,7 +99,12 @@ fn codegen_block(
     }
 }
 
-fn codegen_stmt(ctxt: &mut CodegenCtxt, stmt: &Stmt, ret_reg: Register) {
+fn codegen_stmt(ctxt: &mut CodegenCtxt, stmt: &Stmt) {
+    let ret_reg = match &stmt.declare {
+        Some((_, id, _)) => ctxt.variable(&id.to_string()),
+        None => ctxt.register(),
+    };
+
     codegen_expr(ctxt, &stmt.expr, ret_reg);
 }
 
@@ -175,11 +177,6 @@ fn codegen_expr(ctxt: &mut CodegenCtxt<'_>, expr: &Expr, ret_reg: Register) {
                 ctxt.cg_push_arg(arg_reg);
             }
 
-            let ret_reg = match &call.assign {
-                Some((_, id, _)) => ctxt.variable(&id.to_string()),
-                None => ctxt.register(),
-            };
-
             ctxt.cg_call(fn_, ret_reg);
         }
 
@@ -213,11 +210,31 @@ fn codegen_expr(ctxt: &mut CodegenCtxt<'_>, expr: &Expr, ret_reg: Register) {
             codegen_builtin(ctxt, builtin);
         }
 
+        Expr::Ident(_) => {}
+
         Expr::Block(block) => codegen_block(ctxt, block, ret_reg, None),
 
-        Expr::Binop(_) => panic!("Unexpected binop in statement position"),
+        Expr::Binop(BinopExpr {
+            lhs,
+            op: Binop::Assign,
+            rhs,
+        }) => {
+            let lhs = match lhs.as_ref() {
+                Expr::Ident(id) => id,
 
-        Expr::Neg(_) => panic!("Unexpected negation in statement position"),
+                _ => panic!("Unexpected lhs for `=`"),
+            };
+
+            let ret_reg = ctxt.get_variable(&lhs.ident.to_string());
+
+            codegen_expr(ctxt, rhs, ret_reg);
+        }
+
+        Expr::Binop(_) => {
+            panic!("Unexpected assignment in expression position")
+        }
+
+        Expr::Neg(_) => panic!("Unexpected negation in expression position"),
     };
 }
 
@@ -245,6 +262,10 @@ fn codegen_condition_eval(ctxt: &mut CodegenCtxt, cond: &Expr, reg: Register) {
                 Binop::LogicOr => {
                     ctxt.cg_jump_if_nonzero(reg, after_eval);
                 }
+
+                Binop::Assign => {
+                    panic!("Unexpected assignment in condition position")
+                }
             }
 
             codegen_condition_eval(ctxt, rhs, reg);
@@ -254,6 +275,8 @@ fn codegen_condition_eval(ctxt: &mut CodegenCtxt, cond: &Expr, reg: Register) {
             codegen_condition_eval(ctxt, &expr.inner, reg);
             ctxt.cg_invert(reg, reg);
         }
+
+        Expr::Ident(_) => panic!("Unexpected ident in condition position"),
     }
 
     ctxt.set_label(after_eval);
