@@ -9,11 +9,11 @@ use std::{
 };
 
 use crate::{
+    RepetitionQuantifier, RepetitionQuantifierKind, TokenDescription,
     error::Error,
     grammar::{DynamicState, ParsingError, Transition},
     matcher::{BindingData, Matcher},
     substitution::{TokenTree, TokenTreeKind},
-    RepetitionQuantifier, RepetitionQuantifierKind, TokenDescription,
 };
 
 type Cursor<'ast, Span> = &'ast [TokenTree<Span>];

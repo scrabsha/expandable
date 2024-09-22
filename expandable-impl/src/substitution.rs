@@ -2,9 +2,9 @@
 // to represent a macro substitution in a meaningful way.
 
 use crate::{
-    error::{Error, MacroRuleNode},
     RepetitionQuantifier, RepetitionQuantifierKind, Spannable, Terminal, TokenDescription,
     TokenTree as GenericTokenTree, TokenTreeKind as GenericTokenTreeKind,
+    error::{Error, MacroRuleNode},
 };
 
 #[derive(Clone, Debug, PartialEq)]

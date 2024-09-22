@@ -7,10 +7,10 @@ use std::{
 };
 
 use crate::{
-    error::{Error, MacroRuleNode},
-    list::LameLinkedList,
     FragmentKind, RepetitionQuantifier, RepetitionQuantifierKind, Spannable, Terminal,
     TokenTree as GenericTokenTree, TokenTreeKind as GenericTokenTreeKind,
+    error::{Error, MacroRuleNode},
+    list::LameLinkedList,
 };
 
 #[derive(Clone, Debug, PartialEq)]

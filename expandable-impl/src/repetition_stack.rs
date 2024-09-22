@@ -6,10 +6,10 @@
 // _stack_.
 
 use crate::{
+    Error, RepetitionQuantifierKind,
     list::LameLinkedList,
     matcher::{BindingData, Matcher},
     substitution::{TokenTree, TokenTreeKind},
-    Error, RepetitionQuantifierKind,
 };
 
 pub(crate) fn check<Span>(
