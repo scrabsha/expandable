@@ -61,6 +61,7 @@ pub(crate) enum Expr {
     Binop(BinopExpr),
     Neg(NegExpr),
     Ident(IdentExpr),
+    Paren(ParenExpr),
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -124,6 +125,23 @@ pub(crate) enum Builtin {
 #[derive(Clone, Debug, PartialEq)]
 pub(crate) struct Predicate {
     pub(crate) ident: Ident,
+}
+
+#[derive(Clone, Debug, PartialEq)]
+pub(crate) struct ParenExpr {
+    pub(crate) paren: token::Paren,
+    pub(crate) inner: Box<Expr>,
+}
+
+impl Parse for ParenExpr {
+    fn parse(input: syn::parse::ParseStream) -> Result<Self> {
+        let inner;
+
+        Ok(ParenExpr {
+            paren: parenthesized!(inner in input),
+            inner: Box::new(inner.parse()?),
+        })
+    }
 }
 
 impl Parse for Document {
@@ -303,6 +321,8 @@ impl Expr {
             Expr::Condition(input.parse()?)
         } else if input.peek(Token![!]) {
             Expr::Neg(input.parse()?)
+        } else if input.peek(token::Paren) {
+            Expr::Paren(input.parse()?)
         } else {
             // Distinguish between function call and ident expr.
             if input.peek2(token::Paren) {
