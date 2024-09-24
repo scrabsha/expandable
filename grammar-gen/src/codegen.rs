@@ -235,6 +235,8 @@ fn codegen_expr(ctxt: &mut CodegenCtxt<'_>, expr: &Expr, ret_reg: Register) {
         }
 
         Expr::Neg(_) => panic!("Unexpected negation in expression position"),
+
+        Expr::Paren(_) => panic!("Unexpected parenthesis in expression position"),
     };
 }
 
@@ -277,6 +279,8 @@ fn codegen_condition_eval(ctxt: &mut CodegenCtxt, cond: &Expr, reg: Register) {
         }
 
         Expr::Ident(_) => panic!("Unexpected ident in condition position"),
+
+        Expr::Paren(p_expr) => codegen_condition_eval(ctxt, &p_expr.inner, reg),
     }
 
     ctxt.set_label(after_eval);
@@ -401,7 +405,7 @@ impl<'global> CodegenCtxt<'global> {
     fn variable(&mut self, name: &str) -> Register {
         let reg = self.register();
         let prev = self.variables.insert(name.to_string(), reg);
-        assert!(prev.is_none());
+        assert!(prev.is_none(), "variable redefinition: {name}");
         reg
     }
 
