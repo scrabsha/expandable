@@ -48,7 +48,7 @@ pub(crate) struct Stmt {
 #[derive(Clone, Debug, PartialEq)]
 pub(crate) struct Return {
     pub(crate) ret: Token![return],
-    pub(crate) symbol: Ident,
+    pub(crate) expr: Box<Expr>,
     pub(crate) semi: Token![;],
 }
 
@@ -241,7 +241,7 @@ impl Parse for Return {
     fn parse(input: syn::parse::ParseStream) -> syn::Result<Self> {
         Ok(Return {
             ret: input.parse()?,
-            symbol: input.parse()?,
+            expr: Box::new(Expr::parse_atom(input)?),
             semi: input.parse()?,
         })
     }

@@ -84,16 +84,8 @@ fn codegen_block(
     block.stmts.iter().for_each(|stmt| codegen_stmt(ctxt, stmt));
 
     if let Some(ret) = &block.ret {
-        let reg = if ident_is_atom(&ret.symbol) {
-            let AtomId(val) = ctxt.atom_val(&ret.symbol.to_string());
-            let val = Value(val);
-            ctxt.cg_load_const(ret_reg, val);
-            ret_reg
-        } else {
-            ctxt.get_variable(&ret.symbol.to_string())
-        };
-
-        ctxt.cg_return(reg);
+        codegen_expr(ctxt, &ret.expr, ret_reg);
+        ctxt.cg_return(ret_reg);
     } else if let Some(label) = jump_at_end {
         ctxt.cg_jump(label);
     }
@@ -210,7 +202,15 @@ fn codegen_expr(ctxt: &mut CodegenCtxt<'_>, expr: &Expr, ret_reg: Register) {
             codegen_builtin(ctxt, builtin);
         }
 
-        Expr::Ident(_) => {}
+        Expr::Ident(ident) => {
+            if ident_is_atom(&ident.ident) {
+                let at = ctxt.atom_val(&ident.ident.to_string());
+                ctxt.cg_atom_id_load(at, ret_reg);
+            } else {
+                let src = ctxt.get_variable(&ident.ident.to_string());
+                ctxt.cg_copy(src, ret_reg);
+            }
+        }
 
         Expr::Block(block) => codegen_block(ctxt, block, ret_reg, None),
 
@@ -532,6 +532,8 @@ codegen_fns! {
     fn cg_invert(src: Register, dst: Register) = Instruction::Invert { src, dst }
 
     fn cg_push_arg(reg: Register) = Instruction::PushArg(reg)
+
+    fn cg_copy(src: Register, dst: Register) = Instruction::Copy { src, dst }
 }
 
 struct GlobalCtxt {
@@ -626,7 +628,6 @@ type EncodableInstruction = Instruction<Address>;
 #[derive(Clone, Copy, Debug, PartialEq)]
 enum Instruction<Addr> {
     LoadConst(Register, Value),
-    #[expect(dead_code)]
     Copy {
         src: Register,
         dst: Register,
