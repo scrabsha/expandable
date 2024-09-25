@@ -62,6 +62,7 @@ pub(crate) enum Expr {
     Neg(NegExpr),
     Ident(IdentExpr),
     Paren(ParenExpr),
+    Loop(LoopExpr),
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -131,6 +132,12 @@ pub(crate) struct Predicate {
 pub(crate) struct ParenExpr {
     pub(crate) paren: token::Paren,
     pub(crate) inner: Box<Expr>,
+}
+
+#[derive(Clone, Debug, PartialEq)]
+pub(crate) struct LoopExpr {
+    pub(crate) loop_: Token![loop],
+    pub(crate) body: Block,
 }
 
 impl Parse for ParenExpr {
@@ -218,7 +225,7 @@ impl Parse for Stmt {
 
         let expr = input.parse()?;
         let semi = match &expr {
-            Expr::Condition(_) => None,
+            Expr::Condition(_) | Expr::Loop(_) => None,
             _ => Some(input.parse()?),
         };
 
@@ -319,6 +326,8 @@ impl Expr {
             Expr::Builtin(input.parse()?)
         } else if input.peek(Token![if]) {
             Expr::Condition(input.parse()?)
+        } else if input.peek(Token![loop]) {
+            Expr::Loop(input.parse()?)
         } else if input.peek(Token![!]) {
             Expr::Neg(input.parse()?)
         } else if input.peek(token::Paren) {
@@ -420,6 +429,15 @@ impl Parse for IdentExpr {
     fn parse(input: syn::parse::ParseStream) -> Result<Self> {
         Ok(IdentExpr {
             ident: input.parse()?,
+        })
+    }
+}
+
+impl Parse for LoopExpr {
+    fn parse(input: syn::parse::ParseStream) -> Result<Self> {
+        Ok(LoopExpr {
+            loop_: input.parse()?,
+            body: input.parse()?,
         })
     }
 }
