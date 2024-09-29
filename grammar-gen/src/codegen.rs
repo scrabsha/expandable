@@ -552,8 +552,8 @@ impl GlobalCtxt {
     fn add_function(&mut self, name: String) {
         let id = self.fns.len().try_into().unwrap();
         let id = FunctionId(id);
-        let prev = self.fns.insert(name, id);
-        assert!(prev.is_none());
+        let prev = self.fns.insert(name.clone(), id);
+        assert!(prev.is_none(), "Redefinition of function `{name}`");
     }
 
     fn fn_id(&self, name: &str) -> FunctionId {
@@ -850,6 +850,7 @@ to_tokens_enum! {
     #[derive(Clone, Copy, Debug, PartialEq)]
     pub enum TokenDescription {
         Ident,
+        Lifetime,
         As,
         Async,
         Await,
