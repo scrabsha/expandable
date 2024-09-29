@@ -1,7 +1,7 @@
 use proc_macro2::Ident;
 use smallvec::SmallVec;
 use syn::{
-    Error, Result, Token, parenthesized,
+    Error, Result, Token, Type, parenthesized,
     parse::Parse,
     punctuated::Punctuated,
     token::{self, Let, Paren, Pub},
@@ -179,8 +179,26 @@ impl Parse for Signature {
         Ok(Signature {
             paren_token: parenthesized!(inner in input),
             args: {
-                let args: Punctuated<Ident, Token![,]> = Punctuated::parse_terminated(&inner)?;
-                args.into_iter().collect()
+                struct Arg {
+                    name: Ident,
+                    _colon: Token![:],
+                    _ty: Type,
+                }
+
+                impl Parse for Arg {
+                    fn parse(input: syn::parse::ParseStream) -> syn::Result<Self> {
+                        Ok(Arg {
+                            name: input.parse()?,
+                            _colon: input.parse()?,
+                            _ty: input.parse()?,
+                        })
+                    }
+                }
+
+                Punctuated::<Arg, Token![,]>::parse_terminated(&inner)?
+                    .into_iter()
+                    .map(|arg| arg.name)
+                    .collect()
             },
         })
     }
