@@ -15,16 +15,22 @@
 //!
 //! ```rust,compile_fail
 //! #[expandable::expr]
-//! macro_rules! js_concat {
-//!     ($left:expr, $right:expr) => {
-//!         $left ++ $right
-//!     };
+//! macro_rules! my_vec {
+//!   ($($t:expr),*) => {{
+//!       let mut buffer = Vec::new();
+//!
+//!       $(
+//!           buffer->push($t);
+//!       )*
+//!
+//!       buffer
+//!   }};
 //! }
 //! ```
 //!
 //! This emits the following error [^error-message]:
 //! ```none
-#![doc = include_str!("../tests/ui/fail/js_concat.stderr")]
+#![doc = include_str!("../tests/ui/fail/my_vec.stderr_nightly")]
 //! ```
 //! 
 //! [^error-message]: The Rust grammar is not fully implemented at the moment,
@@ -576,7 +582,7 @@ fn ui() {
 }
 
 #[cfg(test)]
-const CHANNEL_DEPENDANT_STDERRS: [&str; 1] = ["bad_range_pattern"];
+const CHANNEL_DEPENDANT_STDERRS: [&str; 2] = ["bad_range_pattern", "my_vec"];
 
 #[cfg(test)]
 fn setup_channel_dependant_stderrs() {

@@ -15,39 +15,51 @@ checker.
 
 ## Textbook example
 
-`rustc` treats macro definitions as some opaque piece of tokens and don't
-do any check on them. For instance, the following macro definition is valid:
+`rustc` treats macro definitions as some opaque piece of tokens and don't do any
+check on them. For instance, the following macro definition is valid:
 
 ```rust
-macro_rules! js_concat {
-    ($left:expr, $right:expr) => {
-        $left ++ $right
-    };
+macro_rules! my_vec {
+  ($($t:expr),*) => {{
+      let mut buffer = Vec::new();
+
+      $(
+          buffer->push($t);
+      )*
+
+      buffer
+  }};
 }
 ```
 
-However, any call to the `js_concat` macro is invalid, as the `++` operator
-does not exist in Rust.
+However, any call to the `my_vec` macro is invalid, as `->` can't be used for
+method calls.
 Luckily for us, this crate provides the [`expandable::expr`] macro, that
 checks that the macro expands to a valid expression. Let's use it on
 `js_concat`:
 
 ```rust,compile_fail
 #[expandable::expr]
-macro_rules! js_concat {
-    ($left:expr, $right:expr) => {
-        $left ++ $right
-    };
+macro_rules! my_vec {
+  ($($t:expr),*) => {{
+      let mut buffer = Vec::new();
+
+      $(
+          buffer->push($t);
+      )*
+
+      buffer
+  }};
 }
 ```
 
 This emits the following error [^error-message]:
 ```none
-error: Potentially invalid expansion. Expected an expression, an identifier, `::`, `<`, `Self`, `break` or 13 others.
- --> tests/ui/fail/js_concat.rs:5:16
+error: Potentially invalid expansion. Expected an expression, an identifier, `!=`, `!`, `%`, `&&` or 37 others.
+ --> tests/ui/fail/my_vec.rs:9:17
   |
-5 |         $left ++ $right
-  |                ^
+9 |           buffer->push($t);
+  |                 ^^
 ```
  
 [^error-message]: The Rust grammar is not fully implemented at the moment,
