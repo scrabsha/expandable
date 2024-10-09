@@ -6,7 +6,7 @@ pub enum LameLinkedList<'a, T> {
     Cons(T, &'a LameLinkedList<'a, T>),
 }
 
-impl<'a, T> LameLinkedList<'a, T> {
+impl<T> LameLinkedList<'_, T> {
     pub(crate) fn to_vec(&self) -> Vec<T>
     where
         T: Clone,
