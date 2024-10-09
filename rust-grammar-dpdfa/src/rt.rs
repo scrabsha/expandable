@@ -525,13 +525,13 @@ struct StackFrame<'code> {
     registers: Vec<Value>,
 }
 
-impl<'code> PartialOrd for StackFrame<'code> {
+impl PartialOrd for StackFrame<'_> {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
         Some(self.cmp(other))
     }
 }
 
-impl<'code> Ord for StackFrame<'code> {
+impl Ord for StackFrame<'_> {
     fn cmp(&self, other: &Self) -> Ordering {
         // Skipping the `function` field - it will always be the same.
         //
@@ -542,15 +542,15 @@ impl<'code> Ord for StackFrame<'code> {
     }
 }
 
-impl<'code> PartialEq for StackFrame<'code> {
+impl PartialEq for StackFrame<'_> {
     fn eq(&self, other: &Self) -> bool {
         self.cmp(other) == Ordering::Equal
     }
 }
 
-impl<'code> Eq for StackFrame<'code> {}
+impl Eq for StackFrame<'_> {}
 
-impl<'code> Index<Register> for StackFrame<'code> {
+impl Index<Register> for StackFrame<'_> {
     type Output = Value;
 
     fn index(&self, index: Register) -> &Value {
@@ -558,13 +558,13 @@ impl<'code> Index<Register> for StackFrame<'code> {
     }
 }
 
-impl<'code> IndexMut<Register> for StackFrame<'code> {
+impl IndexMut<Register> for StackFrame<'_> {
     fn index_mut(&mut self, index: Register) -> &mut Value {
         &mut self.registers[index.0 as usize]
     }
 }
 
-impl<'code> Index<Address> for StackFrame<'code> {
+impl Index<Address> for StackFrame<'_> {
     type Output = Instruction;
 
     fn index(&self, index: Address) -> &Instruction {

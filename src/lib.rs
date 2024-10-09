@@ -205,7 +205,7 @@ fn pp_repetition_ops(stack: &[RepetitionQuantifierKind]) -> impl Display + '_ {
 
 struct PpRepetitionOps<'a>(&'a [RepetitionQuantifierKind]);
 
-impl<'a> Display for PpRepetitionOps<'a> {
+impl Display for PpRepetitionOps<'_> {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         if self.0.is_empty() {
             write!(f, "no repetition")
