@@ -18,7 +18,7 @@ rust-grammar-dpdfa = { path = "rust-grammar-dpdfa", version = "0.1.0" }
 
 [package]
 name = "expandable"
-version = "0.1.0"
+version = "0.1.1"
 edition.workspace = true
 rust-version = "1.70.0"
 description = "What if we could check declarative macros before using them?"
