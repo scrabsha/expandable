@@ -9,7 +9,7 @@ license.workspace = true
 [dependencies]
 # MSRV: 1.36 (checked in CI)
 smallvec = "1.11"
-rust-grammar-dpdfa = { path = "../rust-grammar-dpdfa" }
+rust-grammar-dpdfa.workspace = true
 
 [dev-dependencies]
 # MSRV: 1.45 (crate-level documentation)
