@@ -23,6 +23,7 @@ edition.workspace = true
 rust-version = "1.70.0"
 description = "What if we could check declarative macros before using them?"
 license.workspace = true
+repository = "https://github.com/scrabsha/expandable"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
