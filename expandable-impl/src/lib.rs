@@ -30,9 +30,9 @@
 //!
 //! <br />
 //! <br />
-#![doc = include_str!("../../doc/00-top-image.md")]
+#![doc = include_str!("../doc/00-top-image.md")]
 //!
-#![doc = include_str!("../../doc/01-textbook-example.md")]
+#![doc = include_str!("../doc/01-textbook-example.md")]
 //! Luckily for us, this crate provides the [`check_macro`] function, that
 //! (drumroll) checks that a macro is valid. It takes as argument the context
 //! in which the macro will be called and the content of the macro definition.
@@ -68,13 +68,13 @@
 //! embed this crate in your analysis tool!
 //!
 //! [`expandable`]: https://crates.io/crates/expandable
-#![doc = include_str!("../../doc/02-what-can-it-detect.md")]
+#![doc = include_str!("../doc/02-what-can-it-detect.md")]
 //!
-#![doc = include_str!("../../doc/03-opinionated.md")]
+#![doc = include_str!("../doc/03-opinionated.md")]
 //!
-#![doc = include_str!("../../doc/98-msrv.md")]
+#![doc = include_str!("../doc/98-msrv.md")]
 //!
-#![doc = include_str!("../../doc/99-license.md")]
+#![doc = include_str!("../doc/99-license.md")]
 
 use std::{marker::Copy, str::FromStr};
 
