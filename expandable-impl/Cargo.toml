@@ -1,7 +1,9 @@
 [package]
 name = "expandable-impl"
 description = "What if we could check declarative macros before using them?"
-include = ["/src", "../"]
+include = ["/src", "/../doc"]
+documentation = "https://docs.rs/expandable-impl"
+readme = "../README.md"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
