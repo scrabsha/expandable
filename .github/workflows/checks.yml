@@ -144,7 +144,7 @@ jobs:
         run: cargo +nightly rustdoc -- --output-format json -Zunstable-options
 
       - name: Compare README with crate-level documentation
-        run: cat target/doc/expandable.json | jq ".index[.root].docs" -r | cmp README.md -
+        run: cat target/doc/expandable.json | jq ".index[.root | tostring].docs" -r | cmp README.md -
 
   grammar-check:
     runs-on: ubuntu-latest
