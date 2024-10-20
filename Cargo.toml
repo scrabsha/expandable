@@ -9,6 +9,8 @@ members = [
 [workspace.package]
 license = "MIT OR Apache-2.0"
 edition = "2021"
+version = "0.1.0"
+rust-version = "1.70.0"
 
 [workspace.dependencies]
 # MSRV: 1.70 (checked in CI)
@@ -18,10 +20,11 @@ rust-grammar-dpdfa = { path = "rust-grammar-dpdfa", version = "0.1.0" }
 
 [package]
 name = "expandable"
-version = "0.1.0"
-edition.workspace = true
-rust-version = "1.70.0"
 description = "What if we could check declarative macros before using them?"
+include = ["/doc", "/tests", "/src"]
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
 license.workspace = true
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
