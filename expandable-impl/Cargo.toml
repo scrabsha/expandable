@@ -1,9 +1,10 @@
 [package]
 name = "expandable-impl"
-version = "0.1.0"
 description = "What if we could check declarative macros before using them?"
-rust-version = "1.70.0"
+include = ["/src", "../"]
+version.workspace = true
 edition.workspace = true
+rust-version.workspace = true
 license.workspace = true
 
 [dependencies]
