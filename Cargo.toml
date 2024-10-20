@@ -9,14 +9,14 @@ members = [
 [workspace.package]
 license = "MIT OR Apache-2.0"
 edition = "2021"
-version = "0.1.0"
+version = "0.1.1"
 rust-version = "1.70.0"
 
 [workspace.dependencies]
 # MSRV: 1.70 (checked in CI)
-expandable-impl = { path = "expandable-impl", version = "0.1.0" }
+expandable-impl = { path = "expandable-impl", version = "0.1.1" }
 # MSRV: 1.70 (checked in CI)
-rust-grammar-dpdfa = { path = "rust-grammar-dpdfa", version = "0.1.0" }
+rust-grammar-dpdfa = { path = "rust-grammar-dpdfa", version = "0.1.1" }
 
 [package]
 name = "expandable"
